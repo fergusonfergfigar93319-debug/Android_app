@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 晶石碎片：三角阵列（原创抽象） -->
+    <path
+        android:fillColor="#34FFFFFF"
+        android:pathData="M100,48 L124,118 L76,118 Z" />
+    <path
+        android:fillColor="#28FFFFFF"
+        android:pathData="M52,108 L72,158 L32,158 Z" />
+    <path
+        android:fillColor="#28FFFFFF"
+        android:pathData="M148,108 L168,158 L128,158 Z" />
+</vector>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 地形三角：Δ 轮廓（原创抽象） -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 100,46 L 158,154 L 42,154 Z"
+        android:strokeWidth="8"
+        android:strokeColor="#34FFFFFF"
+        android:strokeLineJoin="round"
+        android:strokeLineCap="round" />
+    <path
+        android:fillColor="#20FFFFFF"
+        android:pathData="M100,70 L134,142 L66,142 Z" />
+</vector>

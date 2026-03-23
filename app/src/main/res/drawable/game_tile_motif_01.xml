@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 田园夜空：星形（原创抽象） -->
+    <path
+        android:fillColor="#38FFFFFF"
+        android:pathData="M100,36 L112,74 L152,74 L120,98 L134,138 L100,114 L66,138 L80,98 L48,74 L88,74 Z" />
+    <path
+        android:fillColor="#26FFFFFF"
+        android:pathData="M146,54 A10,10 0 1,0 166,54 A10,10 0 1,0 146,54" />
+</vector>

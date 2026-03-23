@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="45"
+                android:endColor="#FF8BC34A"
+                android:startColor="#FF33691E"
+                android:type="linear" />
+        </shape>
+    </item>
+    <item
+        android:gravity="center"
+        android:height="56dp"
+        android:width="160dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#2AC5E1A5" />
+        </shape>
+    </item>
+    <item
+        android:width="152dp"
+        android:height="152dp"
+        android:drawable="@drawable/game_tile_motif_10"
+        android:gravity="center" />
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="90"
+                android:centerColor="#00000000"
+                android:endColor="#7A000000"
+                android:startColor="#00000000"
+                android:type="linear" />
+        </shape>
+    </item>
+</layer-list>

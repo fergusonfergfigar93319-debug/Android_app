@@ -1,0 +1,20 @@
+*.iml
+.gradle
+.kotlin/
+.cursor/
+# 根目录误放的临时图片
+/1773992521968.jpeg
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+app/build/
+/captures
+.externalNativeBuild
+.cxx
+local.properties

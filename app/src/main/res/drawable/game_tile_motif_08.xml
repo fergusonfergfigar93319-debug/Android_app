@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 竞技锋芒：交叉刃形（原创抽象） -->
+    <path
+        android:fillColor="#36FFFFFF"
+        android:pathData="M100,42 L118,158 L100,138 L82,158 Z" />
+    <path
+        android:fillColor="#2AFFFFFF"
+        android:pathData="M42,88 L158,106 L140,112 L42,94 Z" />
+</vector>

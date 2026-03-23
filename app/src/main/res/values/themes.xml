@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.TX_ku" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/window_background_launch</item>
+        <!-- 避免首帧 Compose 尚未合成时透明系统栏下露出默认黑底（模拟器上易表现为整屏黑） -->
+        <item name="android:statusBarColor">@color/window_background_launch</item>
+        <item name="android:navigationBarColor">@color/window_background_launch</item>
+    </style>
+</resources>

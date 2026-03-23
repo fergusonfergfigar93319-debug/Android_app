@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 潮汐声浪：同心弧（原创抽象） -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 32,118 A 68,68 0 0 1 168,118"
+        android:strokeWidth="7"
+        android:strokeColor="#30FFFFFF"
+        android:strokeLineCap="round" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 48,138 A 52,52 0 0 1 152,138"
+        android:strokeWidth="6"
+        android:strokeColor="#24FFFFFF"
+        android:strokeLineCap="round" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 64,158 A 36,36 0 0 1 136,158"
+        android:strokeWidth="5"
+        android:strokeColor="#1CFFFFFF"
+        android:strokeLineCap="round" />
+</vector>

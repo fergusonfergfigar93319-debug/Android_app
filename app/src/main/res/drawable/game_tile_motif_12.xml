@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 派对圆团：叠圆（原创抽象） -->
+    <path
+        android:fillColor="#30FFFFFF"
+        android:pathData="M47,78 A28,28 0 1,0 103,78 A28,28 0 1,0 47,78" />
+    <path
+        android:fillColor="#28FFFFFF"
+        android:pathData="M99,88 A26,26 0 1,0 151,88 A26,26 0 1,0 99,88" />
+    <path
+        android:fillColor="#22FFFFFF"
+        android:pathData="M62,122 A32,32 0 1,0 126,122 A32,32 0 1,0 62,122" />
+</vector>

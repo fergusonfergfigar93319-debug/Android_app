@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 都市动感：斜向速度条（原创抽象） -->
+    <path
+        android:fillColor="#32FFFFFF"
+        android:pathData="M28,168 L48,32 L68,32 L48,168 Z" />
+    <path
+        android:fillColor="#28FFFFFF"
+        android:pathData="M78,168 L98,48 L118,48 L98,168 Z" />
+    <path
+        android:fillColor="#24FFFFFF"
+        android:pathData="M128,168 L148,64 L168,64 L148,168 Z" />
+</vector>
