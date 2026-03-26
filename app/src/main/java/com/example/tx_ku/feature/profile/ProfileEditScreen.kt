@@ -238,7 +238,7 @@ fun ProfileEditScreen(
                     text = "保存",
                     onClick = {
                         if (viewModel.saveToCurrentUser()) {
-                            snackScope.showBuddySnackbar(snackbarHost, "资料已更新，名片与智能体已同步")
+                            snackScope.showBuddySnackbar(snackbarHost, "资料已更新，名片和搭子一起同步了")
                             navController.popBackStack()
                         }
                     },

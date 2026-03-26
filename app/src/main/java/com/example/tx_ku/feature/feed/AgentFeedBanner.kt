@@ -1,10 +1,13 @@
 package com.example.tx_ku.feature.feed
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -16,14 +19,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.BrushPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.tx_ku.R
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -65,27 +68,34 @@ fun AgentFeedBanner(navController: NavController?) {
             modifier = Modifier.padding(BuddyDimens.CardPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val context = LocalContext.current
-            val meshFallback = remember {
-                BrushPainter(
-                    Brush.linearGradient(
-                        colors = listOf(Color(0xFF1565C0), Color(0xFF42A5F5))
-                    )
+            val meshBrush = remember {
+                Brush.linearGradient(
+                    colors = listOf(Color(0xFF1565C0), Color(0xFF42A5F5))
                 )
             }
-            // ui_banner_accent_mesh 为 layer-list，不可用 painterResource
-            AsyncImage(
-                model = ImageRequest.Builder(context)
+            val ctx = LocalContext.current
+            val meshFallback = remember { BrushPainter(meshBrush) }
+            val meshRequest = remember(ctx) {
+                ImageRequest.Builder(ctx)
                     .data(R.drawable.ui_banner_accent_mesh)
-                    .build(),
-                contentDescription = null,
+                    .crossfade(false)
+                    .build()
+            }
+            Box(
                 modifier = Modifier
                     .size(52.dp)
-                    .clip(RoundedCornerShape(14.dp)),
-                contentScale = ContentScale.Crop,
-                placeholder = meshFallback,
-                error = meshFallback
-            )
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(meshBrush)
+            ) {
+                AsyncImage(
+                    model = meshRequest,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    placeholder = meshFallback,
+                    error = meshFallback
+                )
+            }
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -96,7 +106,7 @@ fun AgentFeedBanner(navController: NavController?) {
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = "点击创作专属智能体",
+                    text = "点我捏个游戏搭子",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -106,7 +116,7 @@ fun AgentFeedBanner(navController: NavController?) {
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "进入后微调语气与场景 · 与发帖风格联动",
+                    text = "进去改语气、场景 · 发帖也会跟着顺",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

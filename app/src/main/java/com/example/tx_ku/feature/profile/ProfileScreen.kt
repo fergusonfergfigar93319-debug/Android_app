@@ -20,16 +20,12 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -80,6 +76,8 @@ import com.example.tx_ku.core.model.BuddyAgentPersona
 import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.core.model.Post
 import com.example.tx_ku.core.model.Profile
+import com.example.tx_ku.feature.forum.chipHighlight
+import com.example.tx_ku.feature.forum.userShortLabel
 import com.example.tx_ku.core.navigation.Routes
 import com.example.tx_ku.feature.auth.AuthRepository
 import com.example.tx_ku.feature.forum.ForumRepository
@@ -102,7 +100,9 @@ fun ProfileScreen(
     val snackScope = LocalBuddySnackbarScope.current
 
     var bookmarksSheet by remember { mutableStateOf(false) }
+    var myPostsSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val myPostsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val bookmarkedPosts: List<Post> = remember(allPosts, bookmarkIds) {
         val set = bookmarkIds
         allPosts.filter { it.postId in set }
@@ -110,9 +110,17 @@ fun ProfileScreen(
 
     BuddyBackground(modifier = modifier.fillMaxSize()) {
         if (card != null && profile != null) {
-            val myUid = profile.userId.ifBlank { "local_me" }
-            val myPostCount = allPosts.count { p ->
-                p.authorId == profile.userId || (profile.userId.isBlank() && p.authorId == "local_me")
+            val myUid = CurrentUser.effectiveForumAuthorId()
+            val myPostCount = allPosts.count { p -> p.authorId == myUid }
+            val myPostsForSheet: List<Post> = remember(allPosts, myUid) {
+                allPosts.filter { it.authorId == myUid }
+                    .sortedWith(
+                        compareByDescending<Post> { it.createdAt }
+                            .thenByDescending { it.postId }
+                    )
+            }
+            val myPublicPostCount = remember(myPostsForSheet) {
+                myPostsForSheet.count { it.isVisibleInPublicForum() }
             }
             val completion = remember(profile) { profileCompletionRatio(profile) }
             val (filledCount, totalFields) = remember(profile) { profileCompletionCount(profile) }
@@ -157,13 +165,6 @@ fun ProfileScreen(
                     )
                 }
                 item {
-                    ProfileMissingFieldsStrip(
-                        profile = profile,
-                        modifier = Modifier.padding(horizontal = BuddyDimens.ScreenPaddingHorizontal),
-                        onChipClick = { navController?.navigate(Routes.PROFILE_EDIT) }
-                    )
-                }
-                item {
                     ProfileHeroCard(
                         profile = profile,
                         modifier = Modifier
@@ -203,10 +204,12 @@ fun ProfileScreen(
                         onFollowingClick = { navController?.navigate(Routes.FOLLOWING_LIST) },
                         onBookmarksClick = { bookmarksSheet = true },
                         onPostsClick = {
-                            if (snackbarHost != null) {
+                            if (navController != null) {
+                                myPostsSheet = true
+                            } else if (snackbarHost != null) {
                                 snackScope.showBuddySnackbar(
                                     snackbarHost,
-                                    "已在广场发布 $myPostCount 帖"
+                                    "共 $myPostCount 帖，其中已在广场展示 $myPublicPostCount 帖"
                                 )
                             }
                         }
@@ -220,6 +223,7 @@ fun ProfileScreen(
                         onFollowing = { navController?.navigate(Routes.FOLLOWING_LIST) },
                         onBookmarks = { bookmarksSheet = true },
                         onForum = { navController?.navigate(Routes.POST_EDITOR) },
+                        onAddFriend = { navController?.navigate(Routes.ADD_FRIEND_SEARCH) },
                         navEnabled = navController != null
                     )
                 }
@@ -290,6 +294,81 @@ fun ProfileScreen(
                             )
                         ) {
                             Text("退出登录", fontWeight = FontWeight.Medium)
+                        }
+                    }
+                }
+            }
+
+            if (myPostsSheet && navController != null) {
+                ModalBottomSheet(
+                    onDismissRequest = { myPostsSheet = false },
+                    sheetState = myPostsSheetState
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = BuddyDimens.ContentPadding)
+                            .padding(bottom = BuddyDimens.SpacingXl)
+                    ) {
+                        Text(
+                            text = "我的帖子",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(bottom = BuddyDimens.SpacingSm)
+                        )
+                        Text(
+                            text = "共 $myPostCount 帖 · 已在广场展示 $myPublicPostCount 帖（审核通过才可见）",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = BuddyDimens.SpacingMd)
+                        )
+                        if (myPostsForSheet.isEmpty()) {
+                            Text(
+                                text = "还没有帖子，去广场发一条吧",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else {
+                            myPostsForSheet.forEach { post ->
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = BuddyDimens.SpacingXs)
+                                        .clickable {
+                                            myPostsSheet = false
+                                            navController.navigate(Routes.postDetail(post.postId))
+                                        },
+                                    shape = BuddyShapes.CardSmall,
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                                ) {
+                                    Column(modifier = Modifier.padding(BuddyDimens.SpacingMd)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = post.title,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis,
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            Spacer(modifier = Modifier.width(BuddyDimens.SpacingSm))
+                                            BuddyTag(
+                                                text = post.moderationStatus.userShortLabel(),
+                                                isHighlight = post.moderationStatus.chipHighlight()
+                                            )
+                                        }
+                                        Text(
+                                            text = post.createdAt,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.outline,
+                                            modifier = Modifier.padding(top = BuddyDimens.SpacingXs)
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -400,55 +479,8 @@ private fun profileCompletionRatio(p: Profile): Float {
 private fun profileCompletionHints(p: Profile): String {
     val missing = profileCompletionMissing(p)
     return when {
-        missing.isEmpty() -> "资料已完善，智能体与推荐会更懂你"
+        missing.isEmpty() -> "资料齐了，搭子和推荐都更好猜你"
         else -> "还可补充：${missing.take(4).joinToString("、")}"
-    }
-}
-
-@Composable
-private fun ProfileMissingFieldsStrip(
-    profile: Profile,
-    modifier: Modifier = Modifier,
-    onChipClick: (() -> Unit)?
-) {
-    if (onChipClick == null) return
-    val missing = remember(profile) { profileCompletionMissing(profile) }
-    if (missing.isEmpty()) return
-    Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = "待完善项",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = BuddyColors.CommunityTextPrimary
-        )
-        Text(
-            text = "点击标签去编辑资料",
-            style = MaterialTheme.typography.labelSmall,
-            color = BuddyColors.CommunityTextSecondary,
-            modifier = Modifier.padding(top = 4.dp, bottom = BuddyDimens.SpacingSm)
-        )
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingSm),
-            contentPadding = PaddingValues(vertical = 2.dp)
-        ) {
-            items(missing, key = { it }) { label ->
-                AssistChip(
-                    onClick = onChipClick,
-                    label = { Text(label) },
-                    leadingIcon = {
-                        Text("+", style = MaterialTheme.typography.labelLarge, color = BuddyColors.CommunityPrimary)
-                    },
-                    colors = AssistChipDefaults.assistChipColors(
-                        containerColor = BuddyColors.CommunityPrimary.copy(alpha = 0.1f),
-                        labelColor = BuddyColors.CommunityTextPrimary
-                    ),
-                    border = AssistChipDefaults.assistChipBorder(
-                        enabled = true,
-                        borderColor = BuddyColors.CommunityPrimary.copy(alpha = 0.28f)
-                    )
-                )
-            }
-        }
     }
 }
 
@@ -494,7 +526,7 @@ private fun ProfileHeaderBanner(
                     color = BuddyColors.CommunityTextPrimary
                 )
                 Text(
-                    text = "个性签名 · 智能体 · 连接同好",
+                    text = "签名 · 搭子 · 同好",
                     style = MaterialTheme.typography.bodySmall,
                     color = BuddyColors.CommunityTextSecondary,
                     modifier = Modifier.padding(top = 4.dp)
@@ -764,6 +796,7 @@ private fun ProfileQuickActions(
     onFollowing: () -> Unit,
     onBookmarks: () -> Unit,
     onForum: () -> Unit,
+    onAddFriend: () -> Unit,
     navEnabled: Boolean
 ) {
     if (!navEnabled) return
@@ -788,7 +821,7 @@ private fun ProfileQuickActions(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             QuickActionLargeTile(
-                label = "智能体",
+                label = "搭子",
                 iconRes = R.drawable.ic_agent,
                 containerColor = primary,
                 contentColor = Color.White,
@@ -834,7 +867,15 @@ private fun ProfileQuickActions(
                 onClick = onForum,
                 modifier = Modifier.weight(1f)
             )
-            Spacer(modifier = Modifier.weight(1f))
+            QuickActionLargeTile(
+                label = "加好友",
+                iconRes = R.drawable.ic_search,
+                containerColor = Color.White,
+                contentColor = primary,
+                onClick = onAddFriend,
+                border = BorderStroke(1.dp, BuddyColors.CommunityPrimary.copy(alpha = 0.22f)),
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
@@ -918,7 +959,7 @@ private fun MineAgentEntryCard(
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "我的专属智能体",
+                    text = "我的游戏搭子",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium

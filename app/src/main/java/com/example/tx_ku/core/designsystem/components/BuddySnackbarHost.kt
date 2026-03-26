@@ -1,5 +1,6 @@
 package com.example.tx_ku.core.designsystem.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.theme.BuddyDimens
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -51,7 +53,11 @@ fun BuddyGlobalSnackbarSurface(content: @Composable () -> Unit) {
         LocalBuddySnackbarHostState provides hostState,
         LocalBuddySnackbarScope provides snackScope
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(BuddyColors.CommunityPageBackground)
+        ) {
             content()
             SnackbarHost(
                 hostState = hostState,

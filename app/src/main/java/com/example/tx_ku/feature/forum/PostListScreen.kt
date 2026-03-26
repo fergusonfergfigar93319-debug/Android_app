@@ -251,17 +251,17 @@ fun PostListContent(
                                 contentAlignment = Alignment.Center
                             ) {
                                 BuddyEmptyState(
-                                    title = if (filtered) "没有匹配的帖子" else "还没有帖子",
+                                    title = if (filtered) "没筛到帖" else "这儿还安静",
                                     message = when {
-                                        !filtered -> "先发一条，召集你的搭子"
+                                        !filtered -> "发一条，喊人上车"
                                         selectedTag != null && searchQuery.isNotBlank() ->
-                                            "可尝试减少筛选条件，或点「重置」"
+                                            "筛太狠了，减点条件或点「重置」"
                                         selectedTag != null ->
-                                            "当前分区暂无带「$selectedTag」的帖子"
+                                            "这个区暂时没人打「$selectedTag」标签"
                                         searchQuery.isNotBlank() ->
-                                            "未找到同时包含所有关键词的帖子"
+                                            "没搜到同时含这些词的帖"
                                         else ->
-                                            "该分区暂无内容，可切换分区或点「重置」"
+                                            "换个分区看看，或「重置」重来"
                                     },
                                     emoji = if (filtered) "🔍" else "💬"
                                 )

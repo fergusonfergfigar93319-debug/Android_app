@@ -10,7 +10,7 @@ import com.example.tx_ku.R
 data class FollowGameOption(
     val id: String,
     val label: String,
-    val brandTag: String = "同戏",
+    val brandTag: String = "同频搭",
     val gradientStart: Long,
     val gradientEnd: Long,
     @param:DrawableRes val tileArtRes: Int

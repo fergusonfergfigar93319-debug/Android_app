@@ -42,7 +42,7 @@ internal fun AuthHeroBranding(
     val iconSize = if (compact) 30.dp else 38.dp
     val headlineStyle =
         if (compact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineSmall
-    val tags = listOf("游戏资讯", "搭子广场", "智能体")
+    val tags = listOf("版本速递", "搭子广场", "智能体")
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -85,7 +85,7 @@ internal fun AuthHeroBranding(
         }
         Spacer(modifier = Modifier.height(if (compact) BuddyDimens.SpacingMd else BuddyDimens.SpacingLg))
         Text(
-            text = "同戏库",
+            text = "同频搭",
             style = headlineStyle,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
@@ -93,9 +93,9 @@ internal fun AuthHeroBranding(
         Spacer(modifier = Modifier.height(BuddyDimens.SpacingXs))
         Text(
             text = if (compact) {
-                "游戏资讯与搭子社区"
+                "版本速递与搭子社区"
             } else {
-                "游戏资讯 · 广场组队 · 智能体创作"
+                "版本速递 · 广场组队 · 智能体创作"
             },
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

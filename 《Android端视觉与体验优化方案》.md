@@ -1,4 +1,4 @@
-# 《电竞搭子名片》Android 端 — 视觉与体验优化完整开发方案
+# 《同频搭》Android 端 — 视觉与体验优化完整开发方案
 
 **版本**：V1.0  
 **适用**：Kotlin + Jetpack Compose + Material 3  

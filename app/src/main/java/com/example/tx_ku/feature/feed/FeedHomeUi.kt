@@ -109,14 +109,14 @@ fun CollapsibleSmartAgentCard(
                 )
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "核心 · ${persona.displayName}",
+                        text = "我的搭子 · ${persona.displayName}",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold,
                             color = GameNewsTheme.TextPrimary
                         )
                     )
                     Text(
-                        text = "与资讯、广场、我的联动 · 点按展开",
+                        text = "跟版本速递、广场、我的联动 · 点一下展开",
                         style = MaterialTheme.typography.labelSmall,
                         color = GameNewsTheme.TextSecondary
                     )
@@ -197,7 +197,7 @@ fun CollapsibleSmartAgentCard(
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Text(
-                                text = if (CurrentUser.agentChatUnlocked) "与搭子聊天" else "解锁后聊天",
+                                text = if (CurrentUser.agentChatUnlocked) "开聊" else "先解锁再聊",
                                 style = MaterialTheme.typography.labelLarge,
                                 color = if (CurrentUser.agentChatUnlocked) {
                                     accent
@@ -261,7 +261,7 @@ fun HomeSwipeRecommendationCard(
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
                     Text(
-                        text = "${data.matchScore}% 合拍",
+                        text = "${data.matchScore}% 匹配",
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = FeedHomeLightColors.CtaPurple
@@ -293,21 +293,21 @@ fun HomeSwipeRecommendationCard(
             }
             data.conflict?.let { c ->
                 CompatibilityBubble(
-                    text = "注意：$c",
+                    text = "留意：$c",
                     color = FeedHomeLightColors.BubbleOrange
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
             data.communicationStylePreview?.let { prev ->
                 CompatibilityBubble(
-                    text = "沟通预判：$prev",
+                    text = "聊天画风：$prev",
                     color = Color(0xFF5C6BC0)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
             data.advice?.let { a ->
                 CompatibilityBubble(
-                    text = "话术建议：$a",
+                    text = "开口建议：$a",
                     color = FeedHomeLightColors.BubblePurple
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -327,7 +327,7 @@ fun HomeSwipeRecommendationCard(
                 )
             ) {
                 Text(
-                    text = "申请搭子",
+                    text = "发个邀请",
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                     modifier = Modifier.padding(vertical = 4.dp)
                 )

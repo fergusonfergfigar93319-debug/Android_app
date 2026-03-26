@@ -3,10 +3,15 @@ package com.example.tx_ku.feature.forum
 import com.example.tx_ku.core.model.Post
 import com.example.tx_ku.core.model.PostComment
 import com.example.tx_ku.core.model.PostModerationStatus
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -16,6 +21,14 @@ import java.util.Locale
  * 接后端后替换为网络 Repository。
  */
 object ForumRepository {
+
+    /**
+     * 本地演示：新帖提交后延迟自动变为「已过审」，便于在无后端时验证「先审后发」闭环。
+     * **上线前改为 `0L`**，仅由服务端审核结果更新 [Post.moderationStatus]。
+     */
+    private const val LOCAL_DEMO_AUTO_APPROVE_AFTER_MS = 90_000L
+
+    private val repoScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private val _posts = MutableStateFlow(buildSeedPosts())
     val posts: StateFlow<List<Post>> = _posts.asStateFlow()
@@ -32,6 +45,45 @@ object ForumRepository {
 
     fun prepend(post: Post) {
         _posts.update { listOf(post) + it }
+    }
+
+    /**
+     * 用户发帖后调用：若帖为 [PostModerationStatus.PENDING_REVIEW]，在演示环境下排队本地「过审」。
+     */
+    fun scheduleLocalDemoAutoApproveIfNeeded(post: Post) {
+        if (LOCAL_DEMO_AUTO_APPROVE_AFTER_MS <= 0L) {
+            return
+        }
+        if (post.moderationStatus != PostModerationStatus.PENDING_REVIEW) {
+            return
+        }
+        val id = post.postId
+        repoScope.launch {
+            delay(LOCAL_DEMO_AUTO_APPROVE_AFTER_MS)
+            approvePostInMemory(id)
+        }
+    }
+
+    /**
+     * 将帖标为已过审（仅内存；接后端后改为同步服务端结果）。
+     */
+    fun approvePostInMemory(postId: String) {
+        _posts.update { list ->
+            list.map { p ->
+                if (p.postId != postId) {
+                    p
+                } else {
+                    if (p.moderationStatus != PostModerationStatus.PENDING_REVIEW) {
+                        p
+                    } else {
+                        p.copy(
+                            moderationStatus = PostModerationStatus.APPROVED,
+                            moderationHint = null
+                        )
+                    }
+                }
+            }
+        }
     }
 
     fun toggleLike(postId: String) {
@@ -216,7 +268,8 @@ object ForumRepository {
                 tags = listOf("演示"),
                 createdAt = "2025-03-13",
                 replyCount = 0,
-                moderationStatus = PostModerationStatus.PENDING_REVIEW
+                moderationStatus = PostModerationStatus.PENDING_REVIEW,
+                moderationHint = "内容将在数分钟内完成审核，通过后将出现在广场。"
             )
         )
         val titles = listOf(

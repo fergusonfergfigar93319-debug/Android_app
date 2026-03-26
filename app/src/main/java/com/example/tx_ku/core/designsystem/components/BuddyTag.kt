@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 import com.example.tx_ku.core.designsystem.theme.BuddyDimens
 import com.example.tx_ku.core.designsystem.theme.BuddyShapes
 
@@ -23,8 +24,10 @@ fun BuddyTag(
     Surface(
         modifier = modifier.clip(BuddyShapes.Tag),
         shape = BuddyShapes.Tag,
-        color = if (isHighlight) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                else MaterialTheme.colorScheme.surfaceVariant
+        color = if (isHighlight) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.92f),
+        tonalElevation = 0.5.dp,
+        shadowElevation = 0.dp
     ) {
         Text(
             text = text,

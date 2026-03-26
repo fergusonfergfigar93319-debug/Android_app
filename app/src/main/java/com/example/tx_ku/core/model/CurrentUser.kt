@@ -22,6 +22,18 @@ object CurrentUser {
 
     fun isLoggedIn(): Boolean = account != null
 
+    /**
+     * 与发帖 [com.example.tx_ku.core.model.Post.authorId]、评论作者等对齐：
+     * 资料里未设置用户 ID 时统一为 `local_me`。
+     */
+    fun effectiveForumAuthorId(): String {
+        val raw = profile?.userId?.trim().orEmpty()
+        if (raw.isNotEmpty()) {
+            return raw
+        }
+        return "local_me"
+    }
+
     /** 退出登录：清空会话与本地画像（演示用内存态） */
     fun clearSession() {
         account = null

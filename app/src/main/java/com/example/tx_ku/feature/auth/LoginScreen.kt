@@ -90,7 +90,7 @@ fun LoginScreen(navController: NavController) {
                     ) {
                         AuthCardSectionTitle(
                             title = "欢迎回来",
-                            subtitle = "使用注册邮箱登录，自动同步搭子名片与智能体设定"
+                            subtitle = "用注册邮箱登录，名片和搭子设定一起同步"
                         )
                         OutlinedTextField(
                             value = email,

@@ -261,8 +261,16 @@ class ForumViewModel : ViewModel() {
     }
 
     private suspend fun mergeRepositoryPostsIntoUi(newList: List<Post>) {
-        filteredAll = withContext(Dispatchers.Default) { applyFilterToList(newList) }
+        val prevFiltered = filteredAll
+        val newFiltered = withContext(Dispatchers.Default) { applyFilterToList(newList) }
         if (!coroutineContext.isActive) return
+        val prevIds = prevFiltered.map { it.postId }.toSet()
+        val newIds = newFiltered.map { it.postId }.toSet()
+        filteredAll = newFiltered
+        if (newIds != prevIds) {
+            applyFilterAndResetFirstPage()
+            return
+        }
         _ui.update { state ->
             val byId = filteredAll.associateBy { it.postId }
             val merged = state.posts.mapNotNull { old -> byId[old.postId] }

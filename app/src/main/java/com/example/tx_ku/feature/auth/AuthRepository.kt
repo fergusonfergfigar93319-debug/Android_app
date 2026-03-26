@@ -2,6 +2,8 @@ package com.example.tx_ku.feature.auth
 
 import com.example.tx_ku.core.model.AccountSummary
 import com.example.tx_ku.core.model.CurrentUser
+import com.example.tx_ku.feature.social.DirectMessageRepository
+import com.example.tx_ku.feature.social.FollowRepository
 
 private data class StoredAccount(
     val password: String,
@@ -60,6 +62,8 @@ object AuthRepository {
     }
 
     fun logout() {
+        FollowRepository.clear()
+        DirectMessageRepository.clear()
         CurrentUser.clearSession()
     }
 

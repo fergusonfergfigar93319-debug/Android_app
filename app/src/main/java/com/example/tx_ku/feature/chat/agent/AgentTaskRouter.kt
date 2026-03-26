@@ -168,7 +168,7 @@ object AgentTaskRouter {
     }
 
     private fun buildProfileClipboard(profile: Profile, tuning: AgentTuning): String = buildString {
-        appendLine("【同戏库 · 档案摘要】")
+        appendLine("【同频搭 · 档案摘要】")
         appendLine("昵称：${profile.nickname}")
         if (profile.bio.isNotBlank()) appendLine("签名：${profile.bio}")
         if (profile.preferredGames.isNotEmpty()) appendLine("常玩：${profile.preferredGames.joinToString("、")}")
@@ -179,7 +179,7 @@ object AgentTaskRouter {
         if (profile.voicePref.isNotBlank()) appendLine("语音：${profile.voicePref}")
         if (profile.noGos.isNotEmpty()) appendLine("雷区：${profile.noGos.joinToString("、")}")
         val note = tuning.extraInstructions.trim()
-        if (note.isNotEmpty()) appendLine("智能体备注：${note.take(120)}${if (note.length > 120) "…" else ""}")
+        if (note.isNotEmpty()) appendLine("搭子备忘：${note.take(120)}${if (note.length > 120) "…" else ""}")
     }
 
     private fun summarizeProfile(profile: Profile, tuning: AgentTuning): String {
@@ -195,18 +195,18 @@ object AgentTaskRouter {
             append("· 目标：${profile.target.ifBlank { "未填" }}\n")
             if (profile.bio.isNotBlank()) append("· 签名：${profile.bio.take(60)}${if (profile.bio.length > 60) "…" else ""}\n")
             val note = tuning.extraInstructions.trim()
-            if (note.isNotEmpty()) append("· 你给智能体的备注：${note.take(48)}${if (note.length > 48) "…" else ""}\n")
-            append("\n想改档案可以去「我的」里编辑；需要写招募或搜广场，直接跟我说～")
+            if (note.isNotEmpty()) append("· 你给搭子的备忘：${note.take(48)}${if (note.length > 48) "…" else ""}\n")
+            append("\n改档案去「我的」；写招募、搜广场，继续打字吩咐我就行～")
         }
     }
 
     private fun capabilityHint(): String = buildString {
-        append("我可以陪你聊战术、心态、组队话术，也能帮你「动手」：\n")
-        append("· 写招募 / 发帖 → 打开发帖页\n")
-        append("· 广场搜 + 关键词 → 进广场搜索\n")
-        append("· 去攻略分区 / 招募区 等 → 切论坛分区\n")
-        append("· 关注游戏 → 打开品类选择\n")
-        append("· 总结我的档案 / 复制档案 → 文案或剪贴板\n")
-        append("\n直接像聊天一样说就行～")
+        append("战术、心态、组队嘴炮都能唠，还能顺手办事：\n")
+        append("· 写招募 / 发帖 → 直接打开发帖\n")
+        append("· 广场搜词 → 跳进搜索\n")
+        append("· 攻略区 / 招募区 → 切分区\n")
+        append("· 关注游戏 → 开品类页\n")
+        append("· 总结或复制档案 → 出文案或进剪贴板\n")
+        append("\n当微信聊就行～")
     }
 }

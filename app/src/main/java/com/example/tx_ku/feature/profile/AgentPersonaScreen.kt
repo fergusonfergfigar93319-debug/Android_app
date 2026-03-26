@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,6 +34,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.AlertDialog
@@ -61,6 +63,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -72,6 +75,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
@@ -80,7 +84,6 @@ import com.example.tx_ku.core.designsystem.components.BuddyBackground
 import com.example.tx_ku.core.designsystem.components.BuddySectionHeader
 import com.example.tx_ku.core.designsystem.components.BuddyElevatedCard
 import com.example.tx_ku.core.designsystem.components.BuddyPrimaryButton
-import com.example.tx_ku.core.designsystem.components.BuddyTag
 import com.example.tx_ku.core.designsystem.components.BuddyTopBar
 import com.example.tx_ku.core.designsystem.components.LocalBuddySnackbarHostState
 import com.example.tx_ku.core.designsystem.components.LocalBuddySnackbarScope
@@ -94,6 +97,7 @@ import com.example.tx_ku.core.designsystem.theme.BuddyShapes
 import com.example.tx_ku.core.domain.AgentPersonaResolver
 import com.example.tx_ku.core.model.AgentTuning
 import com.example.tx_ku.core.model.BuddyAgentPersona
+import com.example.tx_ku.core.model.isFactoryDefault
 import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.core.navigation.Routes
 import com.example.tx_ku.core.prefs.UserAgentStore
@@ -143,11 +147,11 @@ fun AgentPersonaScreen(
         Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             BuddyTopBar(
-                title = if (useStudio) "专属智能体工坊" else "个性化智能体",
+                title = if (useStudio) "搭子创作台" else "我的游戏搭子",
                 subtitle = if (useStudio) {
-                    "①～④ 步完成 · 同步聊天、广场与「我的」"
+                    "四步捏脸 · 聊天、广场、我的里都会同步"
                 } else {
-                    "先定形象与语气 → 再进聊天；设置会同步到广场与「我的」"
+                    "形象语气定好再开聊 · 三处界面一起更新"
                 },
                 onBack = if (isTabRoot) null else ({ navController.popBackStack() }),
                 modifier = Modifier.fillMaxWidth(),
@@ -162,6 +166,7 @@ fun AgentPersonaScreen(
             }
 
             val p = persona!!
+            val factoryDefaultLocked = tuning.isFactoryDefault()
             var chatUnlocked by remember(profile?.userId) { mutableStateOf(CurrentUser.agentChatUnlocked) }
             LaunchedEffect(profile?.userId) {
                 chatUnlocked = CurrentUser.agentChatUnlocked
@@ -181,6 +186,7 @@ fun AgentPersonaScreen(
                 PersonaHeroCard(
                     persona = p,
                     tuning = tuning,
+                    displayNameEditable = !factoryDefaultLocked,
                     onAvatarClick = { showAvatarStyleSheet = true },
                     onDisplayNameClick = {
                         nameEditDraft = tuning.agentDisplayNameOverride.ifBlank { p.displayName }
@@ -195,26 +201,30 @@ fun AgentPersonaScreen(
                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
                 if (!chatUnlocked) {
                     Text(
-                        text = "完成基础设置后即可对话（可随时回来修改）。",
+                        text = if (factoryDefaultLocked) {
+                            "点下面按钮解锁后就能聊天。出厂默认搭子需先选下方成品或气质套组，再改展示名与备忘。"
+                        } else {
+                            "点下面按钮解锁后就能聊天，随时回来改设定。"
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
                     BuddyPrimaryButton(
-                        text = "完成创作并解锁聊天",
+                        text = "完成创作，解锁聊天",
                         onClick = {
                             CurrentUser.agentChatUnlocked = true
                             UserAgentStore.saveFromCurrentUser()
                             chatUnlocked = true
                             navController.navigate(Routes.AGENT_CHAT)
-                            snackScope.showBuddySnackbar(snackbarHost, "已解锁，可开始与智能体对话")
+                            snackScope.showBuddySnackbar(snackbarHost, "解锁啦，去找搭子唠两句")
                         },
                         modifier = Modifier.fillMaxWidth()
                     )
                 } else {
                     BuddyPrimaryButton(
-                        text = "进入对话",
+                        text = "开聊",
                         onClick = { navController.navigate(Routes.AGENT_CHAT) },
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -222,8 +232,40 @@ fun AgentPersonaScreen(
                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
 
                 BuddySectionHeader(
-                    title = "快捷形象预设",
-                    subtitle = "一键套用，下方可细调形象与表达",
+                    title = "官方成品搭子",
+                    subtitle = if (factoryDefaultLocked) {
+                        "含王者荣耀、三角洲行动等游戏专属；点卡片换上完整人设后即可改展示名与备忘"
+                    } else {
+                        "含王者荣耀、三角洲行动等游戏专属；点卡片一键换上完整人设，仍可点名称或下面细调"
+                    },
+                    emoji = "🎁"
+                )
+                Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingMd),
+                    contentPadding = PaddingValues(vertical = 4.dp)
+                ) {
+                    items(DesignedAgentPresets.all, key = { it.id }) { preset ->
+                        DesignedAgentMiniCard(
+                            preset = preset,
+                            selected = preset.tuning == tuning,
+                            onClick = {
+                                presetHaptic.buddySelectionTick()
+                                viewModel.applyDesignedAgentPreset(preset)
+                                snackScope.showBuddySnackbar(
+                                    snackbarHost,
+                                    "已换上：${preset.tuning.agentDisplayNameOverride}"
+                                )
+                            }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
+                BuddySectionHeader(
+                    title = "一键气质套组",
+                    subtitle = "先套模板，再往下抠细节",
                     emoji = "⚡"
                 )
                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
@@ -262,24 +304,62 @@ fun AgentPersonaScreen(
                 ) {
                     Column(modifier = Modifier.padding(BuddyDimens.CardPadding)) {
                         BuddySectionHeader(
-                            title = "对话偏好与备忘",
-                            subtitle = "写入后即时生效，并同步到聊天快捷栏",
+                            title = "聊天偏好小纸条",
+                            subtitle = if (factoryDefaultLocked) {
+                                "出厂默认下锁定，选好成品搭子或气质套组后可编辑"
+                            } else {
+                                "备忘、忌讳与手写总则都会进人设摘要，并影响回复语气"
+                            },
                             emoji = "✍"
                         )
                         Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
                         OutlinedTextField(
-                            value = tuning.extraInstructions,
-                            onValueChange = { if (it.length <= 120) viewModel.setExtraInstructions(it) },
+                            value = tuning.customPersonaScript,
+                            onValueChange = { if (it.length <= 400) viewModel.setCustomPersonaScript(it) },
                             modifier = Modifier.fillMaxWidth(),
-                            label = { Text("补充说明") },
-                            placeholder = { Text("例如：希望我多给拆点思路、少用术语……") },
+                            enabled = !factoryDefaultLocked,
+                            readOnly = factoryDefaultLocked,
+                            label = { Text("手写性格与行为总则") },
+                            placeholder = {
+                                Text("例如：叫我外号、别讲大道理、多给步骤、输了先开玩笑再复盘……")
+                            },
+                            minLines = 3,
+                            maxLines = 6,
+                            supportingText = {
+                                Text("${tuning.customPersonaScript.length}/400 · 优先级最高，聊天时会尽量贴近")
+                            }
+                        )
+                        Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
+                        OutlinedTextField(
+                            value = tuning.tabooNotes,
+                            onValueChange = { if (it.length <= 120) viewModel.setTabooNotes(it) },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !factoryDefaultLocked,
+                            readOnly = factoryDefaultLocked,
+                            label = { Text("忌讳话题（逗号或换行分隔）") },
+                            placeholder = { Text("例如：成绩、家庭、某游戏喷子话题……") },
+                            minLines = 2,
+                            maxLines = 3,
+                            supportingText = {
+                                Text("${tuning.tabooNotes.length}/120 · 命中时搭子会委婉绕开")
+                            }
+                        )
+                        Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
+                        OutlinedTextField(
+                            value = tuning.extraInstructions,
+                            onValueChange = { if (it.length <= 200) viewModel.setExtraInstructions(it) },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !factoryDefaultLocked,
+                            readOnly = factoryDefaultLocked,
+                            label = { Text("给搭子的备忘") },
+                            placeholder = { Text("比如：多拆点、少说黑话、别太长……") },
                             minLines = 2,
                             maxLines = 4,
-                            supportingText = { Text("${tuning.extraInstructions.length}/120") }
+                            supportingText = { Text("${tuning.extraInstructions.length}/200") }
                         )
                         Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
                         Text(
-                            text = "聊天快捷短语（留空则仅用内置短语）",
+                            text = "聊天快捷句（不填就用内置那套）",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -288,25 +368,31 @@ fun AgentPersonaScreen(
                             value = tuning.customPhrase1,
                             onValueChange = { if (it.length <= 60) viewModel.setCustomPhrase1(it) },
                             modifier = Modifier.fillMaxWidth(),
+                            enabled = !factoryDefaultLocked,
+                            readOnly = factoryDefaultLocked,
                             singleLine = true,
-                            label = { Text("短语 1") },
-                            placeholder = { Text("将在聊天输入区上方显示为快捷填入") }
+                            label = { Text("快捷句 1") },
+                            placeholder = { Text("会出现在输入框上面，一点就发") }
                         )
                         Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
                         OutlinedTextField(
                             value = tuning.customPhrase2,
                             onValueChange = { if (it.length <= 60) viewModel.setCustomPhrase2(it) },
                             modifier = Modifier.fillMaxWidth(),
+                            enabled = !factoryDefaultLocked,
+                            readOnly = factoryDefaultLocked,
                             singleLine = true,
-                            label = { Text("短语 2") }
+                            label = { Text("快捷句 2") }
                         )
                         Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
                         OutlinedTextField(
                             value = tuning.customPhrase3,
                             onValueChange = { if (it.length <= 60) viewModel.setCustomPhrase3(it) },
                             modifier = Modifier.fillMaxWidth(),
+                            enabled = !factoryDefaultLocked,
+                            readOnly = factoryDefaultLocked,
                             singleLine = true,
-                            label = { Text("短语 3") }
+                            label = { Text("快捷句 3") }
                         )
                         Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
                         TextButton(
@@ -315,11 +401,11 @@ fun AgentPersonaScreen(
                                 clipboard.setText(
                                     AnnotatedString(AgentPersonaResolver.formatPersonaShareText(p, tuning))
                                 )
-                                snackScope.showBuddySnackbar(snackbarHost, "已复制人设摘要")
+                                snackScope.showBuddySnackbar(snackbarHost, "人设摘要已复制")
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("复制人设摘要到剪贴板")
+                            Text("复制人设摘要")
                         }
                     }
                 }
@@ -350,15 +436,29 @@ fun AgentPersonaScreen(
                             Column(modifier = Modifier.fillMaxWidth()) {
                                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
 
-                                TuningChipRow("表达强度", "轻柔更包容，犀利更直给", AgentTuningOptions.intensities, tuning.intensity, viewModel::setIntensity)
+                                TuningChipRow("表达强度", "越左越温柔，越右越直球", AgentTuningOptions.intensities, tuning.intensity, viewModel::setIntensity)
                                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
-                                TuningChipRow("回复长度", "短句利落，长句带步骤感", AgentTuningOptions.replyLengths, tuning.replyLength, viewModel::setReplyLength)
+                                TuningChipRow("回复长度", "短了省流量，长了带步骤", AgentTuningOptions.replyLengths, tuning.replyLength, viewModel::setReplyLength)
                                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
-                                TuningChipRow("场景侧重", "影响建议角度", AgentTuningOptions.scenarios, tuning.focusScenario, viewModel::setFocusScenario)
+                                TuningChipRow("场景侧重", "决定 TA 优先从哪种局境切入", AgentTuningOptions.scenarios, tuning.focusScenario, viewModel::setFocusScenario)
                                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
                                 TuningChipRow("情绪底色", null, AgentTuningOptions.emotionTones, tuning.emotionTone, viewModel::setEmotionTone)
                                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
                                 TuningChipRow("玩梗浓度", null, AgentTuningOptions.humorMixes, tuning.humorMix, viewModel::setHumorMix)
+                                Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
+                                Text(
+                                    text = "── 性格与互动 ──",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
+                                TuningChipRow("话量节奏", "偏静 / 日常 / 话多", AgentTuningOptions.socialEnergies, tuning.socialEnergy, viewModel::setSocialEnergy)
+                                Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
+                                TuningChipRow("玩笑风格", null, AgentTuningOptions.witStyles, tuning.witStyle, viewModel::setWitStyle)
+                                Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
+                                TuningChipRow("站队方式", null, AgentTuningOptions.stanceModes, tuning.stanceMode, viewModel::setStanceMode)
+                                Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
+                                TuningChipRow("话题主动性", null, AgentTuningOptions.initiativeLevels, tuning.initiativeLevel, viewModel::setInitiativeLevel)
                                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
                                 TuningChipRow("称呼习惯", null, AgentTuningOptions.addressStyles, tuning.addressStyle, viewModel::setAddressStyle)
                                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
@@ -374,10 +474,10 @@ fun AgentPersonaScreen(
                                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
 
                                 BuddyPrimaryButton(
-                                    text = "恢复全部默认",
+                                    text = "全部恢复默认",
                                     onClick = {
                                         viewModel.resetTuningToDefault()
-                                        snackScope.showBuddySnackbar(snackbarHost, "已恢复默认")
+                                        snackScope.showBuddySnackbar(snackbarHost, "已回到出厂气质")
                                     },
                                     modifier = Modifier.fillMaxWidth()
                                 )
@@ -387,7 +487,7 @@ fun AgentPersonaScreen(
                 }
 
                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
-                BuddySectionHeader(title = "当前生效摘要", emoji = "📋")
+                BuddySectionHeader(title = "此刻人设一览", emoji = "📋")
                 p.traits.forEach { line ->
                     Text(
                         text = "· $line",
@@ -403,11 +503,11 @@ fun AgentPersonaScreen(
         if (showNameEditDialog) {
             AlertDialog(
                 onDismissRequest = { showNameEditDialog = false },
-                title = { Text("编辑智能体展示名") },
+                title = { Text("改个展示名") },
                 text = {
                     Column {
                         Text(
-                            text = "将作为预览卡片主标题。留空并确定则恢复为「昵称·角色皮」自动生成。",
+                            text = "会显示在预览卡片最上面。清空并确定则恢复成「昵称·角色」自动生成。",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -417,7 +517,7 @@ fun AgentPersonaScreen(
                             onValueChange = { if (it.length <= 32) nameEditDraft = it },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            placeholder = { Text("例如：我的战术搭子") },
+                            placeholder = { Text("比如：峡谷嘴替、局内军师") },
                             supportingText = {
                                 Text("${nameEditDraft.length}/32")
                             }
@@ -507,7 +607,7 @@ private fun EmptyAgentState(isTabRoot: Boolean, navController: NavController, mo
             }
         }
         Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
-        Text("创作前需要先完成建档。", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+        Text("先建个档，再来捏搭子。", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
         Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
         BuddyPrimaryButton(
             text = "去建档",
@@ -559,12 +659,12 @@ private fun TuningCustomizationCollapsibleHeader(
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "形象与表达定制",
+                text = "外观与说话方式",
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "头像 / 边框 / 气泡 / 语音氛围",
+                text = "性格 Chip · 头像 · 边框 · 气泡 · 语音感",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -648,7 +748,7 @@ private fun AgentAvatarStylePickerSheet(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "选择形象风格",
+                "挑个头像画风",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
@@ -713,6 +813,7 @@ private fun AgentAvatarStylePickerSheet(
 private fun PersonaHeroCard(
     persona: BuddyAgentPersona,
     tuning: AgentTuning,
+    displayNameEditable: Boolean,
     onAvatarClick: () -> Unit,
     onDisplayNameClick: () -> Unit,
     onJumpToTuningSection: () -> Unit,
@@ -756,7 +857,20 @@ private fun PersonaHeroCard(
     ) {
         Column(
             modifier = Modifier
-                .border(1.5.dp, accent.copy(alpha = 0.55f), shape)
+                .border(
+                    BorderStroke(
+                        width = 1.5.dp,
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = 0.88f),
+                                accent.copy(alpha = 0.62f),
+                                accent.copy(alpha = 0.38f),
+                                Color.White.copy(alpha = 0.75f)
+                            )
+                        )
+                    ),
+                    shape
+                )
                 .background(gradient)
                 .padding(BuddyDimens.CardPadding)
         ) {
@@ -769,7 +883,11 @@ private fun PersonaHeroCard(
                         val r = size.width * 0.46f
                         drawCircle(
                             brush = Brush.radialGradient(
-                                colors = listOf(accent.copy(alpha = 0.38f), Color.Transparent),
+                                colors = listOf(
+                                    accent.copy(alpha = 0.42f),
+                                    accent.copy(alpha = 0.14f),
+                                    Color.Transparent
+                                ),
                                 center = Offset(cx, cy),
                                 radius = r
                             ),
@@ -780,37 +898,73 @@ private fun PersonaHeroCard(
                     .padding(vertical = BuddyDimens.SpacingMd),
                 contentAlignment = Alignment.Center
             ) {
+                val ringBrush = remember(accent) {
+                    Brush.linearGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.95f),
+                            accent.copy(alpha = 1f),
+                            Color(0xFFFFF5FA),
+                            accent.copy(alpha = 0.65f),
+                            Color.White.copy(alpha = 0.82f)
+                        ),
+                        start = Offset.Zero,
+                        end = Offset(280f, 280f)
+                    )
+                }
                 Box(
-                    modifier = Modifier
-                        .size(136.dp)
-                        .border(
-                            width = 2.dp,
-                            brush = Brush.linearGradient(
-                                colors = listOf(accent.copy(alpha = 0.95f), accent.copy(alpha = 0.35f))
-                            ),
-                            shape = CircleShape
-                        )
-                        .padding(3.dp),
+                    modifier = Modifier.size(160.dp),
                     contentAlignment = Alignment.Center
                 ) {
+                    Canvas(Modifier.fillMaxSize()) {
+                        val c = Offset(size.width / 2f, size.height / 2f)
+                        val haloR = size.minDimension / 2f - 2.dp.toPx()
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    accent.copy(alpha = 0.26f),
+                                    accent.copy(alpha = 0.09f),
+                                    Color.Transparent
+                                ),
+                                center = c,
+                                radius = haloR
+                            ),
+                            radius = haloR * 0.92f,
+                            center = c
+                        )
+                    }
                     Box(
-                        modifier = Modifier.size(128.dp),
+                        modifier = Modifier
+                            .shadow(
+                                elevation = 14.dp,
+                                shape = CircleShape,
+                                clip = false,
+                                ambientColor = accent.copy(alpha = 0.28f),
+                                spotColor = accent.copy(alpha = 0.42f)
+                            )
+                            .size(138.dp)
+                            .border(width = 2.5.dp, brush = ringBrush, shape = CircleShape)
+                            .padding(3.5.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Image(
-                            painter = painterResource(avatarRes),
-                            contentDescription = "智能体头像，点按切换形象",
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(CircleShape)
-                                .then(avatarTapModifier),
-                            contentScale = ContentScale.Crop
-                        )
-                        AgentAvatarFrameOverlay(
-                            avatarFrame = tuning.avatarFrame,
-                            accent = accent,
-                            modifier = Modifier.fillMaxSize().then(avatarTapModifier)
-                        )
+                        Box(
+                            modifier = Modifier.size(128.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(avatarRes),
+                                contentDescription = "搭子头像，点按可换画风",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(CircleShape)
+                                    .then(avatarTapModifier),
+                                contentScale = ContentScale.Crop
+                            )
+                            AgentAvatarFrameOverlay(
+                                avatarFrame = tuning.avatarFrame,
+                                accent = accent,
+                                modifier = Modifier.fillMaxSize().then(avatarTapModifier)
+                            )
+                        }
                     }
                 }
             }
@@ -822,33 +976,37 @@ private fun PersonaHeroCard(
             )
             Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
             Text(
-                text = "展示名 · 点击编辑",
+                text = if (displayNameEditable) {
+                    "轻触名称可改展示名"
+                } else {
+                    "出厂默认搭子展示名固定，请下滑选成品或气质套组后再改"
+                },
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(4.dp))
+            val nameModifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .padding(vertical = 6.dp)
             Text(
                 text = persona.displayName,
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable(role = Role.Button) {
+                modifier = if (displayNameEditable) {
+                    nameModifier.clickable(role = Role.Button) {
                         haptic.buddySelectionTick()
                         onDisplayNameClick()
                     }
-                    .padding(vertical = 6.dp)
+                } else {
+                    nameModifier
+                }
             )
-            Spacer(modifier = Modifier.height(BuddyDimens.SpacingXs))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                BuddyTag(text = persona.personalityArchetype, isHighlight = false)
-            }
             Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
@@ -856,18 +1014,15 @@ private fun PersonaHeroCard(
                         haptic.buddySelectionTick()
                         onJumpToTuningSection()
                     }
-                    .padding(vertical = BuddyDimens.SpacingXs),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                    BuddyTag(text = "形象:${tuning.avatarStyle}", isHighlight = true)
-                    BuddyTag(text = "边框:${tuning.avatarFrame}", isHighlight = false)
-                }
-                Spacer(modifier = Modifier.height(BuddyDimens.SpacingXs))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                    BuddyTag(text = "气泡:${tuning.bubbleStyle}", isHighlight = false)
-                    BuddyTag(text = "语音:${tuning.voiceMood}", isHighlight = false)
-                }
+                Icon(
+                    painter = painterResource(R.drawable.ic_expand_more),
+                    contentDescription = "跳到外观与语气细调",
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                )
             }
         }
     }
@@ -894,18 +1049,41 @@ private fun AgentAvatarFrameOverlay(avatarFrame: String, accent: Color, modifier
 @Composable
 private fun NeonAvatarRingOverlay(accent: Color, modifier: Modifier = Modifier) {
     Canvas(modifier.clip(CircleShape)) {
+        val c = Offset(size.width / 2f, size.height / 2f)
         val r = size.minDimension / 2f
         val outerW = 3.5.dp.toPx()
-        val innerW = 2.dp.toPx()
+        val innerW = 1.75.dp.toPx()
         val gap = 5.dp.toPx()
+        val hi = Color(0xFFFFF8F3)
         drawCircle(
-            color = accent.copy(alpha = 0.92f),
-            radius = r - outerW / 2f,
+            brush = Brush.sweepGradient(
+                colors = listOf(
+                    accent,
+                    Color.White.copy(alpha = 0.95f),
+                    accent.copy(alpha = 0.78f),
+                    hi,
+                    accent.copy(alpha = 0.88f),
+                    accent
+                ),
+                center = c
+            ),
+            radius = (r - outerW / 2f).coerceAtLeast(0f),
+            center = c,
             style = Stroke(width = outerW)
         )
+        val innerR = (r - outerW - gap - innerW / 2f).coerceAtLeast(0f)
         drawCircle(
-            color = Color.White.copy(alpha = 0.5f),
-            radius = (r - outerW - gap - innerW / 2f).coerceAtLeast(0f),
+            brush = Brush.linearGradient(
+                colors = listOf(
+                    Color.White.copy(alpha = 0.72f),
+                    accent.copy(alpha = 0.35f),
+                    Color.White.copy(alpha = 0.55f)
+                ),
+                start = Offset(c.x - innerR, c.y - innerR),
+                end = Offset(c.x + innerR, c.y + innerR)
+            ),
+            radius = innerR,
+            center = c,
             style = Stroke(width = innerW)
         )
     }
@@ -914,13 +1092,102 @@ private fun NeonAvatarRingOverlay(accent: Color, modifier: Modifier = Modifier) 
 @Composable
 private fun MinimalAvatarRingOverlay(accent: Color, modifier: Modifier = Modifier) {
     Canvas(modifier.clip(CircleShape)) {
+        val c = Offset(size.width / 2f, size.height / 2f)
         val r = size.minDimension / 2f
-        val w = 2.dp.toPx()
+        val w = 2.25.dp.toPx()
         drawCircle(
-            color = accent.copy(alpha = 0.78f),
-            radius = r - w / 2f,
+            brush = Brush.sweepGradient(
+                colors = listOf(
+                    accent.copy(alpha = 0.55f),
+                    accent.copy(alpha = 0.95f),
+                    Color.White.copy(alpha = 0.65f),
+                    accent.copy(alpha = 0.7f)
+                ),
+                center = c
+            ),
+            radius = (r - w / 2f).coerceAtLeast(0f),
+            center = c,
             style = Stroke(width = w)
         )
+    }
+}
+
+private fun uiThemeKeyForAvatarStyle(avatarStyle: String): String = when {
+    avatarStyle == "元气辅助" || avatarStyle == "企鹅萌妹" ||
+        avatarStyle == "咕咕嘎嘎" || avatarStyle == "我的刀盾" -> "moe"
+    avatarStyle == "战术导师" -> "tactical"
+    avatarStyle == "治愈陪玩" -> "ink"
+    else -> "cyber"
+}
+
+@Composable
+private fun DesignedAgentMiniCard(
+    preset: DesignedAgentPreset,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    val accent = agentUiAccent(uiThemeKeyForAvatarStyle(preset.tuning.avatarStyle))
+    val shape = RoundedCornerShape(16.dp)
+    val gradient = Brush.verticalGradient(
+        colors = listOf(
+            accent.copy(alpha = 0.4f),
+            MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.94f),
+            MaterialTheme.colorScheme.surface.copy(alpha = 1f)
+        )
+    )
+    Surface(
+        modifier = Modifier
+            .width(140.dp)
+            .clip(shape)
+            .clickable(role = Role.Button, onClick = onClick),
+        shape = shape,
+        color = Color.Transparent,
+        border = BorderStroke(
+            width = if (selected) 2.dp else 1.dp,
+            color = if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.32f)
+            }
+        ),
+        shadowElevation = if (selected) 5.dp else 1.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .background(gradient)
+                .padding(horizontal = 10.dp, vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(avatarDrawableRes(preset.tuning.avatarStyle)),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(58.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = preset.tagEmoji,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                text = preset.tuning.agentDisplayNameOverride.ifBlank { "搭子" },
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = 1
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = preset.subtitle,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                lineHeight = 14.sp,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 
@@ -938,7 +1205,8 @@ private fun avatarDrawableRes(avatarStyle: String): Int = when (avatarStyle) {
     "元气辅助" -> R.drawable.agent_avatar_support
     "战术导师" -> R.drawable.agent_avatar_coach
     "治愈陪玩" -> R.drawable.agent_avatar_healing
-    "企鹅萌妹" -> R.drawable.agent_avatar_penguin
+    "企鹅萌妹", "咕咕嘎嘎" -> R.drawable.agent_avatar_penguin
+    "我的刀盾" -> R.drawable.agent_avatar_daodun
     else -> R.drawable.agent_avatar_commander
 }
 

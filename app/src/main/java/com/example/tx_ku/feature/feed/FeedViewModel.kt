@@ -63,7 +63,7 @@ class FeedViewModel : ViewModel() {
         GameNewsItem(
             id = "n1",
             gameName = "原神",
-            authorName = "同戏官方",
+            authorName = "同频搭官方",
             authorLevel = 16,
             title = "「海灯节」活动预告：限时签到与角色试用开启",
             summary = "参与即可领取纠缠之缘等奖励，更多玩法详见活动页。",
@@ -78,7 +78,7 @@ class FeedViewModel : ViewModel() {
         GameNewsItem(
             id = "n2",
             gameName = "崩坏星穹铁道",
-            authorName = "同戏官方",
+            authorName = "同频搭官方",
             authorLevel = 16,
             title = "2.7 版本更新说明：新活动、卡池与限时福利一览",
             summary = "维护结束后可领取补偿，活动与卡池时间请以游戏内公告为准。",
@@ -93,7 +93,7 @@ class FeedViewModel : ViewModel() {
         GameNewsItem(
             id = "n3",
             gameName = "绝区零",
-            authorName = "同戏官方",
+            authorName = "同频搭官方",
             authorLevel = 16,
             title = "新版本维护说明与补偿发放通知",
             summary = "维护时间预计 5 小时，结束后可领取菲林×300。",
@@ -108,7 +108,7 @@ class FeedViewModel : ViewModel() {
         GameNewsItem(
             id = "n4",
             gameName = "鸣潮",
-            authorName = "同戏官方",
+            authorName = "同频搭官方",
             authorLevel = 16,
             title = "版本维护公告与活动日历更新",
             summary = "维护时段与补偿说明已同步，限时活动开放时间请查看日历。",
@@ -123,7 +123,7 @@ class FeedViewModel : ViewModel() {
         GameNewsItem(
             id = "n5",
             gameName = "王者荣耀",
-            authorName = "同戏官方",
+            authorName = "同频搭官方",
             authorLevel = 16,
             title = "体验服更新公告：英雄平衡与装备改动说明",
             summary = "以官方体验服公告为准，正式服上线时间与数值可能调整。",
@@ -138,7 +138,7 @@ class FeedViewModel : ViewModel() {
         GameNewsItem(
             id = "n6",
             gameName = "无畏契约",
-            authorName = "同戏官方",
+            authorName = "同频搭官方",
             authorLevel = 16,
             title = "夜市即将开启：精选皮肤折扣说明",
             summary = "每位玩家独立折扣池，开启期间可随时查看。",
@@ -153,7 +153,7 @@ class FeedViewModel : ViewModel() {
         GameNewsItem(
             id = "n7",
             gameName = "三角洲行动",
-            authorName = "同戏官方",
+            authorName = "同频搭官方",
             authorLevel = 16,
             title = "赛季活动：限时任务与段位奖励说明",
             summary = "完成指定任务可领取外观与物资，规则以游戏内活动页为准。",
@@ -168,7 +168,7 @@ class FeedViewModel : ViewModel() {
         GameNewsItem(
             id = "n7b",
             gameName = "三角洲行动",
-            authorName = "同戏官方",
+            authorName = "同频搭官方",
             authorLevel = 16,
             title = "夜间战场模式开放时间与匹配规则说明",
             summary = "新模式为独立匹配池，胜负与赛季积分规则详见公告。",
@@ -183,7 +183,7 @@ class FeedViewModel : ViewModel() {
         GameNewsItem(
             id = "n7c",
             gameName = "三角洲行动",
-            authorName = "同戏官方",
+            authorName = "同频搭官方",
             authorLevel = 16,
             title = "新赛季平衡性调整：步枪后坐与护甲穿透改动说明",
             summary = "以战场实测数据为依据，后续将持续观察并小幅迭代。",
@@ -198,7 +198,7 @@ class FeedViewModel : ViewModel() {
         GameNewsItem(
             id = "n8",
             gameName = "第五人格",
-            authorName = "同戏官方",
+            authorName = "同频搭官方",
             authorLevel = 16,
             title = "新赛季精华时装预告与上架时间安排",
             summary = "限定内容以游戏内公告与商城为准，图透仅供期待参考。",
@@ -213,7 +213,7 @@ class FeedViewModel : ViewModel() {
         GameNewsItem(
             id = "n9",
             gameName = "未定事件簿",
-            authorName = "同戏官方",
+            authorName = "同频搭官方",
             authorLevel = 16,
             title = "限时活动「心动纪念」开放：签到与专属剧情",
             summary = "活动期内完成指定任务即可领取奖励，详情见活动页。",
@@ -228,7 +228,7 @@ class FeedViewModel : ViewModel() {
         GameNewsItem(
             id = "n10",
             gameName = "蛋仔派对",
-            authorName = "同戏官方",
+            authorName = "同频搭官方",
             authorLevel = 16,
             title = "周末主题地图推荐与创作者激励计划",
             summary = "参与投稿即有机会获得蛋币与外观，规则以活动页为准。",
@@ -243,7 +243,7 @@ class FeedViewModel : ViewModel() {
         GameNewsItem(
             id = "n11",
             gameName = "崩坏星穹铁道",
-            authorName = "同戏官方",
+            authorName = "同频搭官方",
             authorLevel = 16,
             title = "联动预告：限定光锥与场景限时上架",
             summary = "上架时间与获取方式请以游戏内公告为准。",
@@ -258,7 +258,7 @@ class FeedViewModel : ViewModel() {
         GameNewsItem(
             id = "n12",
             gameName = "星布谷地",
-            authorName = "同戏官方",
+            authorName = "同频搭官方",
             authorLevel = 16,
             title = "季节更新：新作物与节日装饰上架",
             summary = "商店轮换与季节任务已同步，欢迎回岛体验。",
@@ -273,7 +273,7 @@ class FeedViewModel : ViewModel() {
         GameNewsItem(
             id = "n13",
             gameName = "崩坏因缘精灵",
-            authorName = "同戏官方",
+            authorName = "同频搭官方",
             authorLevel = 16,
             title = "版本维护与资源预下载说明",
             summary = "维护期间无法登录，完成后可领取补偿邮件。",
@@ -288,7 +288,7 @@ class FeedViewModel : ViewModel() {
         GameNewsItem(
             id = "n14",
             gameName = "无畏契约",
-            authorName = "同戏官方",
+            authorName = "同频搭官方",
             authorLevel = 16,
             title = "冠军赛观赛任务与限定挂饰领取指南",
             summary = "完成观赛任务即可解锁纪念挂饰，任务进度在客户端内统计。",

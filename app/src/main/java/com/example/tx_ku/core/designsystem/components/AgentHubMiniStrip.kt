@@ -73,7 +73,7 @@ fun AgentHubMiniStrip(
                     }
             ) {
                 Text(
-                    text = "我的智能体",
+                    text = "我的搭子",
                     style = MaterialTheme.typography.labelSmall,
                     color = accent,
                     fontWeight = FontWeight.Medium
@@ -98,7 +98,7 @@ fun AgentHubMiniStrip(
                     onClick = { navController.navigate(Routes.MY_AGENT) },
                     modifier = Modifier.padding(0.dp)
                 ) {
-                    Text("创作", style = MaterialTheme.typography.labelLarge)
+                    Text("去捏脸", style = MaterialTheme.typography.labelLarge)
                 }
                 if (unlocked) {
                     TextButton(

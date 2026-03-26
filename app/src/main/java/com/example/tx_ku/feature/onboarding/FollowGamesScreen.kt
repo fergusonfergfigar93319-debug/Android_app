@@ -191,16 +191,17 @@ private fun FollowGamePickCard(
                     .clip(RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.BottomCenter
             ) {
-                val context = LocalContext.current
-                val tileFallback = remember(option.gradientStart, option.gradientEnd) {
-                    BrushPainter(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color(option.gradientStart),
-                                Color(option.gradientEnd)
-                            )
+                val tileGradient = remember(option.gradientStart, option.gradientEnd) {
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(option.gradientStart),
+                            Color(option.gradientEnd)
                         )
                     )
+                }
+                val context = LocalContext.current
+                val tileFallback = remember(option.gradientStart, option.gradientEnd) {
+                    BrushPainter(tileGradient)
                 }
                 val tileRequest = remember(context, option.tileArtRes) {
                     ImageRequest.Builder(context)
@@ -209,7 +210,12 @@ private fun FollowGamePickCard(
                         .crossfade(false)
                         .build()
                 }
-                // game_tile_art_* 为 layer-list，不可用 painterResource
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(tileGradient)
+                )
+                // game_tile_art_* 为 layer-list：Coil 后台解码，避免 LazyGrid 内大量 AndroidView 触发 ANR
                 AsyncImage(
                     model = tileRequest,
                     contentDescription = option.label,

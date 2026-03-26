@@ -8,5 +8,5 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <!-- 与浅色 Compose 页底一致，避免首帧/重绘前窗口纯黑 -->
-    <color name="window_background_launch">#FFF2F3F5</color>
+    <color name="window_background_launch">#FFE9F0FB</color>
 </resources>

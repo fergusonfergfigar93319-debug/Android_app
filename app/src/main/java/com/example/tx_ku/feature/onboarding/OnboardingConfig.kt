@@ -62,7 +62,7 @@ val ONBOARDING_QUESTIONS: List<OnboardingQuestion> = listOf(
     OnboardingQuestion(id = "no_gos", title = "雷区标签？（可多选）", options = listOf("压力怪", "玻璃心", "不沟通", "甩锅", "挂机", "无"), multiSelect = true),
     OnboardingQuestion(
         id = "personality_archetype",
-        title = "你的性格底色？（决定智能体话术与决策风格）",
+        title = "你的性格底色？（搭子会按这个调语气）",
         options = listOf(
             "冷静谋略型",
             "热血冲锋型",
@@ -73,7 +73,7 @@ val ONBOARDING_QUESTIONS: List<OnboardingQuestion> = listOf(
     ),
     OnboardingQuestion(
         id = "agent_voice_pref",
-        title = "希望智能体是什么音色 / 说话感觉？",
+        title = "希望搭子听起来像哪种声线 / 说话感？",
         options = listOf(
             "偏低沉稳重",
             "偏清亮活泼",
@@ -83,7 +83,7 @@ val ONBOARDING_QUESTIONS: List<OnboardingQuestion> = listOf(
     ),
     OnboardingQuestion(
         id = "agent_visual_theme",
-        title = "智能体界面想长成什么样？（个性化皮肤语义）",
+        title = "搭子界面想走哪种视觉 vibe？（定个皮肤方向）",
         options = listOf(
             "赛博神经 HUD",
             "软萌看板娘",
@@ -98,7 +98,7 @@ fun parseAnswersToProfile(answers: Map<String, List<String>>): com.example.tx_ku
     fun single(id: String): String = answers[id]?.firstOrNull().orEmpty()
     fun list(id: String): List<String> = answers[id].orEmpty().filter { it.isNotBlank() }
     return com.example.tx_ku.core.model.Profile(
-        nickname = single("nickname").ifEmpty { "电竞搭子" },
+        nickname = single("nickname").ifEmpty { "同频搭" },
         bio = "",
         cityOrRegion = "",
         preferredGames = list("preferred_games").ifEmpty { listOf("随便玩，暂不固定") },

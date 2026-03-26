@@ -41,13 +41,13 @@ import androidx.compose.ui.graphics.painter.BrushPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import coil.size.Size
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import coil.size.Size
 import com.example.tx_ku.R
 import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.model.FeedHomeSubTab
@@ -71,7 +71,7 @@ fun FeedScenarioQuickStrip(
             .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
         Text(
-            text = "场景快捷 · 搜索 / 分区 / 发帖 / 问智能体",
+            text = "场景捷径 · 搜帖 · 分区 · 发帖 · 问搭子",
             color = labelMuted,
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium
@@ -507,18 +507,23 @@ fun GameNewsCard(
                     )
                 )
             }
-            if (item.coverDrawableRes != null) {
-                val coverRes = item.coverDrawableRes
+            // 底层渐变始终绘制；封面用 Coil 在后台解码（避免 painterResource 不支持 layer-list，也避免列表里大量 AndroidView 导致主线程测量卡死 ANR）
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(gradientBrush)
+            )
+            val coverRes = item.coverDrawableRes
+            if (coverRes != null && coverRes != 0) {
                 val ctx = LocalContext.current
-                val coverRequest = remember(item.id, coverRes) {
+                val coverFallback = remember(gradientBrush) { BrushPainter(gradientBrush) }
+                val coverRequest = remember(item.id, coverRes, ctx) {
                     ImageRequest.Builder(ctx)
                         .data(coverRes)
-                        // 控制解码尺寸，减轻滑动时内存与主线程压力（layer-list 等不可用 painterResource）
                         .size(Size(900, 506))
                         .crossfade(false)
                         .build()
                 }
-                val coverFallback = remember(gradientBrush) { BrushPainter(gradientBrush) }
                 AsyncImage(
                     model = coverRequest,
                     contentDescription = null,
@@ -526,12 +531,6 @@ fun GameNewsCard(
                     contentScale = ContentScale.Crop,
                     placeholder = coverFallback,
                     error = coverFallback
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(gradientBrush)
                 )
             }
         }

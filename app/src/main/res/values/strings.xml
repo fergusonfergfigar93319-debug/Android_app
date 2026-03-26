@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">Win Together</string>
+    <!-- 应用显示名 -->
+    <string name="app_name">同频搭</string>
 </resources>

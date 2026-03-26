@@ -1,9 +1,11 @@
 package com.example.tx_ku
 
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -20,6 +22,21 @@ import com.example.tx_ku.core.prefs.UserAgentStore
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // targetSdk 35+ 默认边到边时，首帧可能在 SideEffect 运行前露出透明窗口下的黑底；在 setContent 之前先固定系统栏与 fits。
+        @Suppress("DEPRECATION")
+        window.run {
+            clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+            clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+            addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+        }
+        WindowCompat.setDecorFitsSystemWindows(window, true)
+        val launchBg = ContextCompat.getColor(this, R.color.window_background_launch)
+        window.statusBarColor = launchBg
+        window.navigationBarColor = launchBg
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = true
+            isAppearanceLightNavigationBars = true
+        }
         window.setBackgroundDrawable(
             ContextCompat.getDrawable(this, R.color.window_background_launch)
         )

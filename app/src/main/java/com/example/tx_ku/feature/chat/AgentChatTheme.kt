@@ -1,5 +1,6 @@
 package com.example.tx_ku.feature.chat
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -11,7 +12,7 @@ enum class AgentChatThemePreset(
     val label: String
 ) {
     QQ_BLUE("qq_blue", "经典 QQ 蓝"),
-    COMMUNITY("community", "同戏天蓝"),
+    COMMUNITY("community", "同频搭天蓝"),
     MINT("mint", "薄荷清爽"),
     TWILIGHT("twilight", "暮色柔紫");
 
@@ -142,4 +143,24 @@ fun bubbleCornerDp(bubbleStyle: String): Dp {
         style.contains("HUD") || style.contains("玻璃") -> 8.dp
         else -> 12.dp
     }
+}
+
+/** HUD / 玻璃气泡保持等径圆角；其余使用靠头像一侧略尖的不对称圆角，更接近常见会话样式。 */
+fun isHudGlassBubbleStyle(bubbleStyle: String): Boolean {
+    val s = bubbleStyle.trim()
+    return s.contains("HUD") || s.contains("玻璃")
+}
+
+fun bubbleShapeAgent(bubbleStyle: String): RoundedCornerShape {
+    val r = bubbleCornerDp(bubbleStyle)
+    if (isHudGlassBubbleStyle(bubbleStyle)) return RoundedCornerShape(r)
+    val pin = (r.value * 0.38f).dp.coerceIn(3.dp, 6.dp)
+    return RoundedCornerShape(topStart = pin, topEnd = r, bottomEnd = r, bottomStart = r)
+}
+
+fun bubbleShapeUser(bubbleStyle: String): RoundedCornerShape {
+    val r = bubbleCornerDp(bubbleStyle)
+    if (isHudGlassBubbleStyle(bubbleStyle)) return RoundedCornerShape(r)
+    val pin = (r.value * 0.38f).dp.coerceIn(3.dp, 6.dp)
+    return RoundedCornerShape(topStart = r, topEnd = pin, bottomEnd = r, bottomStart = r)
 }

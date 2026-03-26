@@ -30,19 +30,22 @@ fun BuddySectionHeader(
     emoji: String? = null
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(bottom = BuddyDimens.SpacingSm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingMd)
     ) {
         Spacer(
             modifier = Modifier
-                .width(4.dp)
-                .height(22.dp)
+                .width(3.dp)
+                .height(24.dp)
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
                             MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.tertiary
+                            MaterialTheme.colorScheme.tertiary,
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.75f)
                         )
                     ),
                     shape = RoundedCornerShape(2.dp)

@@ -62,6 +62,26 @@ class AgentPersonaViewModel : ViewModel() {
         recomputePersona()
     }
 
+    fun setSocialEnergy(value: String) {
+        CurrentUser.agentTuning = CurrentUser.agentTuning.copy(socialEnergy = value)
+        recomputePersona()
+    }
+
+    fun setWitStyle(value: String) {
+        CurrentUser.agentTuning = CurrentUser.agentTuning.copy(witStyle = value)
+        recomputePersona()
+    }
+
+    fun setStanceMode(value: String) {
+        CurrentUser.agentTuning = CurrentUser.agentTuning.copy(stanceMode = value)
+        recomputePersona()
+    }
+
+    fun setInitiativeLevel(value: String) {
+        CurrentUser.agentTuning = CurrentUser.agentTuning.copy(initiativeLevel = value)
+        recomputePersona()
+    }
+
     fun setAvatarStyle(value: String) {
         CurrentUser.agentTuning = CurrentUser.agentTuning.copy(avatarStyle = value)
         recomputePersona()
@@ -93,6 +113,16 @@ class AgentPersonaViewModel : ViewModel() {
         recomputePersona()
     }
 
+    fun setTabooNotes(value: String) {
+        CurrentUser.agentTuning = CurrentUser.agentTuning.copy(tabooNotes = value)
+        recomputePersona()
+    }
+
+    fun setCustomPersonaScript(value: String) {
+        CurrentUser.agentTuning = CurrentUser.agentTuning.copy(customPersonaScript = value)
+        recomputePersona()
+    }
+
     fun setCustomPhrase1(value: String) {
         CurrentUser.agentTuning = CurrentUser.agentTuning.copy(customPhrase1 = value)
         recomputePersona()
@@ -108,10 +138,18 @@ class AgentPersonaViewModel : ViewModel() {
         recomputePersona()
     }
 
+    /** 官方成品搭子：整包写入 [AgentTuning]（展示名、备忘、快捷句等一并替换） */
+    fun applyDesignedAgentPreset(preset: DesignedAgentPreset) {
+        CurrentUser.agentTuning = preset.tuning
+        recomputePersona()
+    }
+
     /** 快捷预设：一次写入多维度，适合快速切换「形象 + 语感」 */
     fun applyQuickPreset(preset: AgentTuningOptions.QuickPreset) {
         val keepDisplayName = CurrentUser.agentTuning.agentDisplayNameOverride
         val keepExtra = CurrentUser.agentTuning.extraInstructions
+        val keepTaboo = CurrentUser.agentTuning.tabooNotes
+        val keepScript = CurrentUser.agentTuning.customPersonaScript
         val keepP1 = CurrentUser.agentTuning.customPhrase1
         val keepP2 = CurrentUser.agentTuning.customPhrase2
         val keepP3 = CurrentUser.agentTuning.customPhrase3
@@ -167,6 +205,8 @@ class AgentPersonaViewModel : ViewModel() {
         }.copy(
             agentDisplayNameOverride = keepDisplayName,
             extraInstructions = keepExtra,
+            tabooNotes = keepTaboo,
+            customPersonaScript = keepScript,
             customPhrase1 = keepP1,
             customPhrase2 = keepP2,
             customPhrase3 = keepP3

@@ -33,6 +33,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -109,7 +110,11 @@ fun FeedScreen(
         GameInterestStore.orderedChannels(merged).take(16)
     }
     val defaultHotQueries = remember { listOf("星布谷地", "崩坏因缘精灵") }
-    val quickSearchChips = (HomeSearchHistoryStore.getQueries() + defaultHotQueries).distinct().take(8)
+    // 避免每次重组都读 SharedPreferences（状态流 / 动画会导致高频重组，易拖慢主线程）
+    var searchHistoryVersion by remember { mutableIntStateOf(0) }
+    val quickSearchChips = remember(searchHistoryVersion, defaultHotQueries) {
+        (HomeSearchHistoryStore.getQueries() + defaultHotQueries).distinct().take(8)
+    }
 
     Column(
         modifier = modifier
@@ -117,11 +122,12 @@ fun FeedScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
         GameNewsTopHeader(
-            appTitle = "同戏库",
+            appTitle = "同频搭",
             quickSearchChips = quickSearchChips,
             onQuickSearchClick = { term ->
                 haptic.buddyPrimaryClick()
                 HomeSearchHistoryStore.addQuery(term)
+                searchHistoryVersion++
                 if (headerNavigation != null) {
                     headerNavigation.openForumWithSearch(term)
                 } else {
@@ -157,6 +163,7 @@ fun FeedScreen(
                 when (item.kind) {
                     ScenarioChipKind.FORUM_SEARCH -> {
                         HomeSearchHistoryStore.addQuery(item.payload)
+                        searchHistoryVersion++
                         if (headerNavigation != null) {
                             headerNavigation.openForumWithSearch(item.payload)
                         } else {
@@ -173,7 +180,7 @@ fun FeedScreen(
                         } else {
                             snackScope.showBuddySnackbar(
                                 snackbarHost,
-                                "导航可用后可发帖并结合智能体生成草稿"
+                                "导航好了就能发帖，还能让搭子帮你起稿"
                             )
                         }
                     }
@@ -184,7 +191,7 @@ fun FeedScreen(
                         } else {
                             snackScope.showBuddySnackbar(
                                 snackbarHost,
-                                "导航可用后可打开智能体对话"
+                                "导航好了就能打开搭子聊天"
                             )
                         }
                     }
@@ -222,7 +229,7 @@ fun FeedScreen(
             }
         )
         GameNewsAnnouncementBar(
-            text = "官方活动与版本动态集中于此；想发攻略或求建议请前往「广场」。"
+            text = "官方活动、版本动态看这里；想发帖求助请去「广场」。"
         )
         GameNewsSubTabs(
             selected = subTab,
@@ -347,16 +354,16 @@ fun FeedScreen(
                         } else {
                             snackScope.showBuddySnackbar(
                                 snackbarHost,
-                                "请从底栏进入「智能体」"
+                                "请从底栏进入「搭子」"
                             )
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        Text("智能体 · 搭子助手")
+                        Text("搭子 · 形象与聊天")
                         Text(
-                            text = "人设与对话能力",
+                            text = "捏脸、语气、开聊都在这",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -490,9 +497,9 @@ private fun FeedBuddyTabContent(
             contentAlignment = Alignment.Center
         ) {
             BuddyEmptyState(
-                title = "暂无推荐",
-                message = "稍后再试，或完善档案提升匹配",
-                actionLabel = "刷新",
+                title = "今天先空着",
+                message = "晚点再来滑，或把档案补全好匹配",
+                actionLabel = "再刷一次",
                 onAction = { viewModel.loadFeed() }
             )
         }

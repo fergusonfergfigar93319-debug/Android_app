@@ -27,18 +27,38 @@ object UserAgentStore {
     private fun k(field: String): String = "${emailKey()}_$field"
 
     /**
+     * 旧存档迁移：咕咕嘎嘎→企鹅萌妹形象键；梗来运转→我的刀盾；
+     * 曾用「我的刀盾」海豹皮 + 同名展示名 → 现为「咕咕嘎嘎」+ 企鹅萌妹头像。
+     */
+    private fun migrateLegacyTuning(t: AgentTuning): AgentTuning {
+        var avatar = t.avatarStyle
+        var name = t.agentDisplayNameOverride
+        if (avatar == "咕咕嘎嘎") avatar = "企鹅萌妹"
+        if (name == "梗来运转") name = "我的刀盾"
+        if (avatar == "我的刀盾" && name == "我的刀盾") {
+            avatar = "企鹅萌妹"
+            name = "咕咕嘎嘎"
+        }
+        return t.copy(avatarStyle = avatar, agentDisplayNameOverride = name)
+    }
+
+    /**
      * 登录成功后、或建档写入 profile 后调用：恢复该账号的智能体偏好与解锁状态，并刷新 [CurrentUser.buddyAgent]。
      */
     fun loadIntoCurrentUser() {
         val e = emailKey()
         if (e.isEmpty()) return
         val def = AgentTuning()
-        CurrentUser.agentTuning = AgentTuning(
+        val loaded = AgentTuning(
             intensity = prefs.getString(k("intensity"), null) ?: def.intensity,
             replyLength = prefs.getString(k("replyLength"), null) ?: def.replyLength,
             focusScenario = prefs.getString(k("focusScenario"), null) ?: def.focusScenario,
             emotionTone = prefs.getString(k("emotionTone"), null) ?: def.emotionTone,
             humorMix = prefs.getString(k("humorMix"), null) ?: def.humorMix,
+            socialEnergy = prefs.getString(k("socialEnergy"), null) ?: def.socialEnergy,
+            witStyle = prefs.getString(k("witStyle"), null) ?: def.witStyle,
+            stanceMode = prefs.getString(k("stanceMode"), null) ?: def.stanceMode,
+            initiativeLevel = prefs.getString(k("initiativeLevel"), null) ?: def.initiativeLevel,
             addressStyle = prefs.getString(k("addressStyle"), null) ?: def.addressStyle,
             avatarStyle = prefs.getString(k("avatarStyle"), null) ?: def.avatarStyle,
             avatarFrame = prefs.getString(k("avatarFrame"), null) ?: def.avatarFrame,
@@ -47,10 +67,17 @@ object UserAgentStore {
             agentDisplayNameOverride = prefs.getString(k("agentDisplayNameOverride"), null)
                 ?: def.agentDisplayNameOverride,
             extraInstructions = prefs.getString(k("extraInstructions"), null) ?: "",
+            tabooNotes = prefs.getString(k("tabooNotes"), null) ?: "",
+            customPersonaScript = prefs.getString(k("customPersonaScript"), null) ?: "",
             customPhrase1 = prefs.getString(k("customPhrase1"), null) ?: "",
             customPhrase2 = prefs.getString(k("customPhrase2"), null) ?: "",
             customPhrase3 = prefs.getString(k("customPhrase3"), null) ?: ""
         )
+        val migrated = migrateLegacyTuning(loaded)
+        CurrentUser.agentTuning = migrated
+        if (migrated != loaded) {
+            saveFromCurrentUser()
+        }
         CurrentUser.agentChatUnlocked = prefs.getBoolean(k("agentChatUnlocked"), false)
         CurrentUser.profile?.let { p ->
             CurrentUser.buddyAgent = AgentPersonaResolver.resolve(p, CurrentUser.agentTuning)
@@ -67,6 +94,10 @@ object UserAgentStore {
             .putString(k("focusScenario"), t.focusScenario)
             .putString(k("emotionTone"), t.emotionTone)
             .putString(k("humorMix"), t.humorMix)
+            .putString(k("socialEnergy"), t.socialEnergy)
+            .putString(k("witStyle"), t.witStyle)
+            .putString(k("stanceMode"), t.stanceMode)
+            .putString(k("initiativeLevel"), t.initiativeLevel)
             .putString(k("addressStyle"), t.addressStyle)
             .putString(k("avatarStyle"), t.avatarStyle)
             .putString(k("avatarFrame"), t.avatarFrame)
@@ -74,6 +105,8 @@ object UserAgentStore {
             .putString(k("voiceMood"), t.voiceMood)
             .putString(k("agentDisplayNameOverride"), t.agentDisplayNameOverride)
             .putString(k("extraInstructions"), t.extraInstructions)
+            .putString(k("tabooNotes"), t.tabooNotes)
+            .putString(k("customPersonaScript"), t.customPersonaScript)
             .putString(k("customPhrase1"), t.customPhrase1)
             .putString(k("customPhrase2"), t.customPhrase2)
             .putString(k("customPhrase3"), t.customPhrase3)

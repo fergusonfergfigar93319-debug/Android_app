@@ -4,7 +4,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * 电竞搭子名片 - 统一间距与尺寸 token。
+ * 同频搭 - 统一间距与尺寸 token。
  * 禁止在业务代码中硬编码 dp 值，页面级使用本文件常量。
  */
 object BuddyDimens {
@@ -18,8 +18,11 @@ object BuddyDimens {
     val CardRadiusMedium = 16.dp
     val CardRadiusLarge = 20.dp
     val CardRadiusSmall = 12.dp
-    val CardElevation = 6.dp
+    /** 内容卡片默认投影（与 Material3 Card 搭配） */
+    val CardElevation = 7.dp
     val CardElevationPressed = 2.dp
+    /** 页面内大区块之间的垂直节奏 */
+    val SectionVerticalGap = 20.dp
 
     // 列表
     val ListItemSpacing = 16.dp

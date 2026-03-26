@@ -15,6 +15,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicLong
 
@@ -35,6 +38,10 @@ data class AgentChatUi(
 }
 
 class AgentChatViewModel : ViewModel() {
+
+    private val bubbleTimeFormat = SimpleDateFormat("HH:mm", Locale.CHINA)
+
+    private fun nowBubbleTimeLabel(): String = bubbleTimeFormat.format(Date())
 
     private val _ui = MutableStateFlow(AgentChatUi())
     val ui: StateFlow<AgentChatUi> = _ui.asStateFlow()
@@ -76,17 +83,29 @@ class AgentChatViewModel : ViewModel() {
     }
 
     fun send() {
+        sendMessageContent(_ui.value.inputDraft.trim())
+    }
+
+    /**
+     * 快捷短语等：直接作为用户消息发出，等同按发送键，无需再点发送。
+     */
+    fun sendInstant(text: String) {
+        sendMessageContent(text.trim())
+    }
+
+    private fun sendMessageContent(draft: String) {
         val profile = CurrentUser.profile ?: run {
-            _ui.update { it.copy(errorHint = "请先完成建档后再与智能体聊天") }
+            _ui.update { it.copy(errorHint = "先完成建档，才能和搭子开聊") }
             return
         }
-        val draft = _ui.value.inputDraft.trim()
         if (draft.isEmpty()) return
+        if (_ui.value.isAgentTyping) return
 
         val userMsg = AgentChatStreamItem.TextBubble(
             id = UUID.randomUUID().toString(),
             text = draft,
             isFromUser = true,
+            timeLabel = nowBubbleTimeLabel(),
             sortKey = seq.incrementAndGet()
         )
         _ui.update {
@@ -104,12 +123,13 @@ class AgentChatViewModel : ViewModel() {
             val task = AgentTaskRouter.interpret(draft, profile, tuningSnapshot)
             val replyText = task.replyOverride ?: runCatching {
                 AgentPersonaResolver.replyToChat(draft, profile, tuningSnapshot)
-            }.getOrElse { "稍等，我整理一下思路…要不你再说具体一点？" }
+            }.getOrElse { "等一下，我脑子卡了一下…你再说细点我更好接。" }
 
             val agentMsg = AgentChatStreamItem.TextBubble(
                 id = UUID.randomUUID().toString(),
                 text = replyText,
                 isFromUser = false,
+                timeLabel = nowBubbleTimeLabel(),
                 sortKey = seq.incrementAndGet()
             )
             _ui.update {
@@ -141,15 +161,15 @@ class AgentChatViewModel : ViewModel() {
             delay(12_000L)
             injectReminder(
                 iconEmoji = "📢",
-                title = "活动即将开始",
-                summary = "您关注「三角洲行动」周末双倍积分将在 2 小时后开启，记得上线领取加成。",
+                title = "周末加成快开了",
+                summary = "你关注的「三角洲行动」本周末有双倍积分，大约 2 小时后生效，别忘领加成。",
                 eventId = "evt_delta_weekend_x2"
             )
             delay(90_000L)
             injectReminder(
                 iconEmoji = "📅",
-                title = "组队招募截止提醒",
-                summary = "「同戏库宜居测试」讨论活动报名将在今晚 24:00 截止。",
+                title = "招募报名要截止啦",
+                summary = "「同频搭 · 宜居测试」讨论活动报名今晚 24:00 关窗，想参加抓紧。",
                 eventId = "evt_forum_deadline"
             )
         }
@@ -191,13 +211,14 @@ class AgentChatViewModel : ViewModel() {
             val reply = runCatching {
                 AgentPersonaResolver.replyToChat(userIntent, profile, tuning)
             }.getOrElse {
-                if (join) "好，我把「${reminder.title}」记进待办了，开局前我们再对齐节奏。"
-                else "收到，我会在临近开始时在这条对话里再拍你一下。"
+                if (join) "行，「${reminder.title}」我记下了，开局前咱再对一下节奏。"
+                else "好嘞，快到点了我在这条里再戳你。"
             }
             val ack = AgentChatStreamItem.TextBubble(
                 id = UUID.randomUUID().toString(),
                 text = reply,
                 isFromUser = false,
+                timeLabel = nowBubbleTimeLabel(),
                 sortKey = seq.incrementAndGet()
             )
             _ui.update { it.copy(messages = it.messages + ack) }
@@ -215,7 +236,7 @@ class AgentChatViewModel : ViewModel() {
             val detail = buildString {
                 append("【${reminder.title}】\n")
                 append(reminder.summary)
-                append("\n\n规则摘要：参与即视为同意活动条款；奖励以游戏内实际发放为准。")
+                append("\n\n规则摘要：参加即视为同意活动说明；奖品以游戏内实际到账为准。")
             }
             val polished = runCatching {
                 AgentPersonaResolver.replyToChat("详细说说「${reminder.title}」的规则和注意点", profile, tuning)
@@ -225,6 +246,7 @@ class AgentChatViewModel : ViewModel() {
                 id = UUID.randomUUID().toString(),
                 text = text,
                 isFromUser = false,
+                timeLabel = nowBubbleTimeLabel(),
                 sortKey = seq.incrementAndGet()
             )
             _ui.update { it.copy(messages = it.messages + msg, isAgentTyping = false) }
@@ -242,13 +264,13 @@ class AgentChatViewModel : ViewModel() {
         val persona = runCatching { AgentPersonaResolver.resolve(profile, tuning) }.getOrNull() ?: return
         val nick = profile.nickname.ifBlank { "玩家" }
         val note = tuning.extraInstructions.trim()
-        val taskHint = "\n\n小提示：可说「写招募」「广场搜关键词」「去攻略分区」「总结我的档案」等。"
+        val taskHint = "\n\n你可以试试：写条招募、广场搜攻略词、跳转攻略分区，或让我帮你捋一捋档案。"
         val welcomeText = if (note.isNotEmpty()) {
             val head = note.take(48)
             val tail = if (note.length > 48) "…" else ""
-            "嗨，$nick！我是「${persona.displayName}」。我会参考你的备注「$head$tail」。想聊战术、心态还是组队？直接发我就行～$taskHint"
+            "$nick 好，我是「${persona.displayName}」。你的备忘我看过啦（$head$tail）。战术、心态、组队随便问，打字就行。$taskHint"
         } else {
-            "嗨，$nick！我是「${persona.displayName}」。想聊战术、心态还是组队？直接发我就行～$taskHint"
+            "$nick 好，我是「${persona.displayName}」。战术、心态、组队都能聊，直接发我。$taskHint"
         }
         val welcome = AgentChatStreamItem.TextBubble(
             id = "welcome_seed",

@@ -20,6 +20,12 @@ object Routes {
     const val PROFILE_EDIT = "profile_edit"
     /** 我关注的用户列表 */
     const val FOLLOWING_LIST = "following_list"
+    /** 按用户 ID 搜索并关注 */
+    const val ADD_FRIEND_SEARCH = "add_friend_search"
+    /** 与指定用户的私信（需互关） */
+    const val USER_DM = "user_dm"
+
+    fun userDm(peerUserId: String): String = "$USER_DM/$peerUserId"
     /** 与专属智能体聊天（QQ 风格会话页） */
     const val AGENT_CHAT = "agent_chat"
 

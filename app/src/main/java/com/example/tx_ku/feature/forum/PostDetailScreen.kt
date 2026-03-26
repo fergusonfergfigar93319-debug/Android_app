@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -64,7 +65,12 @@ fun PostDetailScreen(
     val post: Post? = remember(postId, posts) {
         postId?.let { id -> posts.find { it.postId == id } }
     }
+    val effectiveAuthorId = CurrentUser.effectiveForumAuthorId()
+    val isPostAuthor = post != null && post.authorId == effectiveAuthorId
+    val blockedForNonAuthor =
+        post != null && !post.isVisibleInPublicForum() && !isPostAuthor
     val followingList by FollowRepository.following.collectAsState()
+    val incomingFollowers by FollowRepository.incomingFollowerIds.collectAsState()
     val comments: List<PostComment> = remember(postId, commentsMap) {
         postId?.let { commentsMap[it].orEmpty() } ?: emptyList()
     }
@@ -86,13 +92,20 @@ fun PostDetailScreen(
                 onBack = { navController.popBackStack() },
                 modifier = Modifier.fillMaxWidth()
             )
-            if (post == null) {
+            if (post == null || blockedForNonAuthor) {
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .padding(BuddyDimens.ContentPadding)
                 ) {
-                    Text("帖子不存在或已删除", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        text = if (blockedForNonAuthor) {
+                            "该帖正在审核或未对公域开放，暂无法查看"
+                        } else {
+                            "帖子不存在或已删除"
+                        },
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                     Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
                     BuddyPrimaryButton(
                         text = "返回",
@@ -102,19 +115,28 @@ fun PostDetailScreen(
                 }
             } else {
                 val p = post!!
+                val publicVisible = p.isVisibleInPublicForum()
                 LazyColumn(
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(BuddyDimens.ContentPadding),
                     verticalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingMd)
                 ) {
                     item {
+                        if (!publicVisible) {
+                            PostModerationBanner(post = p)
+                            Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
+                        }
                         PostHeader(
                             post = p,
                             isFollowing = followingList.any { it.userId == p.authorId },
-                            isSelfAuthor = p.authorId == CurrentUser.profile?.userId
-                                || p.authorId == "local_me",
+                            isSelfAuthor = isPostAuthor,
+                            mutualFollow = followingList.any { it.userId == p.authorId } &&
+                                p.authorId in incomingFollowers,
                             onFollowToggle = {
                                 FollowRepository.toggle(p.authorId, p.authorName)
+                            },
+                            onOpenDm = {
+                                navController.navigate(Routes.userDm(p.authorId))
                             }
                         )
                     }
@@ -147,9 +169,7 @@ fun PostDetailScreen(
                         )
                     }
                     item {
-                        val selfPostEarly = p.authorId == CurrentUser.profile?.userId
-                            || p.authorId == "local_me"
-                        if (p.categoryId == ForumCategories.RECRUIT && !selfPostEarly) {
+                        if (p.categoryId == ForumCategories.RECRUIT && publicVisible && !isPostAuthor) {
                             RecruitPostBuddyIntegrationCard(
                                 authorName = p.authorName,
                                 onApplyBuddy = {
@@ -172,54 +192,62 @@ fun PostDetailScreen(
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
-                    if (comments.isEmpty()) {
+                    if (!publicVisible) {
                         item {
                             Text(
-                                text = "暂无评论，抢沙发～",
+                                text = "审核通过并上架后，其他用户才可查看与评论。",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     } else {
-                        items(comments, key = { it.commentId }) { c ->
-                            CommentItem(comment = c)
+                        if (comments.isEmpty()) {
+                            item {
+                                Text(
+                                    text = "暂无评论，抢沙发～",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        } else {
+                            items(comments, key = { it.commentId }) { c ->
+                                CommentItem(comment = c)
+                            }
+                        }
+                        item {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Text(
+                                    text = "写评论",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
+                                OutlinedTextField(
+                                    value = draft,
+                                    onValueChange = { draft = it },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    placeholder = { Text("友善发言，拒绝人身攻击") },
+                                    maxLines = 4,
+                                    shape = BuddyShapes.CardSmall
+                                )
+                                Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
+                                BuddyPrimaryButton(
+                                    text = "发送",
+                                    onClick = {
+                                        val pid = postId ?: return@BuddyPrimaryButton
+                                        val name = CurrentUser.profile?.nickname?.ifBlank { null } ?: "我"
+                                        ForumRepository.addComment(pid, draft, name)
+                                        draft = ""
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    enabled = draft.isNotBlank()
+                                )
+                            }
                         }
                     }
                     item {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Text(
-                                text = "写评论",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
-                            OutlinedTextField(
-                                value = draft,
-                                onValueChange = { draft = it },
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("友善发言，拒绝人身攻击") },
-                                maxLines = 4,
-                                shape = BuddyShapes.CardSmall
-                            )
-                            Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
-                            BuddyPrimaryButton(
-                                text = "发送",
-                                onClick = {
-                                    val pid = postId ?: return@BuddyPrimaryButton
-                                    val name = CurrentUser.profile?.nickname?.ifBlank { null } ?: "我"
-                                    ForumRepository.addComment(pid, draft, name)
-                                    draft = ""
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                enabled = draft.isNotBlank()
-                            )
-                        }
-                    }
-                    item {
-                        val selfPost = p.authorId == CurrentUser.profile?.userId
-                            || p.authorId == "local_me"
                         when {
-                            selfPost -> {
+                            isPostAuthor -> {
                                 Text(
                                     text = "这是你的帖子",
                                     style = MaterialTheme.typography.bodyMedium,
@@ -299,7 +327,9 @@ private fun PostHeader(
     post: Post,
     isFollowing: Boolean,
     isSelfAuthor: Boolean,
-    onFollowToggle: () -> Unit
+    mutualFollow: Boolean,
+    onFollowToggle: () -> Unit,
+    onOpenDm: () -> Unit
 ) {
     Column {
         Row(
@@ -326,8 +356,18 @@ private fun PostHeader(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             if (!isSelfAuthor && post.authorId.isNotBlank()) {
-                OutlinedButton(onClick = onFollowToggle) {
-                    Text(if (isFollowing) "已关注" else "+ 关注")
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(onClick = onFollowToggle) {
+                        Text(if (isFollowing) "已关注" else "+ 关注")
+                    }
+                    if (isFollowing) {
+                        FilledTonalButton(onClick = onOpenDm) {
+                            Text("私信")
+                        }
+                    }
                 }
             }
         }

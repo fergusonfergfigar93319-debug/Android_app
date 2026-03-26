@@ -1,9 +1,12 @@
 package com.example.tx_ku.feature.chat
 
 import android.util.Log
+import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,18 +16,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,20 +39,25 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.ripple
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,7 +65,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -64,6 +78,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -146,10 +163,17 @@ private fun handleAgentNavCommand(
 private data class QuickPhrase(val label: String, val text: String)
 
 private val quickPhrases = listOf(
-    QuickPhrase("进点分工", "帮我分析一局三角洲的进点分工。"),
-    QuickPhrase("心态调整", "队伍缺人手时怎么调整心态？"),
-    QuickPhrase("突击入门", "新手想玩突击位，给点入门建议。"),
-    QuickPhrase("组队喊话", "帮我写一条友善的组队招募。")
+    QuickPhrase("王者该团吗", "王者这阵容这波该接团还是带线？兵线和小地图一起说。"),
+    QuickPhrase("打野节奏", "王者打野这把刷野、gank、控龙怎么排优先级？短句给时间感。"),
+    QuickPhrase("进点怎么分", "这局三角洲进点怎么分工比较稳？按路人野队说就行。"),
+    QuickPhrase("心态稳住", "缺人连跪时怎么不炸心态？给点能立刻用的招。"),
+    QuickPhrase("突击怎么玩", "突击位萌新，从走位到枪线给几句入门。"),
+    QuickPhrase("写条招募", "帮我写条不尬、好复制的组队招募。"),
+    QuickPhrase("版本嘴替", "这版本平衡用玩家口吻吐槽两句，别太官方。"),
+    QuickPhrase("枪怎么选", "手残友好主武器来几把，一句话说清为啥。"),
+    QuickPhrase("局内短句", "连跪后局里能发的安抚短句，两句就够，别鸡汤。"),
+    QuickPhrase("一句复盘", "用一句话复盘上一把，客观，别小作文。"),
+    QuickPhrase("搜啥关键词", "去广场搜三角洲攻略，帮我起几个好搜的关键词。")
 )
 
 /** 创作页自定义短语优先展示，再接内置短语。 */
@@ -159,15 +183,10 @@ private fun mergedQuickPhrases(tuning: AgentTuning): List<QuickPhrase> {
         tuning.customPhrase2.trim().takeIf { it.isNotEmpty() },
         tuning.customPhrase3.trim().takeIf { it.isNotEmpty() }
     ).mapIndexed { idx, text ->
-        val label = if (text.length <= 8) text else "自定义${idx + 1}"
+        val label = if (text.length <= 8) text else "我的${idx + 1}"
         QuickPhrase(label, text)
     }
     return custom + quickPhrases
-}
-
-private fun isHudGlassBubble(bubbleStyle: String): Boolean {
-    val s = bubbleStyle.trim()
-    return s.contains("HUD") || s.contains("玻璃")
 }
 
 /** 顶栏下分段筛选：浅灰条 + 白底轨道 + 选中浅青灰，对齐产品稿 */
@@ -204,7 +223,7 @@ private fun ChatFilterSegmentedBar(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "全部对话",
+                        text = "全部消息",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = if (selAll) FontWeight.SemiBold else FontWeight.Normal,
                         color = if (selAll) palette.filterLabelActive else palette.filterLabelInactive,
@@ -227,7 +246,7 @@ private fun ChatFilterSegmentedBar(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "重要提醒",
+                        text = "活动提醒",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = if (selImp) FontWeight.SemiBold else FontWeight.Normal,
                         color = if (selImp) palette.filterLabelActive else palette.filterLabelInactive,
@@ -249,15 +268,15 @@ private fun AgentChatLockedGate(navController: NavController) {
     }
     AlertDialog(
         onDismissRequest = { navController.popBackStack() },
-        title = { Text("需先完成智能体创作") },
+        title = { Text("先捏好搭子再聊天") },
         text = {
             Text(
-                "请返回底栏「创作」页，在专属智能体界面完成形象与语气等设置后，点击「完成创作，解锁聊天」再进入会话。"
+                "回到底栏「搭子」页，把形象、语气选好，点「完成创作并解锁聊天」后就能进会话啦。"
             )
         },
         confirmButton = {
             TextButton(onClick = { navController.popBackStack() }) {
-                Text("返回创作")
+                Text("去搭子页")
             }
         }
     )
@@ -275,16 +294,26 @@ fun AgentChatScreen(navController: NavController) {
     AgentChatContent(navController = navController)
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun AgentChatContent(navController: NavController) {
     val viewModel: AgentChatViewModel = viewModel()
     val ui by viewModel.ui.collectAsStateWithLifecycle()
     val profile = CurrentUser.profile
-    val tuning = CurrentUser.agentTuning
+    var tuningRefresh by remember { mutableStateOf(0) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) tuningRefresh++
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    val tuning = remember(tuningRefresh) { CurrentUser.agentTuning }
     val listState = rememberLazyListState()
     val haptic = rememberBuddyHaptic()
     val keyboard = LocalSoftwareKeyboardController.current
+    val appContext = LocalContext.current.applicationContext
 
     val accountEmail = CurrentUser.account?.email
     var themePreset by remember(accountEmail) {
@@ -304,9 +333,9 @@ private fun AgentChatContent(navController: NavController) {
         val nick = profile?.nickname?.trim().orEmpty()
         when {
             nick.isNotEmpty() && !personaName.isNullOrBlank() ->
-                "与 $nick 的搭子助手 · $personaName"
-            nick.isNotEmpty() -> "与 $nick 的搭子助手"
-            else -> "专属搭子助手"
+                "$nick 的搭子 · $personaName"
+            nick.isNotEmpty() -> "$nick 的搭子"
+            else -> "同频搭"
         }
     }
 
@@ -326,6 +355,14 @@ private fun AgentChatContent(navController: NavController) {
     }
 
     val clipboardManager = LocalClipboardManager.current
+
+    fun copyBubbleText(text: String) {
+        if (text.isBlank()) return
+        clipboardManager.setText(AnnotatedString(text))
+        haptic.buddySelectionTick()
+        Toast.makeText(appContext, "已复制", Toast.LENGTH_SHORT).show()
+    }
+
     LaunchedEffect(Unit) {
         viewModel.navCommands.collect { cmd ->
             dispatchAfterMainFrame {
@@ -336,13 +373,14 @@ private fun AgentChatContent(navController: NavController) {
         }
     }
 
-    // 与下方 LazyColumn 的 item 结构严格一致，避免 scrollToItem 越界导致闪退
+    // 与下方 LazyColumn 的 item 结构严格一致，避免 scrollToItem 越界导致闪退（首项为人设提示条）
     LaunchedEffect(ui.displayMessages.size, ui.isAgentTyping, ui.streamFilter) {
         delay(48)
+        val hintRow = 1
         val itemCount = if (ui.displayMessages.isEmpty() && ui.streamFilter == ChatStreamFilter.IMPORTANT) {
-            1
+            hintRow + 1
         } else {
-            ui.displayMessages.size + if (ui.streamFilter == ChatStreamFilter.ALL && ui.isAgentTyping) 1 else 0
+            hintRow + ui.displayMessages.size + if (ui.streamFilter == ChatStreamFilter.ALL && ui.isAgentTyping) 1 else 0
         }
         if (itemCount > 0) {
             val want = itemCount - 1
@@ -362,15 +400,22 @@ private fun AgentChatContent(navController: NavController) {
         ui.messages.filterIsInstance<AgentChatStreamItem.EventReminder>().find { it.id == fid }
     }
     val inputPlaceholder = if (focusedReminder != null) {
-        "关于「${focusedReminder.title}」，有什么想问我的吗？"
+        "想追问「${focusedReminder.title}」？直接打在这"
     } else {
-        "发消息…"
+        "想说点什么…"
     }
 
     Scaffold(
         containerColor = palette.screenBg,
         topBar = {
-            Column(modifier = Modifier.fillMaxWidth()) {
+            // 顶栏抬高到状态栏/挖孔之下，并提高绘制层级，避免被下方列表误挡触控
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .zIndex(2f)
+                    .statusBarsPadding()
+                    .displayCutoutPadding()
+            ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -381,41 +426,62 @@ private fun AgentChatContent(navController: NavController) {
                         )
                 ) {
                     BuddyTopBar(
-                        title = "智能体聊天",
+                        title = "和搭子聊天",
                         subtitle = subtitle,
-                        onBack = { navController.popBackStack() },
+                        onBack = {
+                            val popped = runCatching { navController.popBackStack() }.getOrDefault(false)
+                            if (!popped) {
+                                runCatching {
+                                    navController.navigate(Routes.MAIN_TABS) {
+                                        launchSingleTop = true
+                                    }
+                                }
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         titleColor = palette.onHeader,
                         subtitleColor = palette.onHeader.copy(alpha = 0.88f),
                         backIconTint = palette.onHeader,
                         actions = {
-                            Box {
-                                IconButton(onClick = { menuExpanded = true }) {
-                                    Icon(
-                                        painter = painterResource(R.drawable.ic_more_vert),
-                                        contentDescription = "更多",
-                                        tint = palette.onHeader
-                                    )
-                                }
-                                DropdownMenu(
-                                    expanded = menuExpanded,
-                                    onDismissRequest = { menuExpanded = false }
-                                ) {
-                                    DropdownMenuItem(
-                                        text = { Text("个性化外观") },
-                                        onClick = {
-                                            menuExpanded = false
-                                            showPersonalizeSheet = true
-                                        }
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text("清空会话") },
-                                        onClick = {
-                                            menuExpanded = false
-                                            showClearConfirm = true
-                                        }
-                                    )
-                                }
+                            // DropdownMenu 与 IconButton 并列即可，勿再包一层 Box，减少命中区异常
+                            IconButton(onClick = { menuExpanded = true }) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_more_vert),
+                                    contentDescription = "更多",
+                                    tint = palette.onHeader
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = menuExpanded,
+                                onDismissRequest = { menuExpanded = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("随机问一句") },
+                                    onClick = {
+                                        menuExpanded = false
+                                        val pool = mergedQuickPhrases(tuning)
+                                            .map { it.text.trim() }
+                                            .filter { it.isNotEmpty() }
+                                        if (pool.isEmpty()) return@DropdownMenuItem
+                                        if (profile == null || ui.isAgentTyping) return@DropdownMenuItem
+                                        haptic.buddyPrimaryClick()
+                                        viewModel.sendInstant(pool.random())
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("换聊天主题") },
+                                    onClick = {
+                                        menuExpanded = false
+                                        showPersonalizeSheet = true
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("清空记录") },
+                                    onClick = {
+                                        menuExpanded = false
+                                        showClearConfirm = true
+                                    }
+                                )
                             }
                         }
                     )
@@ -453,13 +519,52 @@ private fun AgentChatContent(navController: NavController) {
                     .fillMaxWidth(),
                 state = listState,
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                item(key = "persona_loaded_hint") {
+                    val script = tuning.customPersonaScript.trim()
+                    val extra = tuning.extraInstructions.trim()
+                    val taboo = tuning.tabooNotes.trim()
+                    val showStrip = script.isNotEmpty() || extra.isNotEmpty() || taboo.isNotEmpty()
+                    if (showStrip) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            color = palette.accent.copy(alpha = 0.09f),
+                            border = BorderStroke(1.dp, palette.accent.copy(alpha = 0.28f)),
+                            shadowElevation = 0.dp
+                        ) {
+                            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+                                Text(
+                                    text = "人设与备忘已载入",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = palette.accent
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                val summary = when {
+                                    script.isNotEmpty() ->
+                                        script.take(72) + if (script.length > 72) "…" else ""
+                                    extra.isNotEmpty() ->
+                                        extra.take(72) + if (extra.length > 72) "…" else ""
+                                    else ->
+                                        "已记录忌讳话题，搭子会尽量绕开。"
+                                }
+                                Text(
+                                    text = summary,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = palette.agentText.copy(alpha = 0.92f),
+                                    lineHeight = 18.sp
+                                )
+                            }
+                        }
+                    }
+                }
                 if (ui.displayMessages.isEmpty() && ui.streamFilter == ChatStreamFilter.IMPORTANT) {
                     item(key = "empty_important") {
                         BuddyEmptyState(
-                            title = "暂无活动提醒",
-                            message = "活动与系统通知会以卡片形式插入对话流；有新推送时会同步出现在悬浮入口。",
+                            title = "这儿还空着",
+                            message = "活动、系统消息会插进对话里；有新动静时，悬浮入口也会冒个泡。",
                             emoji = "📭",
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -471,16 +576,20 @@ private fun AgentChatContent(navController: NavController) {
                             if (item.isFromUser) {
                                 UserBubble(
                                     text = item.text,
+                                    timeLabel = item.timeLabel,
                                     profile = profile,
                                     palette = palette,
-                                    bubbleStyle = tuning.bubbleStyle
+                                    bubbleStyle = tuning.bubbleStyle,
+                                    onLongPressCopy = { copyBubbleText(item.text) }
                                 )
                             } else {
                                 AgentBubble(
                                     text = item.text,
+                                    timeLabel = item.timeLabel,
                                     avatarStyle = tuning.avatarStyle,
                                     palette = palette,
-                                    bubbleStyle = tuning.bubbleStyle
+                                    bubbleStyle = tuning.bubbleStyle,
+                                    onLongPressCopy = { copyBubbleText(item.text) }
                                 )
                             }
                         }
@@ -521,57 +630,95 @@ private fun AgentChatContent(navController: NavController) {
             }
 
             val quickPhraseList = mergedQuickPhrases(tuning)
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = palette.filterBorder.copy(alpha = 0.4f)
+            )
+            Surface(
+                color = palette.inputBarBg.copy(alpha = 0.98f),
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp
             ) {
-                itemsIndexed(
-                    quickPhraseList,
-                    key = { index, _ -> "qp_$index" },
-                    contentType = { _, _ -> "quick_phrase" }
-                ) { _, phrase ->
-                    Surface(
-                        onClick = {
-                            haptic.buddySelectionTick()
-                            viewModel.appendToDraft(phrase.text)
-                        },
-                        shape = RoundedCornerShape(20.dp),
-                        color = palette.quickChipBg,
-                        border = BorderStroke(1.dp, palette.quickChipBorder),
-                        shadowElevation = 0.dp
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = phrase.label,
+                            text = "快捷提问",
                             style = MaterialTheme.typography.labelMedium,
                             color = palette.quickChipLabel,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
-                            maxLines = 1
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = "长按消息可复制",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = palette.hint.copy(alpha = 0.85f)
                         )
                     }
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp)
+                    ) {
+                        itemsIndexed(
+                            quickPhraseList,
+                            key = { index, _ -> "qp_$index" },
+                            contentType = { _, _ -> "quick_phrase" }
+                        ) { index, phrase ->
+                            val chipClickable = phrase.text.isNotBlank() && !ui.isAgentTyping
+                            val chipInteraction = remember(index) { MutableInteractionSource() }
+                            Surface(
+                                modifier = Modifier.clickable(
+                                    enabled = chipClickable,
+                                    interactionSource = chipInteraction,
+                                    indication = ripple(bounded = true),
+                                    onClick = {
+                                        keyboard?.hide()
+                                        haptic.buddyPrimaryClick()
+                                        viewModel.sendInstant(phrase.text)
+                                    }
+                                ),
+                                shape = RoundedCornerShape(20.dp),
+                                color = palette.quickChipBg,
+                                border = BorderStroke(1.dp, palette.quickChipBorder),
+                                shadowElevation = 0.dp
+                            ) {
+                                Text(
+                                    text = phrase.label,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = palette.quickChipLabel,
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                    }
+                    ChatInputBar(
+                        draft = ui.inputDraft,
+                        onDraftChange = viewModel::setInputDraft,
+                        onSend = {
+                            keyboard?.hide()
+                            haptic.buddyPrimaryClick()
+                            viewModel.send()
+                        },
+                        enabled = profile != null && !ui.isAgentTyping,
+                        palette = palette,
+                        placeholderText = inputPlaceholder
+                    )
                 }
             }
-
-            ChatInputBar(
-                draft = ui.inputDraft,
-                onDraftChange = viewModel::setInputDraft,
-                onSend = {
-                    keyboard?.hide()
-                    haptic.buddyPrimaryClick()
-                    viewModel.send()
-                },
-                enabled = profile != null && !ui.isAgentTyping,
-                palette = palette,
-                placeholderText = inputPlaceholder
-            )
         }
     }
 
     if (showClearConfirm) {
         AlertDialog(
             onDismissRequest = { showClearConfirm = false },
-            title = { Text("清空会话？") },
-            text = { Text("将删除当前聊天记录并重新显示欢迎语。") },
+            title = { Text("清空这条对话？") },
+            text = { Text("会删掉当前记录并重新出现开场白。") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -601,12 +748,12 @@ private fun AgentChatContent(navController: NavController) {
                     .padding(bottom = 24.dp)
             ) {
                 Text(
-                    text = "聊天外观",
+                    text = "会话主题色",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 Text(
-                    text = "主题配色（按账号保存）",
+                    text = "跟账号走，换机也记得住",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 12.dp)
@@ -643,7 +790,7 @@ private fun AgentChatContent(navController: NavController) {
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("前往创作页调整形象与语气")
+                    Text("去搭子页改形象与语气")
                 }
                 TextButton(
                     onClick = {
@@ -653,43 +800,62 @@ private fun AgentChatContent(navController: NavController) {
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("恢复默认主题（同戏天蓝）")
+                    Text("恢复默认（同频搭天蓝）")
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun UserBubble(
     text: String,
+    timeLabel: String,
     profile: com.example.tx_ku.core.model.Profile?,
     palette: AgentChatPalette,
-    bubbleStyle: String
+    bubbleStyle: String,
+    onLongPressCopy: () -> Unit
 ) {
-    val radius = bubbleCornerDp(bubbleStyle)
-    val hud = isHudGlassBubble(bubbleStyle)
+    val shape = bubbleShapeUser(bubbleStyle)
+    val hud = isHudGlassBubbleStyle(bubbleStyle)
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.Top
     ) {
-        Surface(
-            shape = RoundedCornerShape(radius),
-            color = palette.userBubble,
-            modifier = Modifier
-                .widthIn(max = 280.dp)
-                .then(
-                    if (hud) Modifier.border(1.dp, palette.accent.copy(alpha = 0.4f), RoundedCornerShape(radius))
-                    else Modifier
+        Column(horizontalAlignment = Alignment.End) {
+            Surface(
+                shape = shape,
+                color = palette.userBubble,
+                shadowElevation = 1.dp,
+                modifier = Modifier
+                    .widthIn(max = 304.dp)
+                    .then(
+                        if (hud) Modifier.border(1.dp, palette.accent.copy(alpha = 0.4f), shape)
+                        else Modifier
+                    )
+                    .combinedClickable(
+                        onClick = { },
+                        onLongClick = onLongPressCopy
+                    )
+            ) {
+                Text(
+                    text = text,
+                    color = palette.userText,
+                    style = MaterialTheme.typography.bodyLarge,
+                    lineHeight = 22.sp,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 11.dp)
                 )
-        ) {
-            Text(
-                text = text,
-                color = palette.userText,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
-            )
+            }
+            if (timeLabel.isNotEmpty()) {
+                Text(
+                    text = timeLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = palette.hint.copy(alpha = 0.9f),
+                    modifier = Modifier.padding(top = 4.dp, end = 2.dp)
+                )
+            }
         }
         Spacer(modifier = Modifier.size(8.dp))
         UserAvatarChip(profile = profile)
@@ -723,15 +889,18 @@ private fun UserAvatarChip(profile: com.example.tx_ku.core.model.Profile?) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AgentBubble(
     text: String,
+    timeLabel: String,
     avatarStyle: String,
     palette: AgentChatPalette,
-    bubbleStyle: String
+    bubbleStyle: String,
+    onLongPressCopy: () -> Unit
 ) {
-    val radius = bubbleCornerDp(bubbleStyle)
-    val hud = isHudGlassBubble(bubbleStyle)
+    val shape = bubbleShapeAgent(bubbleStyle)
+    val hud = isHudGlassBubbleStyle(bubbleStyle)
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start,
@@ -745,29 +914,44 @@ private fun AgentBubble(
         ) {
             Image(
                 painter = painterResource(agentAvatarDrawableRes(avatarStyle)),
-                contentDescription = "智能体头像",
+                contentDescription = "搭子头像",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
         }
         Spacer(modifier = Modifier.size(8.dp))
-        Surface(
-            shape = RoundedCornerShape(radius),
-            color = palette.agentBubble,
-            shadowElevation = 1.dp,
-            modifier = Modifier
-                .widthIn(max = 280.dp)
-                .then(
-                    if (hud) Modifier.border(1.dp, palette.accent.copy(alpha = 0.28f), RoundedCornerShape(radius))
-                    else Modifier
+        Column(horizontalAlignment = Alignment.Start) {
+            Surface(
+                shape = shape,
+                color = palette.agentBubble,
+                shadowElevation = 1.dp,
+                modifier = Modifier
+                    .widthIn(max = 304.dp)
+                    .then(
+                        if (hud) Modifier.border(1.dp, palette.accent.copy(alpha = 0.28f), shape)
+                        else Modifier
+                    )
+                    .combinedClickable(
+                        onClick = { },
+                        onLongClick = onLongPressCopy
+                    )
+            ) {
+                Text(
+                    text = text,
+                    color = palette.agentText,
+                    style = MaterialTheme.typography.bodyLarge,
+                    lineHeight = 22.sp,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 11.dp)
                 )
-        ) {
-            Text(
-                text = text,
-                color = palette.agentText,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
-            )
+            }
+            if (timeLabel.isNotEmpty()) {
+                Text(
+                    text = timeLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = palette.hint.copy(alpha = 0.9f),
+                    modifier = Modifier.padding(top = 4.dp, start = 2.dp)
+                )
+            }
         }
     }
 }
@@ -778,7 +962,8 @@ private fun AgentTypingRow(
     palette: AgentChatPalette,
     bubbleStyle: String
 ) {
-    val radius = bubbleCornerDp(bubbleStyle)
+    val shape = bubbleShapeAgent(bubbleStyle)
+    val hud = isHudGlassBubbleStyle(bubbleStyle)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -800,11 +985,11 @@ private fun AgentTypingRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             modifier = Modifier
-                .clip(RoundedCornerShape(radius))
+                .clip(shape)
                 .background(palette.agentBubble)
                 .then(
-                    if (isHudGlassBubble(bubbleStyle)) {
-                        Modifier.border(1.dp, palette.accent.copy(alpha = 0.28f), RoundedCornerShape(radius))
+                    if (hud) {
+                        Modifier.border(1.dp, palette.accent.copy(alpha = 0.28f), shape)
                     } else Modifier
                 )
                 .padding(horizontal = 14.dp, vertical = 10.dp)
@@ -815,7 +1000,7 @@ private fun AgentTypingRow(
                 color = palette.accent
             )
             Text(
-                "正在输入…",
+                "搭子在打字…",
                 style = MaterialTheme.typography.bodySmall,
                 color = palette.hint
             )
@@ -892,20 +1077,20 @@ private fun EventReminderCard(
                         onClick = onPrimary,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("立即参与", maxLines = 1, style = MaterialTheme.typography.labelMedium)
+                        Text("这就去", maxLines = 1, style = MaterialTheme.typography.labelMedium)
                     }
                     TextButton(
                         onClick = onSecondary,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("稍后提醒", maxLines = 1, style = MaterialTheme.typography.labelMedium)
+                        Text("稍后再说", maxLines = 1, style = MaterialTheme.typography.labelMedium)
                     }
                 }
                 TextButton(
                     onClick = onLearnMore,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("了解更多", style = MaterialTheme.typography.labelLarge, color = palette.accent)
+                    Text("展开讲讲", style = MaterialTheme.typography.labelLarge, color = palette.accent)
                 }
             }
         }
@@ -919,53 +1104,62 @@ private fun ChatInputBar(
     onSend: () -> Unit,
     enabled: Boolean,
     palette: AgentChatPalette,
-    placeholderText: String = "发消息…"
+    placeholderText: String = "想说点什么…"
 ) {
-    Surface(
-        color = palette.inputBarBg,
-        tonalElevation = 2.dp,
-        shadowElevation = 4.dp
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .imePadding()
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.Bottom
     ) {
-        Row(
+        OutlinedTextField(
+            value = draft,
+            onValueChange = onDraftChange,
             modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .imePadding()
-                .padding(horizontal = 10.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.Bottom
-        ) {
-            OutlinedTextField(
-                value = draft,
-                onValueChange = onDraftChange,
-                modifier = Modifier
-                    .weight(1f)
-                    .heightIn(min = 44.dp, max = 120.dp),
-                placeholder = { Text(placeholderText, color = palette.hint) },
-                enabled = enabled,
-                shape = RoundedCornerShape(20.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedBorderColor = palette.accent.copy(alpha = 0.45f),
-                    unfocusedBorderColor = Color(0x22000000)
-                ),
-                maxLines = 4
+                .weight(1f)
+                .heightIn(min = 48.dp, max = 120.dp),
+            placeholder = { Text(placeholderText, color = palette.hint) },
+            enabled = enabled,
+            shape = RoundedCornerShape(24.dp),
+            trailingIcon = {
+                if (draft.isNotEmpty()) {
+                    Text(
+                        text = "清除",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = palette.accent.copy(alpha = 0.85f),
+                        modifier = Modifier
+                            .padding(end = 4.dp)
+                            .clickable { onDraftChange("") }
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedBorderColor = palette.accent.copy(alpha = 0.5f),
+                unfocusedBorderColor = Color(0x22000000)
+            ),
+            maxLines = 4
+        )
+        Spacer(modifier = Modifier.size(8.dp))
+        FilledIconButton(
+            onClick = onSend,
+            enabled = enabled && draft.trim().isNotEmpty(),
+            modifier = Modifier.size(48.dp),
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = palette.accent,
+                contentColor = Color.White,
+                disabledContainerColor = Color(0xFFE8E8E8),
+                disabledContentColor = Color(0xFFBDBDBD)
             )
-            Spacer(modifier = Modifier.size(8.dp))
-            IconButton(
-                onClick = onSend,
-                enabled = enabled && draft.trim().isNotEmpty()
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_send),
-                    contentDescription = "发送",
-                    tint = if (enabled && draft.trim().isNotEmpty()) {
-                        palette.accent
-                    } else {
-                        Color(0xFFBDBDBD)
-                    }
-                )
-            }
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_send),
+                contentDescription = "发送"
+            )
         }
     }
 }
@@ -975,6 +1169,7 @@ private fun agentAvatarDrawableRes(avatarStyle: String): Int = when (avatarStyle
     "元气辅助" -> R.drawable.agent_avatar_support
     "战术导师" -> R.drawable.agent_avatar_coach
     "治愈陪玩" -> R.drawable.agent_avatar_healing
-    "企鹅萌妹" -> R.drawable.agent_avatar_penguin
+    "企鹅萌妹", "咕咕嘎嘎" -> R.drawable.agent_avatar_penguin
+    "我的刀盾" -> R.drawable.agent_avatar_daodun
     else -> R.drawable.agent_avatar_commander
 }
