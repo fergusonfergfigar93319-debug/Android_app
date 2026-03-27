@@ -116,7 +116,7 @@ fun CollapsibleSmartAgentCard(
                         )
                     )
                     Text(
-                        text = "跟版本速递、广场、我的联动 · 点一下展开",
+                        text = "与底栏版本速递、AI搭子、峡谷广场、元流档案联动 · 点一下展开",
                         style = MaterialTheme.typography.labelSmall,
                         color = GameNewsTheme.TextSecondary
                     )

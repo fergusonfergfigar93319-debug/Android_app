@@ -477,8 +477,8 @@ private fun ForumFeedHeader(
     var hotTagsExpanded by rememberSaveable { mutableStateOf(false) }
     Column(modifier = Modifier.fillMaxWidth()) {
         ForumCyberTopBar(
-            title = "搭子广场",
-            subtitle = "招募 · 攻略 · 闲聊",
+            title = "峡谷广场",
+            subtitle = "开黑招募 · 攻略 · 赛评唠局",
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = BuddyDimens.ListContentPadding)
@@ -494,7 +494,7 @@ private fun ForumFeedHeader(
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(
-                        "搜索帖子、标签（空格分词）",
+                        "搜招募、攻略词、英雄或 KPL 话题（空格分词）",
                         color = if (isForumCyberDark) ForumCyberColors.TextMuted
                         else MaterialTheme.colorScheme.onSurfaceVariant
                     )

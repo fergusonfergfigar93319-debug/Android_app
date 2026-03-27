@@ -9,9 +9,9 @@ import androidx.navigation.NavController
 import com.example.tx_ku.core.navigation.Routes
 
 /**
- * **广场（论坛）**：与 [com.example.tx_ku.feature.feed.FeedScreen] 首页分列——
- * 首页侧重 **资讯 / 官方 / 找搭子推荐**；本页承载 **招募帖与讨论流**，与详情页「申请搭子」、发帖 **AI 招募草稿** 形成闭环（见《同频搭_选题设计方案》6.1 C/D）。
- * 智能体入口集中在底栏「搭子」与全局悬浮入口，避免与首页「同频搭」顶区重复。
+ * **广场（峡谷广场）**：与 [com.example.tx_ku.feature.feed.FeedScreen] 首页分列——
+ * 首页侧重 **版本速递 / 官方活动**；本页承载 **王者开黑招募、攻略与赛评流**，与详情页「申请搭子」、发帖 **AI 招募草稿** 形成闭环。
+ * 智能体入口在底栏「AI搭子」与悬浮球，不与首页顶区重复。
  */
 @Composable
 fun ForumScreen(

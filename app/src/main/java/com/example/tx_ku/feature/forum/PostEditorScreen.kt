@@ -96,8 +96,8 @@ fun PostEditorScreen(
     BuddyBackground(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             BuddyTopBar(
-                title = "广场",
-                subtitle = "①填意向 ②可借助 AI 生成 ③发布",
+                title = "发到峡谷广场",
+                subtitle = "① 写意向 ② 可用 AI 润色 ③ 审核通过后上广场",
                 subtitleMaxLines = 2,
                 onBack = { navController.popBackStack() },
                 modifier = Modifier.fillMaxWidth()

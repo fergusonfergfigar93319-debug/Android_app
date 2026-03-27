@@ -4,7 +4,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * 同频搭 - 统一间距与尺寸 token。
+ * 元流同频 - 统一间距与尺寸 token。
  * 禁止在业务代码中硬编码 dp 值，页面级使用本文件常量。
  */
 object BuddyDimens {

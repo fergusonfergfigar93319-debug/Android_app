@@ -1,6 +1,8 @@
-# **📄 《同频搭 (BuddyCard)》API 对接与数据定义开发文档**
+# **📄 《元流同频》API 对接与数据定义开发文档**
 
-**版本**：V1.0
+> **说明**：工程与历史文档曾用代号 **同频搭 (BuddyCard)**；当前 Android 客户端对外产品名为 **元流同频**（与 `app_name` / `BrandConfig.appDisplayName` 一致）。本文档仍以 **REST 路径与表结构** 为主，与 **`TX_ku_Android前后端对接说明.md`** 同步修订。
+
+**版本**：V1.1（对齐元流同频客户端命名与王者向业务范围）
 
 **制定者**：Gemini Antigravity (架构组)
 

@@ -1,0 +1,21 @@
+以下位图来自腾讯《王者荣耀》官网公开静态域名 game.gtimg.cn，仅用于资讯与 UI 演示，版权归腾讯及相关权利人所有。
+
+包内路径：app/src/main/res/drawable-nodpi/
+
+- honor_news_01.jpg ~ honor_news_02.jpg：官网皮肤爆料页主宣图（pvp.qq.com/coming/v2/skins/0719-mgdf.shtml 引用 //game.gtimg.cn/.../20240718/*.jpg）
+- honor_news_03.jpg：英雄头像 heroimg/132/132.jpg
+- honor_news_04.jpg ~ honor_news_06.jpg：英雄头像 heroimg/167、193、523
+- follow_tile_honor_game.jpg：heroimg/112/112.jpg
+- follow_tile_honor_esports.jpg：heroimg/179/179.jpg
+
+智能体英雄头像（官方 heroimg，对应关系见 Drawable 文件名）：
+- agent_hero_kael.jpg：193 铠
+- agent_hero_lan.jpg：528 澜
+- agent_hero_diaochan.jpg：141 貂蝉
+- agent_hero_luban.jpg：112 鲁班七号
+- agent_hero_yao.jpg：505 瑶
+- agent_hero_libai.jpg：131 李白
+- agent_hero_houyi.jpg：169 后羿
+- agent_hero_wukong.jpg：167 孙悟空
+
+正式上架或对外分发前，请按腾讯素材与赛事规则自行确认授权。

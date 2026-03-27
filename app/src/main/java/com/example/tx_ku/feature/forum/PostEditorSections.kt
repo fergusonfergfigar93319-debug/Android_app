@@ -102,7 +102,7 @@ fun PostEditorFormScrollContent(
                 label = { Text("想发什么、想找谁、想聊啥") },
                 placeholder = {
                     Text(
-                        text = "示例：想找工作日晚间打三角洲的固玩，主医疗位，不压力…",
+                        text = "示例：想找王者晚间五排固玩，主游走，会占视野、不压力…",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
                     )
@@ -151,7 +151,7 @@ fun PostEditorFormScrollContent(
                 }
             } else {
                 Text(
-                    text = "在「我的」里完善档案后，生成内容会更贴合你的玩法与习惯。",
+                    text = "在「元流档案」里完善资料后，生成内容会更贴合你的玩法与习惯。",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

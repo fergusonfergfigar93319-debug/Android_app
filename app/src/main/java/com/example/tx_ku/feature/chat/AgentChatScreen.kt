@@ -75,6 +75,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -86,6 +87,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.tx_ku.R
+import com.example.tx_ku.core.brand.BrandConfig
 import com.example.tx_ku.core.designsystem.components.BuddyEmptyState
 import com.example.tx_ku.core.designsystem.components.BuddyBackground
 import com.example.tx_ku.core.designsystem.components.BuddyTopBar
@@ -165,18 +167,26 @@ private data class QuickPhrase(val label: String, val text: String)
 private val quickPhrases = listOf(
     QuickPhrase("王者该团吗", "王者这阵容这波该接团还是带线？兵线和小地图一起说。"),
     QuickPhrase("打野节奏", "王者打野这把刷野、gank、控龙怎么排优先级？短句给时间感。"),
-    QuickPhrase("进点怎么分", "这局三角洲进点怎么分工比较稳？按路人野队说就行。"),
-    QuickPhrase("心态稳住", "缺人连跪时怎么不炸心态？给点能立刻用的招。"),
-    QuickPhrase("突击怎么玩", "突击位萌新，从走位到枪线给几句入门。"),
-    QuickPhrase("写条招募", "帮我写条不尬、好复制的组队招募。"),
-    QuickPhrase("版本嘴替", "这版本平衡用玩家口吻吐槽两句，别太官方。"),
-    QuickPhrase("枪怎么选", "手残友好主武器来几把，一句话说清为啥。"),
+    QuickPhrase("辅助视野", "王者辅助这把怎么占视野不被开？给两步可执行的。"),
+    QuickPhrase("心态稳住", "王者连跪时怎么不炸心态？给点能立刻用的招。"),
+    QuickPhrase("射手发育", "发育路逆风怎么苟住等团？兵线、野区取舍说清。"),
+    QuickPhrase("写条招募", "帮我写条王者五排 / 双排招募，不尬、好复制。"),
+    QuickPhrase("版本嘴替", "这版本王者平衡用玩家口吻吐槽两句，别太官方。"),
+    QuickPhrase("出装追问", "对面这阵容我这件防装该先做不详还是魔女？"),
     QuickPhrase("局内短句", "连跪后局里能发的安抚短句，两句就够，别鸡汤。"),
-    QuickPhrase("一句复盘", "用一句话复盘上一把，客观，别小作文。"),
-    QuickPhrase("搜啥关键词", "去广场搜三角洲攻略，帮我起几个好搜的关键词。")
+    QuickPhrase("一句复盘", "用一句话复盘上一把王者排位，客观，别小作文。"),
+    QuickPhrase("搜攻略词", "去广场搜王者攻略，帮我起几个好搜的关键词。")
 )
 
-/** 创作页自定义短语优先展示，再接内置短语。 */
+private val esportsQuickPhrases = listOf(
+    QuickPhrase("BP咋看", "这场 KPL 的 BP 谁更赚？三句话说清胜负手。"),
+    QuickPhrase("龙团解读", "刚才那条龙团两边谁该接、谁该放？观众视角拆一下。"),
+    QuickPhrase("萌新观赛", "第一次认真看王者电竞，先把哪几个镜头盯住？"),
+    QuickPhrase("赛程闲聊", "今天王者电竞有啥值得唠的焦点局，帮我一句话安利给朋友。"),
+    QuickPhrase("搜赛评词", "去广场搜王者电竞 / KPL 讨论，帮我起几个好搜的关键词。")
+)
+
+/** 创作页自定义短语优先展示；场景侧重追加专属快捷语，再接通用池。 */
 private fun mergedQuickPhrases(tuning: AgentTuning): List<QuickPhrase> {
     val custom = listOfNotNull(
         tuning.customPhrase1.trim().takeIf { it.isNotEmpty() },
@@ -186,7 +196,11 @@ private fun mergedQuickPhrases(tuning: AgentTuning): List<QuickPhrase> {
         val label = if (text.length <= 8) text else "我的${idx + 1}"
         QuickPhrase(label, text)
     }
-    return custom + quickPhrases
+    val scenarioExtras = when (tuning.focusScenario) {
+        "王者电竞" -> esportsQuickPhrases
+        else -> emptyList()
+    }
+    return custom + scenarioExtras + quickPhrases
 }
 
 /** 顶栏下分段筛选：浅灰条 + 白底轨道 + 选中浅青灰，对齐产品稿 */
@@ -271,7 +285,7 @@ private fun AgentChatLockedGate(navController: NavController) {
         title = { Text("先捏好搭子再聊天") },
         text = {
             Text(
-                "回到底栏「搭子」页，把形象、语气选好，点「完成创作并解锁聊天」后就能进会话啦。"
+                "回到底栏「AI搭子」页，把形象、语气选好，点「完成创作并解锁聊天」后就能进会话啦。"
             )
         },
         confirmButton = {
@@ -335,7 +349,7 @@ private fun AgentChatContent(navController: NavController) {
             nick.isNotEmpty() && !personaName.isNullOrBlank() ->
                 "$nick 的搭子 · $personaName"
             nick.isNotEmpty() -> "$nick 的搭子"
-            else -> "同频搭"
+            else -> BrandConfig.appDisplayName
         }
     }
 
@@ -800,7 +814,7 @@ private fun AgentChatContent(navController: NavController) {
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("恢复默认（同频搭天蓝）")
+                    Text(stringResource(R.string.chat_theme_restore_default))
                 }
             }
         }
@@ -1165,9 +1179,19 @@ private fun ChatInputBar(
 }
 
 private fun agentAvatarDrawableRes(avatarStyle: String): Int = when (avatarStyle) {
-    "指挥官" -> R.drawable.agent_avatar_commander
-    "元气辅助" -> R.drawable.agent_avatar_support
-    "战术导师" -> R.drawable.agent_avatar_coach
+    "英雄主题·铠" -> R.drawable.agent_hero_kael
+    "英雄主题·澜" -> R.drawable.agent_hero_lan
+    "英雄主题·貂蝉" -> R.drawable.agent_hero_diaochan
+    "英雄主题·鲁班" -> R.drawable.agent_hero_luban
+    "英雄主题·瑶" -> R.drawable.agent_hero_yao
+    "英雄主题·李白" -> R.drawable.agent_hero_libai
+    "英雄主题·后羿" -> R.drawable.agent_hero_houyi
+    "英雄主题·孙悟空" -> R.drawable.agent_hero_wukong
+    "指挥官", "对抗路教头" -> R.drawable.agent_avatar_commander
+    "元气辅助", "游走先锋" -> R.drawable.agent_avatar_support
+    "战术导师", "中路参谋" -> R.drawable.agent_avatar_coach
+    "发育路教官", "峡谷军师", "赛事实况台" -> R.drawable.agent_avatar_preset_honor_strategist
+    "野核节拍器" -> R.drawable.agent_avatar_preset_honor_jungle
     "治愈陪玩" -> R.drawable.agent_avatar_healing
     "企鹅萌妹", "咕咕嘎嘎" -> R.drawable.agent_avatar_penguin
     "我的刀盾" -> R.drawable.agent_avatar_daodun

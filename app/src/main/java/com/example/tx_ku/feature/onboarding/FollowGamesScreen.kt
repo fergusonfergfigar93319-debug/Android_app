@@ -83,7 +83,7 @@ fun FollowGamesScreen(navController: NavController) {
     ) {
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = "请选择你关注的游戏",
+            text = "请选择关注：王者荣耀 或 王者电竞（可多选）",
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp),

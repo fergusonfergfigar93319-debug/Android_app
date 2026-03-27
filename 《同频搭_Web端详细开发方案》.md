@@ -1,6 +1,10 @@
 # 《同频搭》Web 端详细开发方案
 
-**版本**：V1.0  
+> **⚠️ 现版产品对齐（必读）**  
+> Android 客户端已正式升级为 **元流同频**，底栏与智能体业务范围以 **王者荣耀 + 王者电竞** 为主。Web 若继续按本文旧「发现 / 我的 / 多游戏」叙事实现，将与 App 不一致。  
+> **请先阅读：`元流同频_Web端改版对齐说明.md`（改版需求与验收清单）**；本文仍保留 **技术栈、目录结构、里程碑与模块拆分**，实施时用对齐说明 **替换所有导航文案、枚举与游戏范围**。
+
+**版本**：V1.0（工程方案）+ **以《元流同频_Web端改版对齐说明》为产品真值**  
 **依据**：Android 端当前实现（`Routes`、`MainTabScreen`、`TX_ku_Android前后端对接说明.md`）、《Web前端技术栈选型-Vue3》、《同频搭_API与数据定义文档》  
 **目标**：在 **Vue 3 + Vite** 技术栈下，与 App **功能与数据契约一致**，可并行联调、分阶段上线。
 
@@ -10,7 +14,7 @@
 
 ### 1.1 产品目标
 
-- **同一套业务**：注册登录、建档、游戏兴趣、发现（资讯 + 推荐搭子）、搭子创作与智能体聊天、广场论坛、我的（资料/关注/加好友/私信）、搭子房与共识卡（若后端就绪）。
+- **同一套业务**：注册登录、建档、游戏兴趣、**版本速递**（资讯 + 推荐搭子）、**AI搭子** 创作与智能体聊天、**峡谷广场**、**元流档案**（资料/关注/加好友/私信等）、搭子房与共识卡（若后端就绪）。
 - **体验差异**：Web 以 **键盘 + 大屏** 为主，保留底栏或侧栏导航的等价信息架构；**不追求**与 Compose 像素级一致，但 **品牌色、卡片层级、关键文案** 与《Android端视觉与体验优化方案》及 `BuddyTheme` 方向一致。
 
 ### 1.2 不在首版范围（可列 backlog）
@@ -68,10 +72,10 @@
 | `ONBOARDING` | `/onboarding` | 多步建档 |
 | `GAME_INTEREST` | `/game-interest` | 关注游戏多选 |
 | `MAIN_TABS` | `/app` | 主壳：底栏四 Tab |
-| — | `/app/discover` | 对应「发现」 |
-| — | `/app/agent` | 对应「搭子」创作 Tab |
-| — | `/app/forum` | 对应「广场」 |
-| — | `/app/me` | 对应「我的」 |
+| — | `/app/feed`（或旧 `/app/discover` 重定向至此） | 对应 **版本速递** |
+| — | `/app/agent` | 对应 **AI搭子** 创作 Tab |
+| — | `/app/forum` | 对应 **峡谷广场** |
+| — | `/app/me`（或 `/app/archive`） | 对应 **元流档案** |
 | `POST_DETAIL` | `/app/forum/post/:postId` | 帖子详情（也可全屏 `/post/:postId`） |
 | `POST_EDITOR` | `/app/forum/edit` 或 `/post-editor` | 发帖（FAB 入口与 App 一致时挂论坛子路由） |
 | `MY_AGENT` | 与 `/app/agent` 合并或别名 | App 中 `MY_AGENT` 与 Tab 一致，Web 可单页承载 |
@@ -103,7 +107,7 @@
 ### 4.2 启动与分流（`splash`）
 
 - 展示约 **0.8–1.2s** 品牌动画（可与 App 时长接近），读取 token 与本地缓存的「建档/游戏兴趣完成」标记（最终以 **GET `/profiles/me`** 为准）。
-- 无 token → `/login`；有 token → 拉取画像后决定 `/onboarding` / `/game-interest` / `/app/discover`。
+- 无 token → `/login`；有 token → 拉取画像后决定 `/onboarding` / `/game-interest` / `/app/feed`（版本速递）。
 
 ### 4.3 建档（`onboarding`）
 
@@ -114,16 +118,16 @@
 ### 4.4 游戏兴趣（`game_interest`）
 
 - 与 App「米游社式多选」一致：多选游戏 id，写入服务端（若暂无接口则 **localStorage + TODO** 与 Android `GameInterestStore` 行为一致）。
-- 完成进入 `/app/discover`。
+- 完成进入 `/app/feed`（版本速递）。
 
-### 4.5 主 Tab — 发现（`Feed`）
+### 4.5 主 Tab — 版本速递（`Feed`，原方案称「发现」）
 
 - **子结构**：与 App 一致 — **资讯子 Tab** + **推荐搭子子 Tab**。
 - **资讯**：`GET /feed/news?game=&page=`（对接说明 §2.6）；首版可用静态/mock。
 - **推荐搭子**：`GET /recommendations?page=&size=`；卡片展示 `matchScore`、`matchReasons`、`conflict`、`advice`、`communicationStylePreview`、`card`。
 - **申请**：`POST /buddy-requests`（body `targetUserId`、`message`）；`PATCH /buddy-requests/{id}` 处理接受/拒绝（若 Web 也要做「收到的申请」再扩展页面）。
 
-### 4.6 主 Tab — 搭子（`AgentPersona`）
+### 4.6 主 Tab — AI搭子（`AgentPersona`）
 
 - **成品预设 + 调参**：字段与 `AgentTuning` 一致；复杂表单可用分组 `el-collapse` 或分段子路由（`/app/agent/style`、`/app/agent/tone` 可选）。
 - **解锁聊天**：用户点击「完成创作，解锁聊天」→ 更新 `agentChatUnlocked`（`PUT` 画像扩展或独立接口）；与 Android `UserAgentStore` 云端化方案（对接说明 §2.4）一致。
@@ -135,7 +139,7 @@
 - **消息**：若接 LLM：`POST /ai/agent/chat`（SSE 可选）；若演示期：**mock 或规则回复**（对齐 `AgentPersonaResolver` / `AgentTaskRouter` 的产品规则说明）。
 - **任务路由**：若用户输入触发「去发帖/去广场搜索」，用 **前端路由跳转** + 可选 query 预填（与 App 行为一致）。
 
-### 4.8 主 Tab — 广场（`Forum`）
+### 4.8 主 Tab — 峡谷广场（`Forum`）
 
 - **列表**：`GET /posts?category=&page=&size=&q=`；仅展示 `isVisibleInPublicForum()` 等价逻辑（审核通过等）。
 - **分区**：`recruit` / `guide` / `social` / `event`（与 `ForumCategories` 一致）。
@@ -144,7 +148,7 @@
 - **AI 发帖草稿**：`POST /ai/posts` 填充编辑器；生成过程 **禁用提交 + skeleton/文案轮换**（与《前端开发文档》§3.3 一致）。
 - **点赞/收藏**：对接 `POST/DELETE .../like` 与 `GET/POST /users/me/bookmarks`（若多端同步）。
 
-### 4.9 主 Tab — 我的（`Profile`）
+### 4.9 主 Tab — 元流档案（`Profile`）
 
 - **展示**：头像、昵称、简介、入口：编辑资料、关注列表、加好友、设置、退出。
 - **资料编辑**：`PUT /profiles/me`；字段与 `Profile` 模型一致。
@@ -215,13 +219,13 @@
 | 阶段 | 周期（参考） | 交付物 |
 |------|----------------|--------|
 | **M0** | 3–5 天 | 工程脚手架、主题、Axios、路由壳、登录注册页 + mock |
-| **M1** | 1 周 | 建档全流程、画像拉取、发现 Tab（资讯 mock + 推荐接口） |
+| **M1** | 1 周 | 建档全流程、画像拉取、**版本速递** Tab（资讯 mock + 推荐接口） |
 | **M2** | 1 周 | 广场列表/详情/发帖/评论、审核态过滤 |
-| **M3** | 1 周 | 搭子 Tab 调参与解锁、`/app/agent/chat`、任务路由跳转 |
+| **M3** | 1 周 | **AI搭子** Tab 调参与解锁、`/app/agent/chat`、任务路由跳转 |
 | **M4** | 1 周 | 关注/私信/加好友、搭子房（视后端） |
 | **M5** | 持续 | PWA、SSE、性能与无障碍 |
 
-**3 人分工示例**：A 基础设施 + 认证 + 画像；B 发现 + 推荐 + 搭子创作；C 论坛全链路 + 社交。
+**3 人分工示例**：A 基础设施 + 认证 + 画像；B **版本速递** + 推荐 + **AI搭子** 创作；C **峡谷广场** 全链路 + 社交。
 
 ---
 

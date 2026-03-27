@@ -141,9 +141,9 @@ fun ProfileScreen(
                         },
                         onShareProfile = {
                             val text = buildString {
-                                append(profile.nickname).append(" · 搭子主页\n")
+                                append(profile.nickname).append(" · 元流档案 / 组队名片\n")
                                 profile.bio.take(80).takeIf { it.isNotBlank() }?.let { append(it).append('\n') }
-                                append("来自 ").append(context.getString(R.string.app_name)).append(" 搭子名片")
+                                append("来自 ").append(context.getString(R.string.app_name))
                             }
                             context.startActivity(
                                 Intent.createChooser(
@@ -268,7 +268,7 @@ fun ProfileScreen(
                                 color = BuddyColors.CommunityTextPrimary
                             )
                             Text(
-                                text = "招募标签与宣言，用于匹配与发帖",
+                                text = "王者开黑招募用 · 与峡谷广场发帖、申请搭子一致展示",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = BuddyColors.CommunityTextSecondary
                             )
@@ -311,20 +311,20 @@ fun ProfileScreen(
                             .padding(bottom = BuddyDimens.SpacingXl)
                     ) {
                         Text(
-                            text = "我的帖子",
+                            text = "峡谷广场 · 我的帖子",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.padding(bottom = BuddyDimens.SpacingSm)
                         )
                         Text(
-                            text = "共 $myPostCount 帖 · 已在广场展示 $myPublicPostCount 帖（审核通过才可见）",
+                            text = "共 $myPostCount 帖 · 已在峡谷广场公开展示 $myPublicPostCount 帖（审核通过才可见）",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(bottom = BuddyDimens.SpacingMd)
                         )
                         if (myPostsForSheet.isEmpty()) {
                             Text(
-                                text = "还没有帖子，去广场发一条吧",
+                                text = "还没有帖子，去峡谷广场发条招募或攻略吧",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -386,14 +386,14 @@ fun ProfileScreen(
                             .padding(bottom = BuddyDimens.SpacingXl)
                     ) {
                         Text(
-                            text = "收藏的帖子",
+                            text = "峡谷广场 · 收藏",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.padding(bottom = BuddyDimens.SpacingMd)
                         )
                         if (bookmarkedPosts.isEmpty()) {
                             Text(
-                                text = "暂无收藏，在广场帖子右下角点击「收藏」",
+                                text = "暂无收藏；浏览峡谷广场帖子时，可点「收藏」稍后回看",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -479,7 +479,7 @@ private fun profileCompletionRatio(p: Profile): Float {
 private fun profileCompletionHints(p: Profile): String {
     val missing = profileCompletionMissing(p)
     return when {
-        missing.isEmpty() -> "资料齐了，搭子和推荐都更好猜你"
+        missing.isEmpty() -> "资料齐了，开黑匹配、广场招募和智能体都更懂你"
         else -> "还可补充：${missing.take(4).joinToString("、")}"
     }
 }
@@ -497,12 +497,13 @@ private fun ProfileHeaderBanner(
     val accent = BuddyColors.CommunityPrimary
     val gradient = Brush.linearGradient(
         colors = listOf(
-            BuddyColors.CommunityPrimary.copy(alpha = 0.22f),
-            BuddyColors.BackgroundLightHighlight.copy(alpha = 0.95f),
+            BuddyColors.Primary.copy(alpha = 0.20f),
+            BuddyColors.CommunityPrimary.copy(alpha = 0.14f),
+            BuddyColors.BackgroundLightHighlight.copy(alpha = 0.98f),
             BuddyColors.CommunityPageBackground
         ),
         start = Offset(0f, 0f),
-        end = Offset(900f, 360f)
+        end = Offset(900f, 380f)
     )
     val hintLine = profileCompletionHints(profile)
     Column(
@@ -520,13 +521,13 @@ private fun ProfileHeaderBanner(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "我的主场",
+                    text = "元流档案",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = BuddyColors.CommunityTextPrimary
                 )
                 Text(
-                    text = "签名 · 搭子 · 同好",
+                    text = "搭子人设 · 资料进度 · 与峡谷广场同频",
                     style = MaterialTheme.typography.bodySmall,
                     color = BuddyColors.CommunityTextSecondary,
                     modifier = Modifier.padding(top = 4.dp)
@@ -577,7 +578,7 @@ private fun ProfileHeaderBanner(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "${(completion * 100).toInt()}% · 已填 $filledCount/$totalFields 项 · 完善资料更容易被搭子发现",
+                    text = "${(completion * 100).toInt()}% · 已填 $filledCount/$totalFields 项 · 档案越全，广场招募与推荐越准",
                     style = MaterialTheme.typography.labelSmall,
                     color = BuddyColors.CommunityTextSecondary
                 )
@@ -671,7 +672,7 @@ private fun ProfileHeroCard(
             Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
             val sig = profile.bio.trim()
             Text(
-                text = if (sig.isNotEmpty()) sig else "写一句签名，展示你的游戏态度",
+                text = if (sig.isNotEmpty()) sig else "写一句峡谷签名：分路、段位或常玩英雄，方便开黑对上暗号",
                 style = if (sig.isNotEmpty()) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.bodyMedium,
                 color = if (sig.isNotEmpty()) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -697,8 +698,8 @@ private fun ProfileHeroCard(
                         onClick = onEditClick,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = Color(0xFFE8F5E9),
-                            contentColor = Color(0xFF2E7D32)
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     ) {
                         Text("编辑资料", fontWeight = FontWeight.SemiBold)
@@ -805,13 +806,13 @@ private fun ProfileQuickActions(
     val lightBlue = BuddyColors.CommunityPrimary.copy(alpha = 0.14f)
     Column(modifier = modifier) {
         Text(
-            text = "快捷入口",
+            text = "峡谷捷径",
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
             color = BuddyColors.CommunityTextPrimary
         )
         Text(
-            text = "常用功能一键直达",
+            text = "搭子创作、广场发帖、关注与收藏",
             style = MaterialTheme.typography.bodySmall,
             color = BuddyColors.CommunityTextSecondary,
             modifier = Modifier.padding(top = 4.dp, bottom = BuddyDimens.SpacingSm)
@@ -821,7 +822,7 @@ private fun ProfileQuickActions(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             QuickActionLargeTile(
-                label = "搭子",
+                label = "AI 搭子",
                 iconRes = R.drawable.ic_agent,
                 containerColor = primary,
                 contentColor = Color.White,
@@ -860,7 +861,7 @@ private fun ProfileQuickActions(
                 modifier = Modifier.weight(1f)
             )
             QuickActionLargeTile(
-                label = "发帖",
+                label = "广场发帖",
                 iconRes = R.drawable.ic_add,
                 containerColor = BuddyColors.CommunityAnnouncementBg,
                 contentColor = deepBlue,
@@ -959,7 +960,7 @@ private fun MineAgentEntryCard(
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "我的游戏搭子",
+                    text = "专属峡谷搭子",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium

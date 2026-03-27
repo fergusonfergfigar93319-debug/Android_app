@@ -26,6 +26,31 @@ object UserAgentStore {
 
     private fun k(field: String): String = "${emailKey()}_$field"
 
+    /** 上一版出厂默认（企鹅萌妹 + 通用）；与当前 [AgentTuning] 构造默认不一致时用于一次性升级存档 */
+    private val legacyFactoryDefaultTuning = AgentTuning(
+        intensity = "标准",
+        replyLength = "中",
+        focusScenario = "通用",
+        emotionTone = "中立理性",
+        humorMix = "适中",
+        socialEnergy = "平衡健谈",
+        witStyle = "偶尔调侃",
+        stanceMode = "并肩分析",
+        initiativeLevel = "适度追问",
+        addressStyle = "中性",
+        avatarStyle = "企鹅萌妹",
+        avatarFrame = "霓虹边框",
+        bubbleStyle = "圆角卡片",
+        voiceMood = "清晰播报",
+        agentDisplayNameOverride = "咕咕嘎嘎",
+        extraInstructions = "",
+        tabooNotes = "",
+        customPersonaScript = "",
+        customPhrase1 = "",
+        customPhrase2 = "",
+        customPhrase3 = ""
+    )
+
     /**
      * 旧存档迁移：咕咕嘎嘎→企鹅萌妹形象键；梗来运转→我的刀盾；
      * 曾用「我的刀盾」海豹皮 + 同名展示名 → 现为「咕咕嘎嘎」+ 企鹅萌妹头像。
@@ -33,13 +58,24 @@ object UserAgentStore {
     private fun migrateLegacyTuning(t: AgentTuning): AgentTuning {
         var avatar = t.avatarStyle
         var name = t.agentDisplayNameOverride
+        var focus = t.focusScenario
         if (avatar == "咕咕嘎嘎") avatar = "企鹅萌妹"
         if (name == "梗来运转") name = "我的刀盾"
+        if (name == "冷面队长") name = "指挥官"
+        if (name == "眠眠") name = "治愈陪玩"
         if (avatar == "我的刀盾" && name == "我的刀盾") {
             avatar = "企鹅萌妹"
             name = "咕咕嘎嘎"
         }
-        return t.copy(avatarStyle = avatar, agentDisplayNameOverride = name)
+        if (focus == "三角洲行动" || focus == "CS:GO") focus = "王者荣耀"
+        if (avatar == "撤离顾问") avatar = "峡谷军师"
+        if (avatar == "队医烟位") avatar = "元气辅助"
+        if (avatar == "炙热参谋") avatar = "战术导师"
+        return t.copy(
+            focusScenario = focus,
+            avatarStyle = avatar,
+            agentDisplayNameOverride = name
+        )
     }
 
     /**
@@ -73,10 +109,15 @@ object UserAgentStore {
             customPhrase2 = prefs.getString(k("customPhrase2"), null) ?: "",
             customPhrase3 = prefs.getString(k("customPhrase3"), null) ?: ""
         )
-        val migrated = migrateLegacyTuning(loaded)
-        CurrentUser.agentTuning = migrated
-        if (migrated != loaded) {
+        if (loaded == legacyFactoryDefaultTuning) {
+            CurrentUser.agentTuning = AgentTuning()
             saveFromCurrentUser()
+        } else {
+            val migrated = migrateLegacyTuning(loaded)
+            CurrentUser.agentTuning = migrated
+            if (migrated != loaded) {
+                saveFromCurrentUser()
+            }
         }
         CurrentUser.agentChatUnlocked = prefs.getBoolean(k("agentChatUnlocked"), false)
         CurrentUser.profile?.let { p ->

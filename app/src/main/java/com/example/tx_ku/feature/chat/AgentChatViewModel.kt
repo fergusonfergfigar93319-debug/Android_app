@@ -3,6 +3,7 @@ package com.example.tx_ku.feature.chat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tx_ku.core.domain.AgentPersonaResolver
+import com.example.tx_ku.core.brand.BrandConfig
 import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.feature.chat.agent.AgentNavCommand
 import com.example.tx_ku.feature.chat.agent.AgentTaskRouter
@@ -162,14 +163,14 @@ class AgentChatViewModel : ViewModel() {
             injectReminder(
                 iconEmoji = "📢",
                 title = "周末加成快开了",
-                summary = "你关注的「三角洲行动」本周末有双倍积分，大约 2 小时后生效，别忘领加成。",
-                eventId = "evt_delta_weekend_x2"
+                summary = "你关注的「王者荣耀」本周末有限时活动掉落加成，大约 2 小时后开启，可先进活动页预习规则。",
+                eventId = "evt_honor_weekend_bonus"
             )
             delay(90_000L)
             injectReminder(
                 iconEmoji = "📅",
                 title = "招募报名要截止啦",
-                summary = "「同频搭 · 宜居测试」讨论活动报名今晚 24:00 关窗，想参加抓紧。",
+                summary = "「${BrandConfig.appDisplayName} · 广场活动」报名今晚 24:00 关窗，想参加抓紧。",
                 eventId = "evt_forum_deadline"
             )
         }

@@ -1,6 +1,7 @@
 package com.example.tx_ku.feature.chat.agent
 
 import com.example.tx_ku.core.model.AgentTuning
+import com.example.tx_ku.core.brand.BrandConfig
 import com.example.tx_ku.core.model.Profile
 import com.example.tx_ku.feature.forum.ForumCategories
 
@@ -168,7 +169,7 @@ object AgentTaskRouter {
     }
 
     private fun buildProfileClipboard(profile: Profile, tuning: AgentTuning): String = buildString {
-        appendLine("【同频搭 · 档案摘要】")
+        appendLine(BrandConfig.profileClipboardHeader)
         appendLine("昵称：${profile.nickname}")
         if (profile.bio.isNotBlank()) appendLine("签名：${profile.bio}")
         if (profile.preferredGames.isNotEmpty()) appendLine("常玩：${profile.preferredGames.joinToString("、")}")
@@ -196,7 +197,7 @@ object AgentTaskRouter {
             if (profile.bio.isNotBlank()) append("· 签名：${profile.bio.take(60)}${if (profile.bio.length > 60) "…" else ""}\n")
             val note = tuning.extraInstructions.trim()
             if (note.isNotEmpty()) append("· 你给搭子的备忘：${note.take(48)}${if (note.length > 48) "…" else ""}\n")
-            append("\n改档案去「我的」；写招募、搜广场，继续打字吩咐我就行～")
+            append("\n改档案去「元流档案」；写招募、搜峡谷广场，继续打字吩咐我就行～")
         }
     }
 

@@ -3,7 +3,7 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <!-- 广场：对话气泡 + 角标小气泡 -->
+    <!-- 峡谷广场 Tab：对话气泡 + 角标 -->
     <path
         android:fillColor="#FF000000"
         android:pathData="M20,2H4C2.9,2,2,2.9,2,4v12c0,1.1,0.9,2,2,2h3v3l4,-3h9c1.1,0,2,-0.9,2,-2V4C22,2.9,21.1,2,20,2zM20,16H4V4h16V16z" />

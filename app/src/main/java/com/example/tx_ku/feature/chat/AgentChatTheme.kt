@@ -4,6 +4,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.tx_ku.core.brand.BrandConfig
 import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.prefs.AgentChatPrefsStore
 
@@ -12,7 +13,7 @@ enum class AgentChatThemePreset(
     val label: String
 ) {
     QQ_BLUE("qq_blue", "经典 QQ 蓝"),
-    COMMUNITY("community", "同频搭天蓝"),
+    COMMUNITY("community", BrandConfig.chatThemeDefaultLabel),
     MINT("mint", "薄荷清爽"),
     TWILIGHT("twilight", "暮色柔紫");
 

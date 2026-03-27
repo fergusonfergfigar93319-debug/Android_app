@@ -1,5 +1,6 @@
 package com.example.tx_ku.core.domain
 
+import com.example.tx_ku.core.brand.BrandConfig
 import com.example.tx_ku.core.model.AgentTuning
 import com.example.tx_ku.core.model.BuddyAgentPersona
 import com.example.tx_ku.core.model.Profile
@@ -15,17 +16,36 @@ object AgentPersonaResolver {
         val game = profile.preferredGames.firstOrNull().orEmpty()
 
         val roleSkin = when {
-            role.contains("辅助") -> Triple("支援指挥", "🛰️", "擅长控节奏与信息协同，优先保障团队资源分配。")
-            role.contains("打野") -> Triple("开图节奏", "🧭", "擅长找窗口期，带动队伍节奏推进。")
-            role.contains("中") || role.contains("法") -> Triple("战术中枢", "🎯", "注重技能链与团战进场时机。")
+            role.contains("辅助") || role.contains("游走") ->
+                Triple("游走支援", "🛰️", "擅长视野、开团与保排节奏，串联中野与双边。")
+            role.contains("打野") ->
+                Triple("开图节奏", "🧭", "擅长找窗口期，带动控龙与边路压力。")
+            role.contains("中") || role.contains("法") ->
+                Triple("战术中枢", "🎯", "注重清线转线、技能链与团战进场时机。")
+            role.contains("射手") || role.contains("发育") ->
+                Triple("发育输出", "🏹", "注重补刀经济、存活与团战持续输出位置。")
+            role.contains("对抗") || role.contains("上单") || role.contains("坦克") ->
+                Triple("边路对抗", "⚡", "注重线权、单带牵制与团战承伤或切入。")
             else -> Triple("全局协作", "🎮", "偏向团队协作与沟通组织，提升整体稳定性。")
         }
 
         val uiThemeKey = when {
             tuning.avatarStyle == "元气辅助" || tuning.avatarStyle == "企鹅萌妹" ||
                 tuning.avatarStyle == "咕咕嘎嘎" ||
-                tuning.avatarStyle == "我的刀盾" -> "moe"
-            tuning.avatarStyle == "战术导师" -> "tactical"
+                tuning.avatarStyle == "我的刀盾" ||
+                tuning.avatarStyle == "游走先锋" ||
+                tuning.avatarStyle == "英雄主题·瑶" ||
+                tuning.avatarStyle == "英雄主题·孙悟空" -> "moe"
+            tuning.avatarStyle == "战术导师" || tuning.avatarStyle == "峡谷军师" ||
+                tuning.avatarStyle == "野核节拍器" || tuning.avatarStyle == "赛事实况台" ||
+                tuning.avatarStyle == "中路参谋" || tuning.avatarStyle == "发育路教官" ||
+                tuning.avatarStyle == "对抗路教头" ||
+                tuning.avatarStyle == "英雄主题·澜" ||
+                tuning.avatarStyle == "英雄主题·貂蝉" ||
+                tuning.avatarStyle == "英雄主题·铠" ||
+                tuning.avatarStyle == "英雄主题·鲁班" ||
+                tuning.avatarStyle == "英雄主题·李白" ||
+                tuning.avatarStyle == "英雄主题·后羿" -> "tactical"
             tuning.avatarStyle == "治愈陪玩" -> "ink"
             else -> "cyber"
         }
@@ -41,7 +61,7 @@ object AgentPersonaResolver {
             else -> "中节奏"
         }
 
-        val baseTagline = "面向${if (game.isBlank()) "多游戏" else game}场景，提供可执行沟通建议与战术提示。"
+        val baseTagline = "面向${if (game.isBlank()) "王者荣耀 / 王者电竞" else game}场景，提供可执行沟通建议与战术提示。"
         val tunedTagline = when (tuning.intensity) {
             "轻柔" -> "$baseTagline 当前语气更柔和，优先共情。"
             "犀利" -> "$baseTagline 当前语气更直接，聚焦问题。"
@@ -120,13 +140,16 @@ object AgentPersonaResolver {
             )
         }
         val game = profile.preferredGames.firstOrNull().orEmpty()
-        val honorFocus = tuning.focusScenario == "王者荣耀" ||
-            game.contains("王者") ||
-            trimmed.contains("王者") ||
-            trimmed.contains("峡谷")
-        val deltaFocus = tuning.focusScenario == "三角洲行动" ||
-            game.contains("三角洲") ||
-            trimmed.contains("三角洲")
+        val msgEsportsHint = trimmed.contains("王者电竞") || trimmed.contains("KPL")
+        val esportsFocus = tuning.focusScenario == "王者电竞" ||
+            game.contains("王者电竞") ||
+            msgEsportsHint
+        val honorFocus = !msgEsportsHint && (
+            tuning.focusScenario == "王者荣耀" ||
+                game.contains("王者荣耀") ||
+                trimmed.contains("峡谷") ||
+                (trimmed.contains("王者") && !trimmed.contains("王者电竞"))
+            )
         val base = when {
             trimmed.isEmpty() ->
                 "我在这儿～说说你今天想练什么，或遇到啥卡点？"
@@ -142,8 +165,8 @@ object AgentPersonaResolver {
                 "在的！${if (game.isNotBlank()) "看你常玩「$game」，" else ""}想从哪块聊起？"
             honorFocus ->
                 "王者里节奏紧：先看阵容缺啥、兵线在哪，再决定抱团还是带线；打龙团前把视野占住，别脱节进场。"
-            deltaFocus ->
-                "三角洲这类局里，信息比枪法更先决：落点、资源优先级、转点信号先对齐，再谈个人发挥。"
+            esportsFocus ->
+                "看王者电竞先把 BP 与阵容克制听懂：谁在拆火、谁在逼龙、换线后边路劣势怎么补；别只盯人头，跟大势走。"
             else ->
                 "关于「${trimmed.take(48)}${if (trimmed.length > 48) "…" else ""}」：我们可以先定一个小目标，再一步步拆。"
         }
@@ -183,8 +206,8 @@ object AgentPersonaResolver {
         }
         if (tuning.focusScenario == "赛后复盘") result += " 复盘只盯一个改进点，执行最重要。"
         if (tuning.focusScenario == "组队招募") result += " 我也可以帮你生成一条招募文案。"
-        if (tuning.focusScenario == "三角洲行动") result += " 对局里先统一指挥与报点节奏。"
         if (tuning.focusScenario == "王者荣耀") result += " 峡谷里先看兵线与小地图，再打团。"
+        if (tuning.focusScenario == "王者电竞") result += " 看台前先跟一波 BP 与龙团节奏，再聊谁的胜负手更明显。"
         if (tuning.humorMix == "轻松玩梗" && tuning.witStyle != "正经不玩笑") {
             result += " （这把先稳住节目效果。）"
         }
@@ -213,7 +236,7 @@ object AgentPersonaResolver {
 
     /** 用于复制到剪贴板的人设摘要文本 */
     fun formatPersonaShareText(persona: BuddyAgentPersona, tuning: AgentTuning): String = buildString {
-        appendLine("【同频搭 · 人设卡】")
+        appendLine(BrandConfig.personaShareCardHeader)
         appendLine("展示名：${persona.displayName}")
         appendLine("标语：${persona.tagline}")
         persona.traits.forEach { appendLine("· $it") }

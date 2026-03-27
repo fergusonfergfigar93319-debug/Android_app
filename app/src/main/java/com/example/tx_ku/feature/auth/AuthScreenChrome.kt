@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.tx_ku.R
@@ -42,7 +43,7 @@ internal fun AuthHeroBranding(
     val iconSize = if (compact) 30.dp else 38.dp
     val headlineStyle =
         if (compact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineSmall
-    val tags = listOf("版本速递", "搭子广场", "智能体")
+    val tags = listOf("王者攻略", "组队广场", "AI 搭子")
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -85,7 +86,7 @@ internal fun AuthHeroBranding(
         }
         Spacer(modifier = Modifier.height(if (compact) BuddyDimens.SpacingMd else BuddyDimens.SpacingLg))
         Text(
-            text = "同频搭",
+            text = stringResource(R.string.app_name),
             style = headlineStyle,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
@@ -93,9 +94,9 @@ internal fun AuthHeroBranding(
         Spacer(modifier = Modifier.height(BuddyDimens.SpacingXs))
         Text(
             text = if (compact) {
-                "版本速递与搭子社区"
+                stringResource(R.string.brand_login_tagline_compact)
             } else {
-                "版本速递 · 广场组队 · 智能体创作"
+                stringResource(R.string.brand_login_tagline_full)
             },
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

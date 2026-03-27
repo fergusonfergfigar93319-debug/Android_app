@@ -149,7 +149,7 @@ fun AgentPersonaScreen(
             BuddyTopBar(
                 title = if (useStudio) "搭子创作台" else "我的游戏搭子",
                 subtitle = if (useStudio) {
-                    "四步捏脸 · 聊天、广场、我的里都会同步"
+                    "四步捏脸 · 全端同步：会话、峡谷广场、元流档案"
                 } else {
                     "形象语气定好再开聊 · 三处界面一起更新"
                 },
@@ -234,9 +234,9 @@ fun AgentPersonaScreen(
                 BuddySectionHeader(
                     title = "官方成品搭子",
                     subtitle = if (factoryDefaultLocked) {
-                        "含王者荣耀、三角洲行动等游戏专属；点卡片换上完整人设后即可改展示名与备忘"
+                        "澜瑶貂蝉铠等热门英雄壳+分路逻辑，附 KPL 看台与复盘；点击卡片套上完整人设，再改展示名与备忘"
                     } else {
-                        "含王者荣耀、三角洲行动等游戏专属；点卡片一键换上完整人设，仍可点名称或下面细调"
+                        "澜瑶貂蝉铠等热门英雄壳+分路逻辑，附 KPL 看台与复盘；点击卡片一键换肤，名称与细项仍可改"
                     },
                     emoji = "🎁"
                 )
@@ -898,21 +898,9 @@ private fun PersonaHeroCard(
                     .padding(vertical = BuddyDimens.SpacingMd),
                 contentAlignment = Alignment.Center
             ) {
-                val ringBrush = remember(accent) {
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.95f),
-                            accent.copy(alpha = 1f),
-                            Color(0xFFFFF5FA),
-                            accent.copy(alpha = 0.65f),
-                            Color.White.copy(alpha = 0.82f)
-                        ),
-                        start = Offset.Zero,
-                        end = Offset(280f, 280f)
-                    )
-                }
+                val heroAvatarDiameter = 152.dp
                 Box(
-                    modifier = Modifier.size(160.dp),
+                    modifier = Modifier.size(168.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Canvas(Modifier.fillMaxSize()) {
@@ -921,33 +909,33 @@ private fun PersonaHeroCard(
                         drawCircle(
                             brush = Brush.radialGradient(
                                 colors = listOf(
-                                    accent.copy(alpha = 0.26f),
-                                    accent.copy(alpha = 0.09f),
+                                    accent.copy(alpha = 0.22f),
+                                    accent.copy(alpha = 0.07f),
                                     Color.Transparent
                                 ),
                                 center = c,
                                 radius = haloR
                             ),
-                            radius = haloR * 0.92f,
+                            radius = haloR * 0.94f,
                             center = c
                         )
                     }
                     Box(
                         modifier = Modifier
                             .shadow(
-                                elevation = 14.dp,
+                                elevation = 10.dp,
                                 shape = CircleShape,
                                 clip = false,
-                                ambientColor = accent.copy(alpha = 0.28f),
-                                spotColor = accent.copy(alpha = 0.42f)
+                                ambientColor = accent.copy(alpha = 0.22f),
+                                spotColor = accent.copy(alpha = 0.34f)
                             )
-                            .size(138.dp)
-                            .border(width = 2.5.dp, brush = ringBrush, shape = CircleShape)
-                            .padding(3.5.dp),
+                            .size(heroAvatarDiameter),
                         contentAlignment = Alignment.Center
                     ) {
                         Box(
-                            modifier = Modifier.size(128.dp),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Image(
@@ -1029,20 +1017,63 @@ private fun PersonaHeroCard(
 }
 
 /**
- * 头像边框叠加：霓虹 / 极简 位图中心为实色，叠在头像上会遮挡，改为仅描边圆环；金属徽章资源中间透明，仍用位图。
+ * 头像边框叠加：三种均为 Canvas 圆环，避免位图透明通道/导出棋盘格在真机上的异常叠层。
  */
 @Composable
 private fun AgentAvatarFrameOverlay(avatarFrame: String, accent: Color, modifier: Modifier = Modifier) {
-    val full = modifier.fillMaxSize()
+    val full = modifier.fillMaxSize().clip(CircleShape)
     when (avatarFrame) {
-        "金属徽章" -> Image(
-            painter = painterResource(R.drawable.agent_frame_badge),
-            contentDescription = null,
-            modifier = full,
-            contentScale = ContentScale.Fit
-        )
+        "金属徽章" -> MetalBadgeRingOverlay(accent = accent, modifier = full)
         "极简纯色" -> MinimalAvatarRingOverlay(accent = accent, modifier = full)
         else -> NeonAvatarRingOverlay(accent = accent, modifier = full)
+    }
+}
+
+/** 金属徽章：枪灰 + 电紫描边，语义对齐原 HUD 徽章，不加载位图。 */
+@Composable
+private fun MetalBadgeRingOverlay(accent: Color, modifier: Modifier = Modifier) {
+    val cyberViolet = Color(0xFF9D4EDD)
+    val gunmetal = Color(0xFF4A4E57)
+    val chromeHi = Color(0xFFE8EAEF)
+    Canvas(modifier.clip(CircleShape)) {
+        val c = Offset(size.width / 2f, size.height / 2f)
+        val r = size.minDimension / 2f
+        val outerW = 2.6.dp.toPx()
+        drawCircle(
+            brush = Brush.sweepGradient(
+                colors = listOf(
+                    gunmetal,
+                    cyberViolet.copy(alpha = 0.88f),
+                    chromeHi,
+                    accent.copy(alpha = 0.5f),
+                    cyberViolet.copy(alpha = 0.72f),
+                    gunmetal.copy(alpha = 0.88f),
+                    cyberViolet.copy(alpha = 0.82f),
+                    gunmetal
+                ),
+                center = c
+            ),
+            radius = (r - outerW / 2f).coerceAtLeast(0f),
+            center = c,
+            style = Stroke(width = outerW)
+        )
+        val gap = 2.8.dp.toPx()
+        val innerW = 1.2.dp.toPx()
+        val innerR = (r - outerW - gap - innerW / 2f).coerceAtLeast(0f)
+        drawCircle(
+            brush = Brush.linearGradient(
+                colors = listOf(
+                    cyberViolet.copy(alpha = 0.65f),
+                    Color.White.copy(alpha = 0.38f),
+                    cyberViolet.copy(alpha = 0.42f)
+                ),
+                start = Offset(c.x - innerR, c.y - innerR),
+                end = Offset(c.x + innerR, c.y + innerR)
+            ),
+            radius = innerR,
+            center = c,
+            style = Stroke(width = innerW)
+        )
     }
 }
 
@@ -1051,18 +1082,18 @@ private fun NeonAvatarRingOverlay(accent: Color, modifier: Modifier = Modifier) 
     Canvas(modifier.clip(CircleShape)) {
         val c = Offset(size.width / 2f, size.height / 2f)
         val r = size.minDimension / 2f
-        val outerW = 3.5.dp.toPx()
-        val innerW = 1.75.dp.toPx()
-        val gap = 5.dp.toPx()
+        val outerW = 2.5.dp.toPx()
+        val innerW = 1.2.dp.toPx()
+        val gap = 3.2.dp.toPx()
         val hi = Color(0xFFFFF8F3)
         drawCircle(
             brush = Brush.sweepGradient(
                 colors = listOf(
                     accent,
-                    Color.White.copy(alpha = 0.95f),
-                    accent.copy(alpha = 0.78f),
+                    Color.White.copy(alpha = 0.92f),
+                    accent.copy(alpha = 0.74f),
                     hi,
-                    accent.copy(alpha = 0.88f),
+                    accent.copy(alpha = 0.84f),
                     accent
                 ),
                 center = c
@@ -1075,9 +1106,9 @@ private fun NeonAvatarRingOverlay(accent: Color, modifier: Modifier = Modifier) 
         drawCircle(
             brush = Brush.linearGradient(
                 colors = listOf(
-                    Color.White.copy(alpha = 0.72f),
-                    accent.copy(alpha = 0.35f),
-                    Color.White.copy(alpha = 0.55f)
+                    Color.White.copy(alpha = 0.65f),
+                    accent.copy(alpha = 0.32f),
+                    Color.White.copy(alpha = 0.5f)
                 ),
                 start = Offset(c.x - innerR, c.y - innerR),
                 end = Offset(c.x + innerR, c.y + innerR)
@@ -1094,7 +1125,7 @@ private fun MinimalAvatarRingOverlay(accent: Color, modifier: Modifier = Modifie
     Canvas(modifier.clip(CircleShape)) {
         val c = Offset(size.width / 2f, size.height / 2f)
         val r = size.minDimension / 2f
-        val w = 2.25.dp.toPx()
+        val w = 1.65.dp.toPx()
         drawCircle(
             brush = Brush.sweepGradient(
                 colors = listOf(
@@ -1114,8 +1145,20 @@ private fun MinimalAvatarRingOverlay(accent: Color, modifier: Modifier = Modifie
 
 private fun uiThemeKeyForAvatarStyle(avatarStyle: String): String = when {
     avatarStyle == "元气辅助" || avatarStyle == "企鹅萌妹" ||
-        avatarStyle == "咕咕嘎嘎" || avatarStyle == "我的刀盾" -> "moe"
-    avatarStyle == "战术导师" -> "tactical"
+        avatarStyle == "咕咕嘎嘎" || avatarStyle == "我的刀盾" ||
+        avatarStyle == "游走先锋" ||
+        avatarStyle == "英雄主题·瑶" ||
+        avatarStyle == "英雄主题·孙悟空" -> "moe"
+    avatarStyle == "战术导师" || avatarStyle == "峡谷军师" ||
+        avatarStyle == "野核节拍器" || avatarStyle == "赛事实况台" ||
+        avatarStyle == "中路参谋" || avatarStyle == "发育路教官" ||
+        avatarStyle == "对抗路教头" ||
+        avatarStyle == "英雄主题·澜" ||
+        avatarStyle == "英雄主题·貂蝉" ||
+        avatarStyle == "英雄主题·铠" ||
+        avatarStyle == "英雄主题·鲁班" ||
+        avatarStyle == "英雄主题·李白" ||
+        avatarStyle == "英雄主题·后羿" -> "tactical"
     avatarStyle == "治愈陪玩" -> "ink"
     else -> "cyber"
 }
@@ -1176,7 +1219,8 @@ private fun DesignedAgentMiniCard(
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary,
-                maxLines = 1
+                maxLines = 2,
+                lineHeight = 16.sp
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
@@ -1201,9 +1245,19 @@ private fun agentUiAccent(key: String): Color = when (key) {
 }
 
 private fun avatarDrawableRes(avatarStyle: String): Int = when (avatarStyle) {
-    "指挥官" -> R.drawable.agent_avatar_commander
-    "元气辅助" -> R.drawable.agent_avatar_support
-    "战术导师" -> R.drawable.agent_avatar_coach
+    "英雄主题·铠" -> R.drawable.agent_hero_kael
+    "英雄主题·澜" -> R.drawable.agent_hero_lan
+    "英雄主题·貂蝉" -> R.drawable.agent_hero_diaochan
+    "英雄主题·鲁班" -> R.drawable.agent_hero_luban
+    "英雄主题·瑶" -> R.drawable.agent_hero_yao
+    "英雄主题·李白" -> R.drawable.agent_hero_libai
+    "英雄主题·后羿" -> R.drawable.agent_hero_houyi
+    "英雄主题·孙悟空" -> R.drawable.agent_hero_wukong
+    "指挥官", "对抗路教头" -> R.drawable.agent_avatar_commander
+    "元气辅助", "游走先锋" -> R.drawable.agent_avatar_support
+    "战术导师", "中路参谋" -> R.drawable.agent_avatar_coach
+    "发育路教官", "峡谷军师", "赛事实况台" -> R.drawable.agent_avatar_preset_honor_strategist
+    "野核节拍器" -> R.drawable.agent_avatar_preset_honor_jungle
     "治愈陪玩" -> R.drawable.agent_avatar_healing
     "企鹅萌妹", "咕咕嘎嘎" -> R.drawable.agent_avatar_penguin
     "我的刀盾" -> R.drawable.agent_avatar_daodun

@@ -27,19 +27,20 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.theme.BuddyDimens
 import com.example.tx_ku.core.designsystem.theme.BuddyShapes
 
 /**
- * **浅色「广场」独立色板**：微冷灰蓝底 + 略抬升的卡片白，与首页 [GameNewsTheme] 深蓝顶栏 + 白资讯行形成差异。
+ * **浅色「广场」色板**：与全局 [BuddyColors] / 首页资讯区同系（天青底 + 电竞紫青强调），避免独立成另一套薄荷绿。
  */
 object ForumPlazaTheme {
-    val BackgroundTop = Color(0xFFE8EEF5)
-    val BackgroundBottom = Color(0xFFF5F7FA)
-    /** 帖子卡片：略区别于纯 surface，增强「论坛区」整体感 */
-    val CardLight = Color(0xFFFFFEFE)
-    val LeadingAccentStart = Color(0xFF00897B)
-    val LeadingAccentEnd = Color(0xFF26A69A)
+    val BackgroundTop = BuddyColors.BackgroundLightHighlight
+    val BackgroundBottom = BuddyColors.CommunityPageBackground
+    /** 帖子卡片：白卡片 + 与设计系统 surface 一致 */
+    val CardLight = BuddyColors.SurfaceLight
+    val LeadingAccentStart = BuddyColors.Primary
+    val LeadingAccentEnd = BuddyColors.PrimaryVariant
 }
 
 /**
@@ -102,7 +103,7 @@ fun ForumCyberTopBar(
     title: String,
     subtitle: String? = null,
     modifier: Modifier = Modifier,
-    /** 浅色下左侧青绿竖条，强化「广场」与首页顶栏的差异 */
+    /** 浅色下左侧紫青竖条，与全局主色一致 */
     showPlazaLeadingAccent: Boolean = true
 ) {
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f

@@ -77,7 +77,7 @@ fun RegisterScreen(navController: NavController) {
                 ) {
                     AuthCardSectionTitle(
                         title = "填写账号信息",
-                        subtitle = "注册后将进入游戏与偏好建档，可随时在「我的」里修改"
+                        subtitle = "注册后将进入游戏与偏好建档，可随时在「元流档案」里修改"
                     )
                     AvatarPickerSection(
                         nickname = nickname,

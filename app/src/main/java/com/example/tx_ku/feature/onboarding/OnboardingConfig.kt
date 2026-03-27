@@ -1,5 +1,7 @@
 package com.example.tx_ku.feature.onboarding
 
+import com.example.tx_ku.core.brand.BrandConfig
+
 /**
  * 建档问卷题目配置，与方案 6.1 A 及 API POST /profiles 字段对应。
  */
@@ -14,18 +16,10 @@ val ONBOARDING_QUESTIONS: List<OnboardingQuestion> = listOf(
     OnboardingQuestion(id = "nickname", title = "你的昵称是？", options = emptyList()), // 自由输入，options 空表示文本题
     OnboardingQuestion(
         id = "preferred_games",
-        title = "常玩哪类游戏？（大类即可）",
+        title = "你主要聊哪块？（可多选）",
         options = listOf(
-            "MOBA（王者 / LOL手游）",
-            "战术射击（无畏契约 / CS2）",
-            "搜打撤（三角洲行动 / 暗区突围）",
-            "大逃杀（和平 / PUBG / Apex）",
-            "英雄射击（守望先锋等）",
-            "动作竞技（永劫无间等）",
-            "开放世界二游（原神 / 鸣潮 / 绝区零）",
-            "休闲 / 派对 / 卡牌 / 炉石",
-            "小众 / 独游 / 垂直品类",
-            "随便玩，暂不固定"
+            "王者荣耀（峡谷对局 / 排位巅峰）",
+            "王者电竞（KPL / 杯赛 / 观赛唠嗑）"
         ),
         multiSelect = true
     ),
@@ -43,21 +37,20 @@ val ONBOARDING_QUESTIONS: List<OnboardingQuestion> = listOf(
     OnboardingQuestion(id = "active_time", title = "常玩时段？（可多选）", options = listOf("工作日晚上", "周末全天", "午休", "凌晨档", "不定时"), multiSelect = true),
     OnboardingQuestion(
         id = "main_roles",
-        title = "更常打什么位置？（选最贴近的）",
+        title = "峡谷里更常打什么位置？（选最贴近的）",
         options = listOf(
             "打野 / 带节奏",
-            "中单 / 法核",
-            "辅助 / 治疗位",
-            "射手 / 持续输出",
-            "上单 / 坦克前排",
-            "突破 / 第一枪位",
-            "狙击或信息位",
-            "指挥 / 全能补位"
+            "中单 / 法刺",
+            "辅助 / 游走",
+            "发育路 / 射手",
+            "对抗路 / 战坦",
+            "指挥 / 全能补位",
+            "主看赛事，对局打得少"
         ),
         multiSelect = true
     ),
     OnboardingQuestion(id = "play_style", title = "游戏风格？", options = listOf("稳健运营", "激进打架", "运营为主", "打架为主")),
-    OnboardingQuestion(id = "target", title = "组队目标？", options = listOf("上分冲段", "娱乐放松", "练角色 / 练枪", "固定队友")),
+    OnboardingQuestion(id = "target", title = "组队目标？", options = listOf("上分冲段", "娱乐放松", "练英雄 / 练分路", "固定队友")),
     OnboardingQuestion(id = "voice_pref", title = "沟通/语音偏好？", options = listOf("必须语音", "可语音可文字", "偏好文字", "随意")),
     OnboardingQuestion(id = "no_gos", title = "雷区标签？（可多选）", options = listOf("压力怪", "玻璃心", "不沟通", "甩锅", "挂机", "无"), multiSelect = true),
     OnboardingQuestion(
@@ -98,10 +91,10 @@ fun parseAnswersToProfile(answers: Map<String, List<String>>): com.example.tx_ku
     fun single(id: String): String = answers[id]?.firstOrNull().orEmpty()
     fun list(id: String): List<String> = answers[id].orEmpty().filter { it.isNotBlank() }
     return com.example.tx_ku.core.model.Profile(
-        nickname = single("nickname").ifEmpty { "同频搭" },
+        nickname = single("nickname").ifEmpty { BrandConfig.defaultNicknamePlaceholder },
         bio = "",
         cityOrRegion = "",
-        preferredGames = list("preferred_games").ifEmpty { listOf("随便玩，暂不固定") },
+        preferredGames = list("preferred_games").ifEmpty { listOf("王者荣耀（峡谷对局 / 排位巅峰）") },
         rank = single("rank").ifEmpty { "未知" },
         activeTime = list("active_time").ifEmpty { listOf("不定时") },
         mainRoles = list("main_roles").ifEmpty { listOf("指挥 / 全能补位") },

@@ -13,7 +13,7 @@ fun refreshBuddyCardFromProfile(profile: Profile, old: BuddyCard?): BuddyCard {
         addAll(profile.preferredGames.take(2))
         if (persona.isNotEmpty()) add(persona.take(12))
         else if (profile.playStyle.isNotBlank()) add(profile.playStyle)
-    }.distinct().take(3).ifEmpty { listOf("多游戏搭子") }
+    }.distinct().take(3).ifEmpty { listOf("王者搭子") }
     val bioPart = profile.bio.trim().let { if (it.isNotEmpty()) " · $it" else "" }
     val cityPart = profile.cityOrRegion.trim().let { if (it.isNotEmpty()) " · $it" else "" }
     val declaration = "${profile.nickname}：${profile.target}$bioPart$cityPart".take(160)

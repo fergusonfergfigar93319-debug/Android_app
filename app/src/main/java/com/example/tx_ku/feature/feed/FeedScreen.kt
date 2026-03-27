@@ -40,8 +40,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.tx_ku.R
 import com.example.tx_ku.core.designsystem.components.BuddyEmptyState
 import com.example.tx_ku.core.designsystem.components.BuddyErrorState
 import com.example.tx_ku.core.designsystem.components.LocalBuddySnackbarHostState
@@ -84,7 +86,7 @@ data class FeedHeaderNavigation(
 )
 
 /**
- * **首页**：以 **官方更新、活动、维护通知** 为核心（资讯 / 官方 Tab）；**交友区** 与底栏 **搭子广场** 在招募流上互通（发帖 / 分区 / 详情申请搭子）。
+ * **首页**：以 **官方更新、活动、维护通知** 为核心（资讯 / 官方 Tab）；**交友区** 与底栏 **峡谷广场** 在招募流上互通（发帖 / 分区 / 详情申请搭子）。
  */
 @Composable
 fun FeedScreen(
@@ -109,7 +111,7 @@ fun FeedScreen(
         val merged = pickIds + GameCatalog.popularGameTags.filter { it !in pickIds.toSet() }
         GameInterestStore.orderedChannels(merged).take(16)
     }
-    val defaultHotQueries = remember { listOf("星布谷地", "崩坏因缘精灵") }
+    val defaultHotQueries = remember { listOf("王者荣耀", "KPL") }
     // 避免每次重组都读 SharedPreferences（状态流 / 动画会导致高频重组，易拖慢主线程）
     var searchHistoryVersion by remember { mutableIntStateOf(0) }
     val quickSearchChips = remember(searchHistoryVersion, defaultHotQueries) {
@@ -122,7 +124,7 @@ fun FeedScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
         GameNewsTopHeader(
-            appTitle = "同频搭",
+            appTitle = stringResource(R.string.app_name),
             quickSearchChips = quickSearchChips,
             onQuickSearchClick = { term ->
                 haptic.buddyPrimaryClick()
@@ -133,7 +135,7 @@ fun FeedScreen(
                 } else {
                     snackScope.showBuddySnackbar(
                         snackbarHost,
-                        "请从底栏进入「广场」搜索帖子"
+                        "请从底栏进入「峡谷广场」搜索帖子"
                     )
                 }
             },
@@ -148,7 +150,7 @@ fun FeedScreen(
                 } else {
                     snackScope.showBuddySnackbar(
                         snackbarHost,
-                        "请从底栏进入「广场」搜索帖子"
+                        "请从底栏进入「峡谷广场」搜索帖子"
                     )
                 }
             },
@@ -169,7 +171,7 @@ fun FeedScreen(
                         } else {
                             snackScope.showBuddySnackbar(
                                 snackbarHost,
-                                "请从底栏进入「广场」搜索相关内容"
+                                "请从底栏进入「峡谷广场」搜索相关内容"
                             )
                         }
                     }
@@ -201,7 +203,7 @@ fun FeedScreen(
                         } else {
                             snackScope.showBuddySnackbar(
                                 snackbarHost,
-                                "请从底栏进入「广场」"
+                                "请从底栏进入「峡谷广场」"
                             )
                         }
                     }
@@ -211,7 +213,7 @@ fun FeedScreen(
                         } else {
                             snackScope.showBuddySnackbar(
                                 snackbarHost,
-                                "请从底栏进入「广场」"
+                                "请从底栏进入「峡谷广场」"
                             )
                         }
                     }
@@ -229,7 +231,7 @@ fun FeedScreen(
             }
         )
         GameNewsAnnouncementBar(
-            text = "官方活动、版本动态看这里；想发帖求助请去「广场」。"
+            text = "官方活动、版本动态看这里；想发帖求助请去「峡谷广场」。"
         )
         GameNewsSubTabs(
             selected = subTab,
@@ -329,14 +331,14 @@ fun FeedScreen(
                         } else {
                             snackScope.showBuddySnackbar(
                                 snackbarHost,
-                                "请从底栏进入「广场」"
+                                "请从底栏进入「峡谷广场」"
                             )
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        Text("广场 · 搜索与浏览帖子")
+                        Text("峡谷广场 · 搜索与浏览帖子")
                         Text(
                             text = "打开搜索框与分区筛选",
                             style = MaterialTheme.typography.bodySmall,
@@ -354,7 +356,7 @@ fun FeedScreen(
                         } else {
                             snackScope.showBuddySnackbar(
                                 snackbarHost,
-                                "请从底栏进入「搭子」"
+                                "请从底栏进入「AI搭子」"
                             )
                         }
                     },
@@ -391,13 +393,13 @@ fun FeedScreen(
                         } else {
                             snackScope.showBuddySnackbar(
                                 snackbarHost,
-                                "请从底栏进入「我的」"
+                                "请从底栏进入「元流档案」"
                             )
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("我的 · 个人主页", modifier = Modifier.fillMaxWidth())
+                    Text("元流档案 · 个人中心", modifier = Modifier.fillMaxWidth())
                 }
             }
         }
@@ -550,7 +552,7 @@ private fun FeedBuddyTabContent(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "这里是系统推荐；也可以去「搭子广场」发招募帖，用评论对齐需求后再申请搭子。",
+                        text = "这里是系统推荐；也可以去「峡谷广场」发开黑招募，评论对齐后再申请搭子。",
                         style = MaterialTheme.typography.bodySmall,
                         color = GameNewsTheme.TextSecondary
                     )

@@ -1,4 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 应用显示名 -->
-    <string name="app_name">同频搭</string>
+    <!-- 应用显示名（桌面图标下、多处分页标题）；须与 BrandConfig.appDisplayName 一致 -->
+    <string name="app_name">元流同频</string>
+
+    <!-- 登录页副标题 -->
+    <string name="brand_login_tagline_compact">王者峡谷 · KPL 资讯 · AI 搭子</string>
+    <string name="brand_login_tagline_full">王者峡谷对局与王者电竞资讯 · 广场组队 · 智能体创作（非官方）</string>
+
+    <!-- 聊天页：恢复默认主题文案 -->
+    <string name="chat_theme_restore_default">恢复默认（元流天蓝）</string>
+
+    <!-- 复制到应用商店「简短说明」 -->
+    <string name="store_listing_short">
+        面向《王者荣耀》与王者电竞玩家的组队交流、赛程资讯与 AI 搭子工具。非腾讯官方应用。
+    </string>
+    <!-- 复制到应用商店「完整说明」-->
+    <string name="store_listing_full">
+        「元流同频」聚焦王者峡谷排位/巅峰与 KPL、杯赛等电竞内容：看版本速递、逛峡谷广场、管理元流档案，并定制 AI 搭子人设与快捷句，方便开黑与观赛唠局。\n\n
+        ※ 本应用由第三方开发者提供，非《王者荣耀》游戏客户端或腾讯官方产品，不提供代练、外挂或游戏内交易；应用图标与界面为原创视觉，不代表腾讯授权。《王者荣耀》等名称相关商标归权利人所有。
+    </string>
 </resources>

@@ -3,7 +3,7 @@ package com.example.tx_ku.core.designsystem.theme
 import androidx.compose.ui.graphics.Color
 
 /**
- * 同频搭 · 名片与界面设计系统 - 颜色调色板。
+ * 元流同频 · 名片与界面设计系统 - 颜色调色板。
  * 禁止在业务代码中硬编码颜色，统一使用本文件或 MaterialTheme。
  *
  * Primary: 电竞紫/赛博蓝（主要按钮、进度条）

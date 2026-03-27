@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -50,18 +51,19 @@ enum class MainTab(
     val title: String,
     val iconResId: Int
 ) {
-    /** 版本速递（官方资讯 / 活动 / 维护等） */
+    /** 版本与活动速递（首页资讯流） */
     FEED("版本速递", R.drawable.ic_tab_discover),
-    /** 搭子形象与语气创作 */
-    AGENT("搭子", R.drawable.ic_tab_agent),
-    /** 论坛广场 */
-    FORUM("广场", R.drawable.ic_tab_forum),
-    PROFILE("我的", R.drawable.ic_tab_profile)
+    /** 专属 AI 搭子人设与快捷句 */
+    AGENT("AI搭子", R.drawable.ic_tab_agent),
+    /** 开黑招募 · 攻略 · 赛评 */
+    FORUM("峡谷广场", R.drawable.ic_tab_forum),
+    /** 元流档案（个人与资料入口） */
+    PROFILE("元流档案", R.drawable.ic_tab_profile)
 }
 
 @Composable
 fun MainTabScreen(navController: NavController? = null) {
-    // 首 Tab 为版本速递（资讯流）；搭子创作仍保留独立 Tab
+    // 首 Tab 为版本速递（资讯流）；AI 搭子为独立 Tab
     var selectedIndex by rememberSaveable { mutableIntStateOf(MainTab.FEED.ordinal) }
     val tabs = MainTab.entries
     val haptic = rememberBuddyHaptic()
@@ -130,7 +132,14 @@ fun MainTabScreen(navController: NavController? = null) {
                                     contentDescription = tab.title
                                 )
                             },
-                            label = { Text(tab.title) },
+                            label = {
+                                Text(
+                                    text = tab.title,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            },
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = MaterialTheme.colorScheme.primary,
                                 selectedTextColor = MaterialTheme.colorScheme.primary,

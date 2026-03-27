@@ -57,8 +57,8 @@ object DevQuickLogin {
         val answers = mapOf(
             "nickname" to listOf(DEMO_NICKNAME),
             "preferred_games" to listOf(
-                "MOBA（王者 / LOL手游）",
-                "搜打撤（三角洲行动 / 暗区突围）"
+                "王者荣耀（峡谷排位 / 巅峰）",
+                "王者电竞（赛事 / KPL）"
             ),
             "rank" to listOf("中高分段"),
             "active_time" to listOf("工作日晚上", "周末全天"),

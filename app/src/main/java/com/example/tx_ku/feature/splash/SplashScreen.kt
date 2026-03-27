@@ -4,11 +4,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
+import com.example.tx_ku.R
 import com.example.tx_ku.core.designsystem.components.BuddyBackground
 import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.core.navigation.Routes
@@ -44,7 +46,7 @@ fun SplashScreen(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "同频搭",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.displayLarge,
                 color = MaterialTheme.colorScheme.primary
             )
