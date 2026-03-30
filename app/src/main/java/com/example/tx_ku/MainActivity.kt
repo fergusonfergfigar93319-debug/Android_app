@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.rememberNavController
 import com.example.tx_ku.core.designsystem.components.BuddyGlobalSnackbarSurface
 import com.example.tx_ku.core.designsystem.theme.BuddyCardTheme
@@ -47,9 +48,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             // 产品默认亮色系；若需跟随系统深浅色，改为 BuddyCardTheme { 不传参 }
             BuddyCardTheme(darkTheme = false) {
+                // 透明底：避免整屏铺社区浅蓝，盖住各页 BuddyBackground 的峡谷晨光/星空渐变
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    color = Color.Transparent
                 ) {
                     BuddyGlobalSnackbarSurface {
                         val navController = rememberNavController()

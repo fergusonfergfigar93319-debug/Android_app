@@ -21,12 +21,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.tx_ku.R
 import com.example.tx_ku.core.designsystem.components.BuddyTag
+import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.theme.BuddyDimens
 
 /**
@@ -53,16 +55,19 @@ internal fun AuthHeroBranding(
             modifier = Modifier.size(ringOuter),
             contentAlignment = Alignment.Center
         ) {
+            // 外环：峡谷金三段渐变，王者荣耀战令质感
             Box(
                 modifier = Modifier
                     .size(ringInner + 10.dp)
                     .border(
-                        width = 2.dp,
-                        brush = Brush.linearGradient(
+                        width = 2.5.dp,
+                        brush = Brush.sweepGradient(
                             colors = listOf(
-                                MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.tertiary,
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)
+                                BuddyColors.HonorGoldDark,
+                                BuddyColors.HonorGold,
+                                BuddyColors.HonorGoldBright,
+                                BuddyColors.HonorGold,
+                                BuddyColors.HonorGoldDark
                             )
                         ),
                         shape = CircleShape
@@ -72,14 +77,22 @@ internal fun AuthHeroBranding(
                 Box(
                     modifier = Modifier
                         .size(ringInner)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape),
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    BuddyColors.BattlePassPurple.copy(alpha = 0.42f),
+                                    Color(0xFFFFF6ED) // 暖米底，避免 Material 浅蓝灰像「旧版青圈」
+                                )
+                            ),
+                            shape = CircleShape
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_agent),
                         contentDescription = null,
                         modifier = Modifier.size(iconSize),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = BuddyColors.HonorGoldBright
                     )
                 }
             }
@@ -88,7 +101,7 @@ internal fun AuthHeroBranding(
         Text(
             text = stringResource(R.string.app_name),
             style = headlineStyle,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = BuddyColors.CommunityHeaderDeep,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(BuddyDimens.SpacingXs))

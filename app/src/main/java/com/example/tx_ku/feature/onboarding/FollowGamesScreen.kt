@@ -51,18 +51,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.tx_ku.R
+import com.example.tx_ku.core.designsystem.components.BuddyBackground
 import com.example.tx_ku.core.designsystem.components.buddyPrimaryClick
 import com.example.tx_ku.core.designsystem.components.rememberBuddyHaptic
 import com.example.tx_ku.core.model.FollowGameCatalog
 import com.example.tx_ku.core.model.FollowGameOption
 import com.example.tx_ku.core.navigation.Routes
 import com.example.tx_ku.core.navigation.dispatchAfterMainFrame
+import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.prefs.GameInterestStore
 
 @Composable
 fun FollowGamesScreen(navController: NavController) {
     val haptic = rememberBuddyHaptic()
-    val pageBg = MaterialTheme.colorScheme.background
     val accent = MaterialTheme.colorScheme.primary
     var selectedIds by remember {
         mutableStateOf(GameInterestStore.getSelectedIds())
@@ -76,10 +77,9 @@ fun FollowGamesScreen(navController: NavController) {
         }
     }
 
+    BuddyBackground(modifier = Modifier.fillMaxSize()) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(pageBg)
+        modifier = Modifier.fillMaxSize()
     ) {
         Spacer(modifier = Modifier.height(24.dp))
         Text(
@@ -154,6 +154,7 @@ fun FollowGamesScreen(navController: NavController) {
             )
         }
     }
+    }
 }
 
 @Composable
@@ -168,6 +169,17 @@ private fun FollowGamePickCard(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(0.92f)
+            .border(
+                1.dp,
+                Brush.linearGradient(
+                    colors = listOf(
+                        BuddyColors.HonorGold.copy(alpha = 0.45f),
+                        BuddyColors.BattlePassPurpleLight.copy(alpha = 0.35f),
+                        BuddyColors.HonorGold.copy(alpha = 0.45f)
+                    )
+                ),
+                RoundedCornerShape(14.dp)
+            )
             .clip(RoundedCornerShape(14.dp))
             .clickable(
                 interactionSource = interaction,
@@ -175,8 +187,8 @@ private fun FollowGamePickCard(
                 onClick = { onToggleId(option.id) }
             ),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        colors = CardDefaults.cardColors(containerColor = BuddyColors.SurfaceCardWarm),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier

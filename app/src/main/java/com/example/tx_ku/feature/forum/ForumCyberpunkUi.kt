@@ -27,34 +27,39 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.tx_ku.core.designsystem.components.BuddyPageBrushes
 import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.theme.BuddyDimens
 import com.example.tx_ku.core.designsystem.theme.BuddyShapes
 
 /**
- * **浅色「广场」色板**：与全局 [BuddyColors] / 首页资讯区同系（天青底 + 电竞紫青强调），避免独立成另一套薄荷绿。
+ * **浅色「广场」色板**：与 [BuddyPageBrushes.light]、首页资讯卡同系（峡谷金 / 战令紫 / 暖米底）。
  */
 object ForumPlazaTheme {
-    val BackgroundTop = BuddyColors.BackgroundLightHighlight
-    val BackgroundBottom = BuddyColors.CommunityPageBackground
-    /** 帖子卡片：白卡片 + 与设计系统 surface 一致 */
-    val CardLight = BuddyColors.SurfaceLight
-    val LeadingAccentStart = BuddyColors.Primary
-    val LeadingAccentEnd = BuddyColors.PrimaryVariant
+    /** 帖子卡片：暖白面 + 与设计系统 surface 一致 */
+    val CardLight = BuddyColors.SurfaceCardWarm
+    val LeadingAccentStart = BuddyColors.HonorGold
+    val LeadingAccentEnd = BuddyColors.HonorGoldBright
 }
 
 /**
- * 论坛模块：深色为克制渐变底 + 卡片描边；浅色跟随全局背景。
- * 避免全屏网格/扫光动画，降低视觉噪音与绘制开销。
+ * 论坛模块：深色为峡谷星空底 + 金色/战令紫描边；浅色跟随全局背景。
  */
 object ForumCyberColors {
-    val NeonPink = Color(0xFFFF2D95)
-    val NeonCyan = Color(0xFF00E5FF)
-    val DeepVoid = Color(0xFF04060C)
+    /** 峡谷金：深色底强调色 */
+    val NeonGold = BuddyColors.HonorGold
+    val NeonGoldBright = BuddyColors.HonorGoldBright
+    /** 战令紫：深色底次强调 */
+    val NeonPurple = BuddyColors.BattlePassPurpleLight
+    /** 与 [NeonGold] 同义，深色论坛列表等旧引用兼容 */
+    val NeonCyan = NeonGold
+    /** 与 [NeonPurple] 同义，深色论坛列表等旧引用兼容 */
+    val NeonPink = NeonPurple
+    val DeepVoid = BuddyColors.CanyonDeep
     /** 输入框等半透明底 */
-    val Panel = Color(0xFF0E1220)
-    val PanelElevated = Color(0xFF141A2E)
-    val TextPrimary = Color(0xFFE8F1FF)
+    val Panel = BuddyColors.CanyonMid
+    val PanelElevated = BuddyColors.CanyonSurface
+    val TextPrimary = Color(0xFFEEE8D5)   // 暖白，在深蓝底上更舒适
     val TextMuted = Color(0xFF8B95B0)
 }
 
@@ -69,14 +74,7 @@ fun ForumCyberpunkBackground(
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            ForumPlazaTheme.BackgroundTop,
-                            ForumPlazaTheme.BackgroundBottom
-                        )
-                    )
-                )
+                .background(BuddyPageBrushes.light())
         ) { content() }
         return
     }
@@ -84,15 +82,7 @@ fun ForumCyberpunkBackground(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFF0D1118),
-                            ForumCyberColors.DeepVoid,
-                            Color(0xFF050508)
-                        )
-                    )
-                )
+                .background(BuddyPageBrushes.dark(base))
         )
         content()
     }
@@ -161,7 +151,7 @@ fun ForumCyberTopBar(
         HorizontalDivider(
             thickness = 1.dp,
             color = if (isLight) {
-                MaterialTheme.colorScheme.outlineVariant
+                BuddyColors.HonorGold.copy(alpha = 0.22f)
             } else {
                 ForumCyberColors.TextMuted.copy(alpha = 0.22f)
             }
@@ -177,12 +167,19 @@ fun ForumCyberPostCard(
 ) {
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     if (isLight) {
-        val outline = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+        val rim = Brush.linearGradient(
+            colors = listOf(
+                BuddyColors.HonorGold.copy(alpha = 0.55f),
+                BuddyColors.BattlePassPurpleLight.copy(alpha = 0.38f),
+                BuddyColors.HonorCyanAccent.copy(alpha = 0.32f),
+                BuddyColors.HonorGold.copy(alpha = 0.55f)
+            )
+        )
         Card(
-            modifier = modifier.border(1.dp, outline, shape),
+            modifier = modifier.border(1.dp, brush = rim, shape = shape),
             shape = shape,
             colors = CardDefaults.cardColors(containerColor = ForumPlazaTheme.CardLight),
-            elevation = CardDefaults.cardElevation(defaultElevation = BuddyDimens.CardElevation)
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Column(content = content)
         }
@@ -190,15 +187,16 @@ fun ForumCyberPostCard(
     }
     val borderBrush = Brush.linearGradient(
         colors = listOf(
-            ForumCyberColors.NeonCyan.copy(alpha = 0.4f),
-            ForumCyberColors.NeonPink.copy(alpha = 0.35f)
+            ForumCyberColors.NeonGold.copy(alpha = 0.55f),
+            ForumCyberColors.NeonPurple.copy(alpha = 0.40f),
+            ForumCyberColors.NeonGoldBright.copy(alpha = 0.45f)
         )
     )
     Card(
         modifier = modifier.border(1.dp, brush = borderBrush, shape = shape),
         shape = shape,
         colors = CardDefaults.cardColors(
-            containerColor = ForumCyberColors.PanelElevated.copy(alpha = 0.88f)
+            containerColor = ForumCyberColors.PanelElevated.copy(alpha = 0.90f)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {

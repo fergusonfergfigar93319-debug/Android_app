@@ -26,11 +26,12 @@ fun BuddyElevatedCard(
 ) {
     val dark = LocalBuddyDarkTheme.current
     val borderColor = if (dark) BuddyColors.CardEdgeDark else BuddyColors.CardEdgeLight
+    val face = if (dark) MaterialTheme.colorScheme.surface else BuddyColors.SurfaceCardWarm
     Card(
         modifier = modifier.border(1.dp, borderColor, shape),
         shape = shape,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = face
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = BuddyDimens.CardElevation,

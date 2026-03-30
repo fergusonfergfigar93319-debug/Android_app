@@ -135,9 +135,8 @@ fun AgentPersonaScreen(
     val studioBrush = remember {
         Brush.verticalGradient(
             colors = listOf(
-                Color(0xFFB8D9F6),
-                Color(0xFFE3F2FD),
-                BuddyColors.CommunityAnnouncementBg,
+                BuddyColors.BackgroundLightMid,
+                BuddyColors.CommunityPageBackground,
                 BuddyColors.CommunityPageBackground
             )
         )

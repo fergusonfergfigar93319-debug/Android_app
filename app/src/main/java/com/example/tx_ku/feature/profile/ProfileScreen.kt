@@ -494,13 +494,15 @@ private fun ProfileHeaderBanner(
     onShareProfile: () -> Unit,
     onCopyId: () -> Unit
 ) {
-    val accent = BuddyColors.CommunityPrimary
+    val accent = BuddyColors.HonorGold
+    // 峡谷金渐变 Banner：深蓝顶 → 战令紫 → 金色微光底
     val gradient = Brush.linearGradient(
         colors = listOf(
-            BuddyColors.Primary.copy(alpha = 0.20f),
-            BuddyColors.CommunityPrimary.copy(alpha = 0.14f),
-            BuddyColors.BackgroundLightHighlight.copy(alpha = 0.98f),
-            BuddyColors.CommunityPageBackground
+            BuddyColors.CanyonDeep,
+            BuddyColors.BackgroundHighlight,
+            BuddyColors.BattlePassPurple.copy(alpha = 0.55f),
+            BuddyColors.HonorGold.copy(alpha = 0.12f),
+            BuddyColors.CanyonSurface
         ),
         start = Offset(0f, 0f),
         end = Offset(900f, 380f)
@@ -524,12 +526,12 @@ private fun ProfileHeaderBanner(
                     text = "元流档案",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = BuddyColors.CommunityTextPrimary
+                    color = BuddyColors.HonorGoldBright
                 )
                 Text(
                     text = "搭子人设 · 资料进度 · 与峡谷广场同频",
                     style = MaterialTheme.typography.bodySmall,
-                    color = BuddyColors.CommunityTextSecondary,
+                    color = Color(0xFF8B95B0),
                     modifier = Modifier.padding(top = 4.dp)
                 )
             }
@@ -539,7 +541,7 @@ private fun ProfileHeaderBanner(
                         "复制ID",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Medium,
-                        color = BuddyColors.CommunityPrimary
+                        color = BuddyColors.HonorGold
                     )
                 }
                 TextButton(onClick = onShareProfile) {
@@ -547,7 +549,7 @@ private fun ProfileHeaderBanner(
                         "分享",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Medium,
-                        color = BuddyColors.CommunityPrimary
+                        color = BuddyColors.HonorGold
                     )
                 }
             }
@@ -557,7 +559,7 @@ private fun ProfileHeaderBanner(
             text = "资料完整度",
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Medium,
-            color = BuddyColors.CommunityTextPrimary
+            color = Color(0xFFEEE8D5)   // 暖白，在深蓝 Banner 上可读
         )
         Spacer(modifier = Modifier.height(8.dp))
         LinearProgressIndicator(
@@ -566,8 +568,8 @@ private fun ProfileHeaderBanner(
                 .fillMaxWidth()
                 .height(8.dp)
                 .clip(RoundedCornerShape(4.dp)),
-            color = accent,
-            trackColor = Color.White.copy(alpha = 0.85f)
+            color = BuddyColors.HonorGold,
+            trackColor = BuddyColors.CanyonSurfaceElevated
         )
         Row(
             modifier = Modifier

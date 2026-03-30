@@ -14,6 +14,7 @@ enum class AgentChatThemePreset(
 ) {
     QQ_BLUE("qq_blue", "经典 QQ 蓝"),
     COMMUNITY("community", BrandConfig.chatThemeDefaultLabel),
+    CANYON("canyon", "峡谷星空"),
     MINT("mint", "薄荷清爽"),
     TWILIGHT("twilight", "暮色柔紫");
 
@@ -74,24 +75,45 @@ fun paletteFor(preset: AgentChatThemePreset): AgentChatPalette = when (preset) {
     )
     AgentChatThemePreset.COMMUNITY -> AgentChatPalette(
         screenBg = BuddyColors.CommunityPageBackground,
-        userBubble = BuddyColors.CommunityPrimary,
+        userBubble = BuddyColors.BattlePassPurpleLight,
         userText = Color.White,
         agentBubble = Color.White,
         agentText = BuddyColors.CommunityTextPrimary,
-        accent = BuddyColors.CommunityPrimary,
-        inputBarBg = Color(0xFFF8FAFC),
+        accent = BuddyColors.HonorGold,
+        inputBarBg = BuddyColors.NavBarSurfaceLight,
         hint = BuddyColors.CommunityTextSecondary,
-        headerDeep = BuddyColors.CommunityHeaderDeep,
-        headerMid = BuddyColors.CommunityHeaderMid,
-        onHeader = Color.White,
+        headerDeep = BuddyColors.CanyonDeep,
+        headerMid = BuddyColors.BackgroundHighlight,
+        onHeader = BuddyColors.HonorGoldBright,
         filterStripBg = BuddyColors.CommunityPageBackground,
-        filterSegmentSelected = Color(0xFFD6EAF8),
-        filterBorder = Color(0x22000000),
-        filterLabelActive = BuddyColors.CommunityHeaderMid,
+        filterSegmentSelected = BuddyColors.TabSelectionTintLight.copy(alpha = 0.95f),
+        filterBorder = BuddyColors.HonorGold.copy(alpha = 0.22f),
+        filterLabelActive = BuddyColors.HonorGoldDark,
         filterLabelInactive = BuddyColors.CommunityTextSecondary,
         quickChipBg = Color.White,
-        quickChipBorder = Color(0xFFE0E3E8),
+        quickChipBorder = BuddyColors.GoldOutline,
         quickChipLabel = Color(0xFF5C6370)
+    )
+    AgentChatThemePreset.CANYON -> AgentChatPalette(
+        screenBg = BuddyColors.CanyonDeep,
+        userBubble = BuddyColors.HonorGold,
+        userText = Color(0xFF1A1000),
+        agentBubble = BuddyColors.CanyonSurface,
+        agentText = Color(0xFFEEE8D5),
+        accent = BuddyColors.HonorGoldBright,
+        inputBarBg = BuddyColors.CanyonMid,
+        hint = Color(0xFF8B95B0),
+        headerDeep = BuddyColors.CanyonDeep,
+        headerMid = BuddyColors.BackgroundHighlight,
+        onHeader = BuddyColors.HonorGoldBright,
+        filterStripBg = BuddyColors.CanyonMid,
+        filterSegmentSelected = BuddyColors.HonorGold.copy(alpha = 0.18f),
+        filterBorder = BuddyColors.GoldOutline,
+        filterLabelActive = BuddyColors.HonorGold,
+        filterLabelInactive = Color(0xFF8B95B0),
+        quickChipBg = BuddyColors.CanyonSurface,
+        quickChipBorder = BuddyColors.GoldOutline,
+        quickChipLabel = BuddyColors.HonorGold
     )
     AgentChatThemePreset.MINT -> AgentChatPalette(
         screenBg = Color(0xFFE8F5F0),

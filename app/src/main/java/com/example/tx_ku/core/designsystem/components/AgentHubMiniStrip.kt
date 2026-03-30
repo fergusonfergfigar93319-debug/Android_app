@@ -1,5 +1,6 @@
 package com.example.tx_ku.core.designsystem.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -20,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.theme.BuddyDimens
 import com.example.tx_ku.core.domain.AgentPersonaResolver
 import com.example.tx_ku.core.model.CurrentUser
@@ -37,14 +40,23 @@ fun AgentHubMiniStrip(
     val persona = CurrentUser.buddyAgent
         ?: AgentPersonaResolver.resolve(profile, CurrentUser.agentTuning)
     val unlocked = CurrentUser.agentChatUnlocked
-    val accent = MaterialTheme.colorScheme.primary
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = BuddyDimens.ScreenPaddingHorizontal, vertical = 8.dp),
         shape = RoundedCornerShape(16.dp),
         shadowElevation = 2.dp,
-        color = MaterialTheme.colorScheme.surface
+        color = BuddyColors.SurfaceCardWarm,
+        border = BorderStroke(
+            1.dp,
+            Brush.linearGradient(
+                colors = listOf(
+                    BuddyColors.HonorGold.copy(alpha = 0.32f),
+                    BuddyColors.BattlePassPurpleLight.copy(alpha = 0.2f),
+                    BuddyColors.HonorGold.copy(alpha = 0.32f)
+                )
+            )
+        )
     ) {
         Row(
             modifier = Modifier
@@ -52,8 +64,10 @@ fun AgentHubMiniStrip(
                 .background(
                     Brush.horizontalGradient(
                         listOf(
-                            accent.copy(alpha = 0.12f),
-                            MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.3f)
+                            BuddyColors.HonorGold.copy(alpha = 0.07f),
+                            BuddyColors.SurfaceLight.copy(alpha = 0.65f),
+                            BuddyColors.BackgroundLightLilac.copy(alpha = 0.45f),
+                            BuddyColors.BackgroundLightMint.copy(alpha = 0.24f)
                         )
                     )
                 )
@@ -75,7 +89,7 @@ fun AgentHubMiniStrip(
                 Text(
                     text = "我的搭子",
                     style = MaterialTheme.typography.labelSmall,
-                    color = accent,
+                    color = BuddyColors.HonorGoldDark,
                     fontWeight = FontWeight.Medium
                 )
                 Text(
@@ -96,14 +110,20 @@ fun AgentHubMiniStrip(
             Column(horizontalAlignment = Alignment.End) {
                 TextButton(
                     onClick = { navController.navigate(Routes.MY_AGENT) },
-                    modifier = Modifier.padding(0.dp)
+                    modifier = Modifier.padding(0.dp),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = BuddyColors.HonorGoldDark
+                    )
                 ) {
                     Text("去捏脸", style = MaterialTheme.typography.labelLarge)
                 }
                 if (unlocked) {
                     TextButton(
                         onClick = { navController.navigate(Routes.AGENT_CHAT) },
-                        modifier = Modifier.padding(0.dp)
+                        modifier = Modifier.padding(0.dp),
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = BuddyColors.HonorGoldDark
+                        )
                     ) {
                         Text("聊天", style = MaterialTheme.typography.labelLarge)
                     }

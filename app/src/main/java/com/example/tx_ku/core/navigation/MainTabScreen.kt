@@ -29,6 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.example.tx_ku.core.designsystem.components.BuddyBackground
 import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.theme.LocalBuddyDarkTheme
 import com.example.tx_ku.R
@@ -70,22 +71,28 @@ fun MainTabScreen(navController: NavController? = null) {
     val bubblePreview by AgentChatReminderHub.bubblePreview.collectAsStateWithLifecycle()
     val unreadReminders by AgentChatReminderHub.unreadReminders.collectAsStateWithLifecycle()
     val darkChrome = LocalBuddyDarkTheme.current
-    val chromeDivider = if (darkChrome) BuddyColors.ChromeDividerDark else BuddyColors.ChromeDividerLight
+    val chromeDivider =
+        if (darkChrome) BuddyColors.GoldOutline.copy(alpha = 0.35f)
+        else BuddyColors.HonorGold.copy(alpha = 0.22f)
     val navBarSurface = if (darkChrome) {
-        MaterialTheme.colorScheme.surface
+        BuddyColors.CanyonSurface   // 峡谷星空底色，比纯黑更有质感
     } else {
         BuddyColors.NavBarSurfaceLight
     }
+    // 选中指示器：深色用金色微光，浅色用天蓝
     val tabIndicatorColor = if (darkChrome) {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.68f)
+        BuddyColors.HonorGold.copy(alpha = 0.22f)
     } else {
-        BuddyColors.TabSelectionTintLight.copy(alpha = 0.92f)
+        BuddyColors.HonorGold.copy(alpha = 0.42f)
     }
+    // 选中图标/文字：峡谷金系，浅色下也比纯 primary 更易辨认
+    val selectedItemColor = if (darkChrome) BuddyColors.HonorGold else BuddyColors.HonorGoldDark
 
     Box(modifier = Modifier.fillMaxSize()) {
-    Scaffold(
+        BuddyBackground(modifier = Modifier.fillMaxSize()) {}
+        Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = Color.Transparent,
         floatingActionButton = {
             if (navController != null && tabs[selectedIndex] == MainTab.FORUM) {
                 FloatingActionButton(
@@ -94,7 +101,7 @@ fun MainTabScreen(navController: NavController? = null) {
                         navController.navigate(Routes.POST_EDITOR)
                     },
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.White,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                     elevation = FloatingActionButtonDefaults.elevation(
                         defaultElevation = 8.dp,
                         pressedElevation = 12.dp
@@ -141,11 +148,19 @@ fun MainTabScreen(navController: NavController? = null) {
                                 )
                             },
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = MaterialTheme.colorScheme.primary,
-                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                selectedIconColor = selectedItemColor,
+                                selectedTextColor = selectedItemColor,
                                 indicatorColor = tabIndicatorColor,
-                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                unselectedIconColor = if (darkChrome) {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                } else {
+                                    BuddyColors.TextSecondaryLayered
+                                },
+                                unselectedTextColor = if (darkChrome) {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                } else {
+                                    BuddyColors.TextSecondaryLayered
+                                }
                             )
                         )
                     }

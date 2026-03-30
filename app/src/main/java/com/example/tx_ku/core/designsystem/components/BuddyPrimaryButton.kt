@@ -20,7 +20,8 @@ import androidx.compose.ui.unit.dp
 import com.example.tx_ku.core.designsystem.theme.BuddyColors
 
 /**
- * 主按钮：天青→赛博青→亮紫的轻渐变 + 柔和浮影，与全局极光背景呼应。
+ * 主按钮：峡谷金三段渐变（暗金→亮金→暗金）+ 金色光晕阴影，王者荣耀战令质感。
+ * 禁用态降为半透明灰金。
  */
 @Composable
 fun BuddyPrimaryButton(
@@ -36,33 +37,36 @@ fun BuddyPrimaryButton(
     val brush = if (enabled) {
         Brush.horizontalGradient(
             colors = listOf(
-                MaterialTheme.colorScheme.primary,
-                BuddyColors.PrimaryVariant,
-                BuddyColors.PrimaryBright.copy(alpha = 0.92f)
+                BuddyColors.HonorGoldDark,
+                BuddyColors.HonorGold,
+                BuddyColors.HonorGoldBright,
+                BuddyColors.HonorGold,
+                BuddyColors.HonorGoldDark
             )
         )
     } else {
         Brush.horizontalGradient(
             colors = listOf(
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
+                BuddyColors.HonorGold.copy(alpha = 0.30f),
+                BuddyColors.HonorGold.copy(alpha = 0.22f)
             )
         )
     }
-    val shadowElev = if (enabled) {
-        5.dp
-    } else {
-        0.dp
-    }
+    val shadowElev = if (enabled) 6.dp else 0.dp
     Box(
         modifier = pressedMod
-            .shadow(elevation = shadowElev, shape = shape, ambientColor = BuddyColors.Primary.copy(alpha = 0.18f), spotColor = BuddyColors.PrimaryVariant.copy(alpha = 0.22f))
+            .shadow(
+                elevation = shadowElev,
+                shape = shape,
+                ambientColor = BuddyColors.HonorGold.copy(alpha = 0.30f),
+                spotColor = BuddyColors.HonorGoldBright.copy(alpha = 0.40f)
+            )
             .clip(shape)
             .background(brush)
             .clickable(
                 enabled = enabled,
                 interactionSource = interactionSource,
-                indication = ripple(bounded = true, color = Color.White.copy(alpha = 0.28f)),
+                indication = ripple(bounded = true, color = Color.White.copy(alpha = 0.32f)),
                 onClick = {
                     if (enabled) {
                         haptic.buddyPrimaryClick()
@@ -76,7 +80,8 @@ fun BuddyPrimaryButton(
         Text(
             text = text,
             style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onPrimary
+            color = Color(0xFF1A1000),   // 深棕黑，在金色底上高对比
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
         )
     }
 }

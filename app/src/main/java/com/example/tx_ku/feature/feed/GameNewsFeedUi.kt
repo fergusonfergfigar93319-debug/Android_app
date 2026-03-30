@@ -2,6 +2,7 @@ package com.example.tx_ku.feature.feed
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -34,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -53,28 +55,49 @@ import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.model.FeedHomeSubTab
 import com.example.tx_ku.core.model.GameNewsItem
 
-/** 浅底场景快捷条：多枚可横向滑动，与设计稿白胶囊 + 细描边一致。 */
+/** 场景快捷条：暖底 + 左侧金紫装饰条 + 金/战令紫强调芯片 */
 @Composable
 fun FeedScenarioQuickStrip(
     items: List<ScenarioQuickItem> = BuddyForumScenarioChips.quickItems,
     onChipClick: (ScenarioQuickItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val stripBg = Color(0xFFEBEFF5)
-    val chipBorder = Color(0xFFDDE3EB)
-    val labelMuted = Color(0xFF546E7A)
-    val textMain = Color(0xFF37474F)
-    Column(
+    val stripBg = Brush.verticalGradient(
+        colors = listOf(
+            BuddyColors.CommunityHeaderDeep.copy(alpha = 0.12f),
+            BuddyColors.ParchmentDeep,
+            BuddyColors.HonorGold.copy(alpha = 0.06f),
+            BuddyColors.CommunityPageBackground
+        )
+    )
+    val accentBrush = Brush.verticalGradient(
+        colors = listOf(
+            BuddyColors.HonorGold.copy(alpha = 0.75f),
+            BuddyColors.BattlePassPurpleLight.copy(alpha = 0.55f)
+        )
+    )
+    // 禁止 Row.height(IntrinsicSize.Min) + LazyRow：会触发对 Lazy 子项的 intrinsic 测量并崩溃
+    Row(
         modifier = modifier
             .fillMaxWidth()
             .background(stripBg)
-            .padding(horizontal = 16.dp, vertical = 10.dp)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.Top
     ) {
+        Box(
+            modifier = Modifier
+                .width(3.dp)
+                .heightIn(min = 56.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(accentBrush)
+        )
+        Column(modifier = Modifier.weight(1f)) {
         Text(
             text = "场景捷径 · 搜帖 · 分区 · 发帖 · 问搭子",
-            color = labelMuted,
+            color = BuddyColors.BattlePassPurple,
             fontSize = 12.sp,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.height(8.dp))
         LazyRow(
@@ -82,25 +105,28 @@ fun FeedScenarioQuickStrip(
         ) {
             items(items, key = { it.id }) { item ->
                 val interaction = remember(item.id) { MutableInteractionSource() }
-                val borderWidth = when {
-                    item.emphasize -> 2.dp
-                    item.secondaryEmphasis -> 1.5.dp
-                    else -> 1.dp
-                }
                 val borderColor = when {
-                    item.emphasize -> GameNewsTheme.AccentSky
-                    item.secondaryEmphasis -> GameNewsTheme.AccentSky.copy(alpha = 0.7f)
-                    else -> chipBorder
+                    item.emphasize -> BuddyColors.HonorGold.copy(alpha = 0.55f)
+                    item.secondaryEmphasis -> BuddyColors.BattlePassPurpleLight.copy(alpha = 0.65f)
+                    else -> BuddyColors.BattlePassPurple.copy(alpha = 0.14f)
                 }
-                val fontWeight = when {
-                    item.emphasize -> FontWeight.SemiBold
-                    item.secondaryEmphasis -> FontWeight.Medium
-                    else -> FontWeight.Normal
+                val chipBg = when {
+                    item.emphasize -> BuddyColors.TabSelectionTintLight.copy(alpha = 0.65f)
+                    item.secondaryEmphasis -> BuddyColors.BattlePassPurple.copy(alpha = 0.12f)
+                    else -> BuddyColors.SurfaceLight
+                }
+                val textColor = when {
+                    item.emphasize -> BuddyColors.HonorGoldDark
+                    item.secondaryEmphasis -> BuddyColors.BattlePassPurple
+                    else -> GameNewsTheme.TextSecondary
                 }
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = Color.White,
-                    border = BorderStroke(width = borderWidth, color = borderColor),
+                    color = chipBg,
+                    border = androidx.compose.foundation.BorderStroke(
+                        width = if (item.emphasize) 1.5.dp else 1.dp,
+                        color = borderColor
+                    ),
                     modifier = Modifier.heightIn(min = 36.dp)
                 ) {
                     Text(
@@ -108,30 +134,40 @@ fun FeedScenarioQuickStrip(
                         modifier = Modifier
                             .clickable(
                                 interactionSource = interaction,
-                                indication = ripple(bounded = true),
+                                indication = ripple(bounded = true, color = BuddyColors.HonorGold.copy(alpha = 0.2f)),
                                 onClick = { onChipClick(item) }
                             )
                             .padding(horizontal = 14.dp, vertical = 8.dp),
-                        color = textMain,
+                        color = textColor,
                         fontSize = 13.sp,
-                        fontWeight = fontWeight,
+                        fontWeight = if (item.emphasize) FontWeight.SemiBold else FontWeight.Normal,
                         maxLines = 1
                     )
                 }
             }
         }
+        }
     }
 }
 
-/** 米游社式首页色板，与全局 [BuddyColors] / Material lightScheme 一致 */
+/** 首页资讯色板：与 [BuddyBackground] 浅色峡谷晨光、元流档案暖底一致 */
 object GameNewsTheme {
-    val HeaderDeep = BuddyColors.CommunityHeaderDeep
-    val HeaderMid = BuddyColors.CommunityHeaderMid
+    /** 顶区渐变顶：暖金白 */
+    val HeaderTopLight = Color(0xFFFFFBF5)
+    /** 顶区渐变：香槟 */
+    val HeaderMidLight = Color(0xFFFFF5E8)
+    /** 顶区与内容衔接条（略深于 parchment，层次更清晰） */
+    val ChromeStripTop = Color(0xFFF0E8DC)
     val AccentSky = BuddyColors.CommunityPrimary
+    val AccentGold = BuddyColors.HonorGold
     val AnnouncementBg = BuddyColors.CommunityAnnouncementBg
     val CardDivider = Color(0x14000000)
     val TextPrimary = BuddyColors.CommunityTextPrimary
     val TextSecondary = BuddyColors.CommunityTextSecondary
+    /** Tab/说明：带紫倾向的灰，与主金区分层级 */
+    val TextTertiary = BuddyColors.TextSecondaryLayered
+    /** 元信息行（游戏名·时间）：战令紫弱化 */
+    val MetaMuted = BuddyColors.BattlePassPurple.copy(alpha = 0.62f)
 }
 
 @Composable
@@ -146,18 +182,18 @@ fun GameNewsTopHeader(
     onMenuClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val heroBrush = Brush.verticalGradient(
+        colors = listOf(
+            BuddyColors.CommunityHeaderDeep,
+            BuddyColors.CommunityHeaderMid,
+            Color(0xFF1C3D5C)
+        )
+    )
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        GameNewsTheme.HeaderDeep,
-                        GameNewsTheme.HeaderMid
-                    )
-                )
-            )
-            .padding(top = 8.dp, bottom = 10.dp)
+            .background(heroBrush)
+            .padding(top = 8.dp, bottom = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -167,7 +203,7 @@ fun GameNewsTopHeader(
         ) {
             Text(
                 text = appTitle,
-                color = Color.White,
+                color = BuddyColors.HonorGoldBright,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
@@ -186,7 +222,8 @@ fun GameNewsTopHeader(
                     HeaderCapsuleChip(
                         label = label,
                         emphasize = false,
-                        onClick = { onQuickSearchClick(label) }
+                        onClick = { onQuickSearchClick(label) },
+                        onHero = true
                     )
                 }
             }
@@ -198,14 +235,14 @@ fun GameNewsTopHeader(
                     Icon(
                         painter = painterResource(R.drawable.ic_search),
                         contentDescription = "搜索",
-                        tint = Color.White
+                        tint = BuddyColors.HonorGoldBright
                     )
                 }
                 IconButton(onClick = onMenuClick) {
                     Icon(
                         painter = painterResource(R.drawable.ic_menu_hamburger),
                         contentDescription = "菜单",
-                        tint = Color.White
+                        tint = BuddyColors.HonorGoldBright
                     )
                 }
             }
@@ -218,7 +255,7 @@ fun GameNewsTopHeader(
         ) {
             Text(
                 text = "资讯频道",
-                color = Color.White.copy(alpha = 0.55f),
+                color = Color(0xFFB8C8E0),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.padding(end = 8.dp)
@@ -232,36 +269,79 @@ fun GameNewsTopHeader(
                     HeaderCapsuleChip(
                         label = "全部",
                         emphasize = selectedChannel == null,
-                        onClick = { onChannelSelect(null) }
+                        onClick = { onChannelSelect(null) },
+                        onHero = true
                     )
                 }
                 items(gameChannels, key = { it }) { name ->
                     HeaderCapsuleChip(
                         label = name,
                         emphasize = selectedChannel == name,
-                        onClick = { onChannelSelect(name) }
+                        onClick = { onChannelSelect(name) },
+                        onHero = true
                     )
                 }
             }
         }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp)
+                .height(3.dp)
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            BuddyColors.HonorGoldDark,
+                            BuddyColors.HonorGold,
+                            BuddyColors.HonorGoldBright,
+                            BuddyColors.HonorCyanAccent,
+                            BuddyColors.HonorGoldBright,
+                            BuddyColors.HonorGold,
+                            BuddyColors.HonorGoldDark
+                        )
+                    )
+                )
+        )
     }
 }
 
-/** 顶栏半透明胶囊：热搜/历史用 `emphasize=false`，频道选中用 `emphasize=true`。 */
+/** 顶栏胶囊：浅色页暖底；[onHero] 夜幕顶栏上半透明底 + 选中峡谷金实底 */
 @Composable
 private fun HeaderCapsuleChip(
     label: String,
     emphasize: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onHero: Boolean = false
 ) {
-    val bg = if (emphasize) Color.White.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.08f)
-    val textColor = if (emphasize) Color.White else Color.White.copy(alpha = 0.88f)
+    val bg = if (onHero) {
+        if (emphasize) BuddyColors.HonorGold.copy(alpha = 0.98f) else Color.White.copy(alpha = 0.14f)
+    } else if (emphasize) {
+        BuddyColors.TabSelectionTintLight.copy(alpha = 0.92f)
+    } else {
+        BuddyColors.SurfaceLight
+    }
+    val border = if (onHero) {
+        if (emphasize) BorderStroke(1.5.dp, BuddyColors.HonorGoldBright.copy(alpha = 0.95f))
+        else BorderStroke(1.dp, Color.White.copy(alpha = 0.35f))
+    } else if (emphasize) {
+        BorderStroke(1.dp, BuddyColors.HonorGold.copy(alpha = 0.42f))
+    } else {
+        BorderStroke(1.dp, BuddyColors.BattlePassPurple.copy(alpha = 0.16f))
+    }
+    val textColor = if (onHero) {
+        if (emphasize) BuddyColors.HonorGoldDark else Color(0xFFF2F6FF).copy(alpha = 0.92f)
+    } else if (emphasize) {
+        BuddyColors.HonorGoldDark
+    } else {
+        GameNewsTheme.TextTertiary
+    }
     Surface(
         onClick = onClick,
         modifier = modifier.heightIn(min = 30.dp),
         shape = RoundedCornerShape(16.dp),
-        color = bg
+        color = bg,
+        border = border
     ) {
         Text(
             text = label,
@@ -284,18 +364,43 @@ fun GameNewsAnnouncementBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(GameNewsTheme.AnnouncementBg)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .background(
+                Brush.horizontalGradient(
+                    colors = listOf(
+                        BuddyColors.BattlePassPurple.copy(alpha = 0.10f),
+                        BuddyColors.CommunityAnnouncementBg,
+                        BuddyColors.BackgroundLightLilac.copy(alpha = 0.55f),
+                        BuddyColors.HonorCyanAccent.copy(alpha = 0.06f),
+                        BuddyColors.BackgroundLightMint.copy(alpha = 0.28f),
+                        BuddyColors.HonorGold.copy(alpha = 0.10f)
+                    )
+                )
+            )
+            .border(
+                width = androidx.compose.ui.unit.Dp.Hairline,
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        BuddyColors.HonorGold.copy(alpha = 0.32f),
+                        BuddyColors.BattlePassPurpleLight.copy(alpha = 0.28f),
+                        BuddyColors.HonorGold.copy(alpha = 0.32f)
+                    )
+                ),
+                shape = RoundedCornerShape(0.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(
             shape = RoundedCornerShape(4.dp),
-            color = GameNewsTheme.AccentSky.copy(alpha = 0.15f)
+            color = BuddyColors.BackgroundLightLilac.copy(alpha = 0.55f),
+            border = androidx.compose.foundation.BorderStroke(
+                0.5.dp, BuddyColors.BattlePassPurpleLight.copy(alpha = 0.38f)
+            )
         ) {
             Text(
                 text = "公告",
                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                color = GameNewsTheme.AccentSky,
+                color = BuddyColors.BattlePassPurple,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -311,7 +416,7 @@ fun GameNewsAnnouncementBar(
         )
         Text(
             text = "全部 ›",
-            color = GameNewsTheme.AccentSky,
+            color = BuddyColors.BattlePassPurpleLight,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
             modifier = Modifier
@@ -333,46 +438,84 @@ fun GameNewsSubTabs(
         FeedHomeSubTab.OFFICIAL to "官方",
         FeedHomeSubTab.BUDDY to "交友区"
     )
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color.White)
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        tabs.forEach { (tab, label) ->
-            val on = selected == tab
-            val interaction = remember(label) { MutableInteractionSource() }
-            Column(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable(
-                        interactionSource = interaction,
-                        indication = ripple(bounded = true),
-                        onClick = { onSelect(tab) }
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        BuddyColors.ParchmentDeep,
+                        BuddyColors.SurfaceCardWarm,
+                        BuddyColors.ChromeShelfTint,
+                        BuddyColors.BattlePassPurple.copy(alpha = 0.04f),
+                        BuddyColors.BackgroundLightLilac.copy(alpha = 0.14f),
+                        BuddyColors.CommunityPageBackground
                     )
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = label,
-                    color = if (on) GameNewsTheme.TextPrimary else GameNewsTheme.TextSecondary,
-                    fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal,
-                    fontSize = 15.sp
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Box(
+            )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 8.dp, vertical = 0.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            tabs.forEach { (tab, label) ->
+                val on = selected == tab
+                val interaction = remember(label) { MutableInteractionSource() }
+                Column(
                     modifier = Modifier
-                        .width(28.dp)
-                        .height(3.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(
-                            if (on) GameNewsTheme.AccentSky else Color.Transparent
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable(
+                            interactionSource = interaction,
+                            indication = ripple(bounded = true, color = BuddyColors.HonorGold.copy(alpha = 0.22f)),
+                            onClick = { onSelect(tab) }
                         )
-                )
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = label,
+                        color = if (on) BuddyColors.CommunityHeaderDeep else GameNewsTheme.TextTertiary,
+                        fontWeight = if (on) FontWeight.Bold else FontWeight.Normal,
+                        fontSize = 15.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Box(
+                        modifier = Modifier
+                            .width(28.dp)
+                            .height(3.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(
+                                if (on) Brush.horizontalGradient(
+                                    colors = listOf(
+                                        BuddyColors.HonorGold,
+                                        BuddyColors.HonorGoldBright,
+                                        BuddyColors.HonorCyanAccent.copy(alpha = 0.85f)
+                                    )
+                                ) else Brush.horizontalGradient(
+                                    colors = listOf(Color.Transparent, Color.Transparent)
+                                )
+                            )
+                    )
+                }
             }
         }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            BuddyColors.HonorGold.copy(alpha = 0.18f),
+                            BuddyColors.BattlePassPurpleLight.copy(alpha = 0.26f),
+                            BuddyColors.HonorGold.copy(alpha = 0.18f)
+                        )
+                    )
+                )
+        )
     }
 }
 
@@ -383,13 +526,40 @@ fun GameNewsCard(
     onOpen: () -> Unit = {}
 ) {
     val interaction = remember(item.id) { MutableInteractionSource() }
+    val cardShape = RoundedCornerShape(16.dp)
+    val textMain = GameNewsTheme.TextPrimary
+    val textMuted = GameNewsTheme.TextSecondary
+    val cardFace = Brush.verticalGradient(
+        colors = listOf(
+            BuddyColors.SurfaceCardWarm,
+            BuddyColors.SurfaceLight,
+            BuddyColors.SurfaceCardWarm.copy(alpha = 0.92f)
+        )
+    )
+    val cardRim = Brush.linearGradient(
+        colors = listOf(
+            BuddyColors.HonorGold.copy(alpha = 0.52f),
+            BuddyColors.BattlePassPurpleLight.copy(alpha = 0.32f),
+            BuddyColors.HonorCyanAccent.copy(alpha = 0.28f),
+            BuddyColors.HonorGold.copy(alpha = 0.52f)
+        )
+    )
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .padding(horizontal = 16.dp, vertical = 7.dp)
+            .shadow(
+                elevation = 5.dp,
+                shape = cardShape,
+                spotColor = BuddyColors.BattlePassPurple.copy(alpha = 0.16f),
+                ambientColor = BuddyColors.HonorGold.copy(alpha = 0.12f)
+            )
+            .clip(cardShape)
+            .background(cardFace)
+            .border(BorderStroke(1.dp, cardRim), cardShape)
             .clickable(
                 interactionSource = interaction,
-                indication = ripple(bounded = true),
+                indication = ripple(bounded = true, color = BuddyColors.HonorGold.copy(alpha = 0.18f)),
                 onClick = onOpen
             )
             .padding(horizontal = 16.dp, vertical = 14.dp)
@@ -402,6 +572,11 @@ fun GameNewsCard(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
+                    .border(
+                        width = if (item.isOfficial) 2.dp else 1.5.dp,
+                        color = if (item.isOfficial) BuddyColors.CanyonTeal else BuddyColors.GoldOutline,
+                        shape = CircleShape
+                    )
                     .background(
                         Brush.linearGradient(
                             listOf(
@@ -424,7 +599,7 @@ fun GameNewsCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = item.authorName,
-                        color = GameNewsTheme.TextPrimary,
+                        color = textMain,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
@@ -434,12 +609,15 @@ fun GameNewsCard(
                         Spacer(modifier = Modifier.width(6.dp))
                         Surface(
                             shape = RoundedCornerShape(4.dp),
-                            color = GameNewsTheme.AccentSky.copy(alpha = 0.12f)
+                            color = BuddyColors.BackgroundLightLilac.copy(alpha = 0.65f),
+                            border = androidx.compose.foundation.BorderStroke(
+                                0.5.dp, BuddyColors.BattlePassPurpleLight.copy(alpha = 0.42f)
+                            )
                         ) {
                             Text(
                                 text = "官方",
                                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
-                                color = GameNewsTheme.AccentSky,
+                                color = BuddyColors.BattlePassPurple,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Medium
                             )
@@ -448,19 +626,19 @@ fun GameNewsCard(
                     Spacer(modifier = Modifier.width(6.dp))
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = Color(0xFFF0F0F0)
+                        color = BuddyColors.BackgroundLightLilac.copy(alpha = 0.35f)
                     ) {
                         Text(
                             text = "${item.authorLevel}",
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            color = GameNewsTheme.TextSecondary,
+                            color = BuddyColors.BattlePassPurple.copy(alpha = 0.75f),
                             fontSize = 11.sp
                         )
                     }
                 }
                 Text(
                     text = "${item.gameName} · ${item.timeLabel}",
-                    color = GameNewsTheme.TextSecondary,
+                    color = GameNewsTheme.MetaMuted,
                     fontSize = 12.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -469,13 +647,13 @@ fun GameNewsCard(
             Icon(
                 painter = painterResource(R.drawable.ic_more_vert),
                 contentDescription = null,
-                tint = GameNewsTheme.TextSecondary
+                tint = textMuted
             )
         }
         Spacer(modifier = Modifier.height(10.dp))
         Text(
             text = item.title,
-            color = GameNewsTheme.TextPrimary,
+            color = textMain,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             maxLines = 2,
@@ -485,7 +663,7 @@ fun GameNewsCard(
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = item.summary,
-                color = GameNewsTheme.TextSecondary,
+                color = GameNewsTheme.TextTertiary,
                 fontSize = 14.sp,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -498,6 +676,19 @@ fun GameNewsCard(
                 .fillMaxWidth()
                 .height(160.dp)
                 .clip(RoundedCornerShape(12.dp))
+                .border(
+                    BorderStroke(
+                        1.dp,
+                        Brush.linearGradient(
+                            colors = listOf(
+                                BuddyColors.CardEdgeLight,
+                                BuddyColors.CanyonTealMuted.copy(alpha = 0.35f),
+                                BuddyColors.CardEdgeLight
+                            )
+                        )
+                    ),
+                    RoundedCornerShape(12.dp)
+                )
         ) {
             val gradientBrush = remember(item.coverGradientStart, item.coverGradientEnd) {
                 Brush.linearGradient(
@@ -507,12 +698,7 @@ fun GameNewsCard(
                     )
                 )
             }
-            // 底层渐变始终绘制；封面用 Coil 在后台解码（避免 painterResource 不支持 layer-list，也避免列表里大量 AndroidView 导致主线程测量卡死 ANR）
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(gradientBrush)
-            )
+            Box(modifier = Modifier.fillMaxSize().background(gradientBrush))
             val coverRes = item.coverDrawableRes
             if (coverRes != null && coverRes != 0) {
                 val ctx = LocalContext.current
@@ -533,6 +719,20 @@ fun GameNewsCard(
                     error = coverFallback
                 )
             }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp)
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.06f)
+                            )
+                        )
+                    )
+            )
         }
         Spacer(modifier = Modifier.height(12.dp))
         Row(
@@ -544,29 +744,21 @@ fun GameNewsCard(
                 Icon(
                     painter = painterResource(R.drawable.ic_forum_chat),
                     contentDescription = null,
-                    tint = GameNewsTheme.TextSecondary,
+                    tint = BuddyColors.CanyonTealMuted,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "${item.commentCount}",
-                    color = GameNewsTheme.TextSecondary,
-                    fontSize = 13.sp
-                )
+                Text(text = "${item.commentCount}", color = GameNewsTheme.TextTertiary, fontSize = 13.sp)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     painter = painterResource(R.drawable.ic_favorite),
                     contentDescription = null,
-                    tint = GameNewsTheme.TextSecondary,
+                    tint = BuddyColors.BattlePassPurpleLight.copy(alpha = 0.75f),
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "${item.likeCount}",
-                    color = GameNewsTheme.TextSecondary,
-                    fontSize = 13.sp
-                )
+                Text(text = "${item.likeCount}", color = GameNewsTheme.TextTertiary, fontSize = 13.sp)
             }
         }
     }
@@ -577,6 +769,6 @@ fun GameNewsCardDivider() {
     HorizontalDivider(
         modifier = Modifier.fillMaxWidth(),
         thickness = 0.5.dp,
-        color = GameNewsTheme.CardDivider
+        color = BuddyColors.GoldOutline.copy(alpha = 0.5f)
     )
 }

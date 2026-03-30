@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -47,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.components.buddyPressScale
 import com.example.tx_ku.core.designsystem.components.buddyPrimaryClick
 import com.example.tx_ku.core.designsystem.components.rememberBuddyHaptic
@@ -55,16 +57,16 @@ import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.core.model.Recommendation
 import com.example.tx_ku.core.navigation.Routes
 
-/** 搭子推荐卡片等浅色块用色（与全局资讯主题并存） */
+/** 搭子推荐卡片等浅色块用色（与全局资讯主题、峡谷金/战令紫一致） */
 object FeedHomeLightColors {
-    val CardSurface = Color(0xFFFFFFFF)
-    val TextMain = Color(0xFF1A1530)
-    val TextMuted = Color(0xFF5C5670)
-    val CtaPurple = Color(0xFF7C4DFF)
+    val CardSurface = BuddyColors.SurfaceCardWarm
+    val TextMain = BuddyColors.CommunityTextPrimary
+    val TextMuted = BuddyColors.TextSecondaryLayered
+    val CtaPurple = BuddyColors.BattlePassPurpleLight
     val BubbleGreen = Color(0xFF2E7D32)
     val BubbleOrange = Color(0xFFE65100)
-    val BubblePurple = Color(0xFF6B4EFF)
-    val BadgeTint = Color(0xFFEDE7FF)
+    val BubblePurple = BuddyColors.BattlePassPurpleLight
+    val BadgeTint = BuddyColors.BackgroundLightLilac.copy(alpha = 0.65f)
 }
 
 @Composable
@@ -85,7 +87,8 @@ fun CollapsibleSmartAgentCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(6.dp, RoundedCornerShape(20.dp), spotColor = accent.copy(alpha = 0.35f)),
+            .border(1.dp, BuddyColors.CardEdgeLight, RoundedCornerShape(20.dp))
+            .shadow(4.dp, RoundedCornerShape(20.dp), spotColor = BuddyColors.HonorGold.copy(alpha = 0.2f)),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = FeedHomeLightColors.CardSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -224,7 +227,8 @@ fun HomeSwipeRecommendationCard(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 420.dp)
-            .shadow(10.dp, RoundedCornerShape(28.dp), spotColor = Color(0x503D2E7A)),
+            .border(1.dp, BuddyColors.CardEdgeLight, RoundedCornerShape(28.dp))
+            .shadow(8.dp, RoundedCornerShape(28.dp), spotColor = BuddyColors.HonorGold.copy(alpha = 0.18f)),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = FeedHomeLightColors.CardSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)

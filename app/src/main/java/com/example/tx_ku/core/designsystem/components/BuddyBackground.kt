@@ -6,12 +6,69 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.theme.LocalBuddyDarkTheme
 
 /**
- * 统一页面背景：深色为夜蓝 + 青紫霓虹感渐变；浅色为顶区极光（天青→淡紫→薄荷回光）叠在页底色上。
+ * 全站浅色/深色页面底纹（与 [BuddyBackground]、论坛浅色底一致，避免各页各画一套）。
+ */
+object BuddyPageBrushes {
+    /** 浅色：对角峡谷晨光 — 金 / 紫雾 / 赛博青 / 夜幕压底 */
+    fun light(): Brush = Brush.linearGradient(
+        colors = listOf(
+            Color(0xFFFFF5E8),
+            BuddyColors.HonorGold.copy(alpha = 0.18f),
+            BuddyColors.BackgroundLightLilac.copy(alpha = 0.58f),
+            BuddyColors.HonorCyanAccent.copy(alpha = 0.08f),
+            BuddyColors.BattlePassPurpleLight.copy(alpha = 0.11f),
+            BuddyColors.CommunityHeaderDeep.copy(alpha = 0.11f),
+            BuddyColors.CommunityPageBackground
+        ),
+        start = Offset.Zero,
+        end = Offset(1200f, 2200f)
+    )
+
+    /** 深色：峡谷星空 — 供论坛/全页与 [BuddyBackground] 同步 */
+    fun dark(base: Color): Brush {
+        val glowPurple = BuddyColors.BattlePassPurple.copy(alpha = 0.28f)
+        val glowGold = BuddyColors.HonorGold.copy(alpha = 0.07f)
+        val glowCyan = BuddyColors.PrimaryVariant.copy(alpha = 0.06f)
+        return Brush.verticalGradient(
+            colors = listOf(
+                BuddyColors.BackgroundHighlight,
+                BuddyColors.BackgroundHighlight,
+                glowPurple,
+                BuddyColors.BackgroundMidTone,
+                glowCyan,
+                glowGold,
+                base
+            ),
+            startY = 0f,
+            endY = Float.POSITIVE_INFINITY
+        )
+    }
+
+    /**
+     * 列表/信息流区纵向带：比整页略压一层紫与金，减轻「白卡漂在米色上」的扁平感。
+     */
+    fun lightListBand(): Brush = Brush.verticalGradient(
+        colors = listOf(
+            BuddyColors.ParchmentDeep,
+            BuddyColors.BattlePassPurple.copy(alpha = 0.05f),
+            BuddyColors.CommunityPageBackground,
+            BuddyColors.HonorGold.copy(alpha = 0.06f),
+            BuddyColors.ParchmentDeep.copy(alpha = 0.85f)
+        )
+    )
+}
+
+/**
+ * 统一页面背景：
+ * 深色 = 峡谷星空（深蓝近黑底 + 战令紫/峡谷金微光渐变，营造王者荣耀夜战氛围）；
+ * 浅色 = 峡谷晨光（顶区暖金白 → 天青薄雾 → 淡紫回光，与主色呼应）。
  */
 @Composable
 fun BuddyBackground(
@@ -21,47 +78,9 @@ fun BuddyBackground(
     val base = MaterialTheme.colorScheme.background
     val useDarkBg = LocalBuddyDarkTheme.current
     val gradient = if (!useDarkBg) {
-        val washSky = BuddyColors.BackgroundLightMid
-        val washLilac = BuddyColors.BackgroundLightLilac.copy(alpha = 0.55f)
-        val washMint = BuddyColors.BackgroundLightMint.copy(alpha = 0.45f)
-        val glowSky = BuddyColors.CommunityPrimary.copy(alpha = 0.11f)
-        val glowViolet = BuddyColors.Primary.copy(alpha = 0.06f)
-        val glowCyan = BuddyColors.PrimaryVariant.copy(alpha = 0.07f)
-        val topAir = BuddyColors.BackgroundLightHighlight
-        Brush.verticalGradient(
-            colors = listOf(
-                topAir,
-                washSky,
-                washLilac,
-                BuddyColors.CommunityAnnouncementBg,
-                glowSky,
-                BuddyColors.CommunityPageBackground,
-                washMint,
-                glowViolet,
-                glowCyan,
-                base
-            ),
-            startY = 0f,
-            endY = Float.POSITIVE_INFINITY
-        )
+        BuddyPageBrushes.light()
     } else {
-        val glowSky = BuddyColors.CommunityPrimary.copy(alpha = 0.12f)
-        val glowViolet = BuddyColors.Primary.copy(alpha = 0.10f)
-        val glowCyan = BuddyColors.PrimaryVariant.copy(alpha = 0.09f)
-        val rim = BuddyColors.BackgroundHighlight.copy(alpha = 0.92f)
-        Brush.verticalGradient(
-            colors = listOf(
-                rim,
-                BuddyColors.BackgroundHighlight,
-                glowViolet,
-                glowSky,
-                BuddyColors.BackgroundMidTone,
-                glowCyan,
-                base
-            ),
-            startY = 0f,
-            endY = Float.POSITIVE_INFINITY
-        )
+        BuddyPageBrushes.dark(base)
     }
     Box(
         modifier = modifier

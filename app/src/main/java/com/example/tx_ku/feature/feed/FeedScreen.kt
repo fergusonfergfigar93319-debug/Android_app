@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,16 +40,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tx_ku.R
+import com.example.tx_ku.core.designsystem.components.BuddyPageBrushes
 import com.example.tx_ku.core.designsystem.components.BuddyEmptyState
 import com.example.tx_ku.core.designsystem.components.BuddyErrorState
 import com.example.tx_ku.core.designsystem.components.LocalBuddySnackbarHostState
 import com.example.tx_ku.core.designsystem.components.LocalBuddySnackbarScope
 import com.example.tx_ku.core.designsystem.components.showBuddySnackbar
+import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.theme.BuddyDimens
 import com.example.tx_ku.core.model.FeedHomeSubTab
 import com.example.tx_ku.core.model.FollowGameCatalog
@@ -121,7 +127,7 @@ fun FeedScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color.Transparent)
     ) {
         GameNewsTopHeader(
             appTitle = stringResource(R.string.app_name),
@@ -242,6 +248,7 @@ fun FeedScreen(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
+                .background(BuddyPageBrushes.lightListBand())
         ) {
             when (subTab) {
                 FeedHomeSubTab.BUDDY -> {
@@ -253,7 +260,10 @@ fun FeedScreen(
                         label = "buddyFeed"
                     ) { state ->
                         when (state) {
-                            is UiState.Loading -> FeedNewsListSkeleton(modifier = Modifier.fillMaxSize())
+                            is UiState.Loading -> FeedNewsListSkeleton(
+                                modifier = Modifier.fillMaxSize(),
+                                tone = FeedListSkeletonTone.Light
+                            )
                             is UiState.Error -> BuddyErrorState(
                                 title = "加载失败",
                                 message = state.message,
@@ -283,7 +293,10 @@ fun FeedScreen(
                         label = "newsFeed"
                     ) { state ->
                         when (state) {
-                            is UiState.Loading -> FeedNewsListSkeleton(modifier = Modifier.fillMaxSize())
+                            is UiState.Loading -> FeedNewsListSkeleton(
+                                modifier = Modifier.fillMaxSize(),
+                                tone = FeedListSkeletonTone.Light
+                            )
                             is UiState.Error -> BuddyErrorState(
                                 title = "资讯加载失败",
                                 message = state.message,
@@ -451,19 +464,39 @@ private fun GameNewsListContent(
             }
         }
         item(key = "news_scroll_hint") {
-            Surface(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
-                shape = RoundedCornerShape(20.dp),
-                color = GameNewsTheme.AccentSky.copy(alpha = 0.12f),
-                shadowElevation = 0.dp
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                BuddyColors.TabSelectionTintLight.copy(alpha = 0.48f),
+                                BuddyColors.SurfaceCardWarm.copy(alpha = 0.92f),
+                                BuddyColors.BackgroundLightLilac.copy(alpha = 0.44f),
+                                BuddyColors.BackgroundLightMint.copy(alpha = 0.3f),
+                                BuddyColors.TabSelectionTintLight.copy(alpha = 0.48f)
+                            )
+                        )
+                    )
+                    .border(
+                        1.dp,
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                BuddyColors.HonorGold.copy(alpha = 0.28f),
+                                BuddyColors.BattlePassPurpleLight.copy(alpha = 0.22f),
+                                BuddyColors.HonorGold.copy(alpha = 0.28f)
+                            )
+                        ),
+                        RoundedCornerShape(20.dp)
+                    )
             ) {
                 Text(
                     text = "👇 下滑浏览更多官方资讯与活动",
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
                     style = MaterialTheme.typography.labelLarge,
-                    color = GameNewsTheme.AccentSky,
+                    color = BuddyColors.BattlePassPurple.copy(alpha = 0.82f),
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -474,7 +507,6 @@ private fun GameNewsListContent(
             contentType = { _ -> "game_news_row" }
         ) { item ->
             GameNewsCard(item = item)
-            GameNewsCardDivider()
         }
     }
 }

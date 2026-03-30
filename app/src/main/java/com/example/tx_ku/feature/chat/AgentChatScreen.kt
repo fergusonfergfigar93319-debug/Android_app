@@ -94,6 +94,7 @@ import com.example.tx_ku.core.designsystem.components.BuddyTopBar
 import com.example.tx_ku.core.designsystem.components.buddyPrimaryClick
 import com.example.tx_ku.core.designsystem.components.buddySelectionTick
 import com.example.tx_ku.core.designsystem.components.rememberBuddyHaptic
+import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.theme.BuddyDimens
 import com.example.tx_ku.core.domain.AgentPersonaResolver
 import com.example.tx_ku.core.model.AgentTuning
@@ -438,6 +439,20 @@ private fun AgentChatContent(navController: NavController) {
                                 colors = listOf(palette.headerDeep, palette.headerMid)
                             )
                         )
+                        // 顶栏底部金色细线，与版本速递顶栏统一
+                        .border(
+                            width = androidx.compose.ui.unit.Dp.Hairline,
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    BuddyColors.HonorGold.copy(alpha = 0f),
+                                    BuddyColors.HonorGold.copy(alpha = 0.55f),
+                                    BuddyColors.HonorGoldBright.copy(alpha = 0.75f),
+                                    BuddyColors.HonorGold.copy(alpha = 0.55f),
+                                    BuddyColors.HonorGold.copy(alpha = 0f)
+                                )
+                            ),
+                            shape = RoundedCornerShape(0.dp)
+                        )
                 ) {
                     BuddyTopBar(
                         title = "和搭子聊天",
@@ -664,7 +679,7 @@ private fun AgentChatContent(navController: NavController) {
                         Text(
                             text = "快捷提问",
                             style = MaterialTheme.typography.labelMedium,
-                            color = palette.quickChipLabel,
+                            color = BuddyColors.HonorGold,   // 峡谷金标题
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
@@ -895,7 +910,16 @@ private fun UserAvatarChip(profile: com.example.tx_ku.core.model.Profile?) {
             modifier = Modifier
                 .size(size)
                 .clip(CircleShape)
-                .background(Color(0xFFB0BEC5)),
+                // 峡谷金渐变默认头像
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(
+                            BuddyColors.HonorGoldDark,
+                            BuddyColors.HonorGold,
+                            BuddyColors.BattlePassPurple
+                        )
+                    )
+                ),
             contentAlignment = Alignment.Center
         ) {
             Text(letter, color = Color.White, fontWeight = FontWeight.Bold)
@@ -924,7 +948,7 @@ private fun AgentBubble(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .border(1.dp, Color(0x22000000), CircleShape)
+                .border(1.5.dp, BuddyColors.GoldOutline, CircleShape)
         ) {
             Image(
                 painter = painterResource(agentAvatarDrawableRes(avatarStyle)),
@@ -1003,7 +1027,7 @@ private fun AgentTypingRow(
                 .background(palette.agentBubble)
                 .then(
                     if (hud) {
-                        Modifier.border(1.dp, palette.accent.copy(alpha = 0.28f), shape)
+                        Modifier.border(1.dp, BuddyColors.GoldOutline, shape)
                     } else Modifier
                 )
                 .padding(horizontal = 14.dp, vertical = 10.dp)
@@ -1011,7 +1035,7 @@ private fun AgentTypingRow(
             CircularProgressIndicator(
                 modifier = Modifier.size(16.dp),
                 strokeWidth = 2.dp,
-                color = palette.accent
+                color = BuddyColors.HonorGold   // 峡谷金打字指示器
             )
             Text(
                 "搭子在打字…",
@@ -1151,10 +1175,13 @@ private fun ChatInputBar(
                 }
             },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedBorderColor = palette.accent.copy(alpha = 0.5f),
-                unfocusedBorderColor = Color(0x22000000)
+                focusedContainerColor = BuddyColors.CanyonSurface,
+                unfocusedContainerColor = BuddyColors.CanyonMid,
+                focusedBorderColor = BuddyColors.HonorGold.copy(alpha = 0.75f),
+                unfocusedBorderColor = BuddyColors.GoldOutline,
+                focusedTextColor = Color(0xFFEEE8D5),
+                unfocusedTextColor = Color(0xFFCDD5E0),
+                cursorColor = BuddyColors.HonorGold
             ),
             maxLines = 4
         )
@@ -1164,10 +1191,10 @@ private fun ChatInputBar(
             enabled = enabled && draft.trim().isNotEmpty(),
             modifier = Modifier.size(48.dp),
             colors = IconButtonDefaults.filledIconButtonColors(
-                containerColor = palette.accent,
-                contentColor = Color.White,
-                disabledContainerColor = Color(0xFFE8E8E8),
-                disabledContentColor = Color(0xFFBDBDBD)
+                containerColor = BuddyColors.HonorGold,
+                contentColor = Color(0xFF1A1000),   // 深棕黑，金底高对比
+                disabledContainerColor = BuddyColors.CanyonSurface,
+                disabledContentColor = Color(0xFF8B95B0)
             )
         ) {
             Icon(

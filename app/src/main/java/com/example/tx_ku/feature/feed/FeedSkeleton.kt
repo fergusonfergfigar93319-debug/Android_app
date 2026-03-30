@@ -24,17 +24,44 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.tx_ku.core.designsystem.components.buddyShimmer
+import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.theme.BuddyDimens
 import com.example.tx_ku.core.designsystem.theme.BuddyShapes
 
+/** 与资讯流底色一致：浅色交友区 / 峡谷深色资讯官方区 */
+enum class FeedListSkeletonTone {
+    Light,
+    Canyon
+}
+
 /** 资讯列表区骨架（顶栏已由真实 [GameNewsTopHeader] 展示） */
 @Composable
-fun FeedNewsListSkeleton(modifier: Modifier = Modifier) {
-    val placeholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.18f)
+fun FeedNewsListSkeleton(
+    modifier: Modifier = Modifier,
+    tone: FeedListSkeletonTone = FeedListSkeletonTone.Light
+) {
+    val placeholderColor = when (tone) {
+        FeedListSkeletonTone.Light ->
+            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.18f)
+        FeedListSkeletonTone.Canyon ->
+            Color.White.copy(alpha = 0.14f)
+    }
     val shimmer = MaterialTheme.colorScheme.primary
+    val pageBg = when (tone) {
+        FeedListSkeletonTone.Light -> Color.Transparent
+        FeedListSkeletonTone.Canyon -> BuddyColors.CanyonDeep
+    }
+    val cardBg = when (tone) {
+        FeedListSkeletonTone.Light -> BuddyColors.SurfaceCardWarm
+        FeedListSkeletonTone.Canyon -> BuddyColors.CanyonSurface
+    }
+    val dividerColor = when (tone) {
+        FeedListSkeletonTone.Light -> MaterialTheme.colorScheme.outline.copy(alpha = 0.08f)
+        FeedListSkeletonTone.Canyon -> BuddyColors.GoldOutline.copy(alpha = 0.22f)
+    }
     Column(
         modifier = modifier
-            .background(MaterialTheme.colorScheme.background)
+            .background(pageBg)
             .padding(horizontal = BuddyDimens.ListContentPadding, vertical = BuddyDimens.SpacingMd),
         verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {
@@ -42,7 +69,7 @@ fun FeedNewsListSkeleton(modifier: Modifier = Modifier) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(0.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = cardBg)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(
@@ -111,7 +138,7 @@ fun FeedNewsListSkeleton(modifier: Modifier = Modifier) {
             }
             HorizontalDivider(
                 thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.08f)
+                color = dividerColor
             )
         }
     }
