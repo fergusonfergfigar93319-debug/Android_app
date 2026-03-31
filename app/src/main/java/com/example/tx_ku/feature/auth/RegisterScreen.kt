@@ -1,6 +1,8 @@
 package com.example.tx_ku.feature.auth
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,10 +31,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.navigation.NavController
 import com.example.tx_ku.R
-import com.example.tx_ku.core.designsystem.components.BuddyBackground
 import com.example.tx_ku.core.designsystem.components.BuddyElevatedCard
+import com.example.tx_ku.core.designsystem.components.BuddyPageBrushes
 import com.example.tx_ku.core.designsystem.components.BuddyPrimaryButton
 import com.example.tx_ku.core.designsystem.components.BuddyTopBar
+import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.theme.BuddyDimens
 import com.example.tx_ku.core.designsystem.theme.BuddyShapes
 import com.example.tx_ku.core.navigation.Routes
@@ -50,7 +53,13 @@ fun RegisterScreen(navController: NavController) {
     }
     var error by remember { mutableStateOf<String?>(null) }
 
-    BuddyBackground(modifier = Modifier.fillMaxSize()) {
+    val fieldColors = authFormOutlinedTextFieldColors()
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BuddyPageBrushes.splashHonorCool())
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -61,14 +70,19 @@ fun RegisterScreen(navController: NavController) {
                 title = "注册",
                 subtitle = "创建账号 · 选择形象",
                 onBack = { navController.popBackStack() },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                titleColor = BuddyColors.HonorGoldBright,
+                subtitleColor = BuddyColors.PrimaryVariant.copy(alpha = 0.88f),
+                backIconTint = BuddyColors.HonorGoldBright
             )
             Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
             AuthHeroBranding(compact = true, modifier = Modifier.fillMaxWidth())
             Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
             BuddyElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = BuddyShapes.CardLarge
+                shape = BuddyShapes.CardLarge,
+                containerColorOverride = BuddyColors.SurfaceElevatedLight,
+                borderColorOverride = BuddyColors.HonorCyanAccent.copy(alpha = 0.28f)
             ) {
                 Column(
                     Modifier
@@ -92,11 +106,12 @@ fun RegisterScreen(navController: NavController) {
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = BuddyShapes.CardSmall,
+                        colors = fieldColors,
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(R.drawable.ic_person),
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = AuthFormFieldLeadingIconTint
                             )
                         }
                     )
@@ -109,11 +124,12 @@ fun RegisterScreen(navController: NavController) {
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         modifier = Modifier.fillMaxWidth(),
                         shape = BuddyShapes.CardSmall,
+                        colors = fieldColors,
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(R.drawable.ic_mail),
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = AuthFormFieldLeadingIconTint
                             )
                         }
                     )
@@ -127,11 +143,12 @@ fun RegisterScreen(navController: NavController) {
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         modifier = Modifier.fillMaxWidth(),
                         shape = BuddyShapes.CardSmall,
+                        colors = fieldColors,
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(R.drawable.ic_lock),
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = AuthFormFieldLeadingIconTint
                             )
                         }
                     )
@@ -145,11 +162,12 @@ fun RegisterScreen(navController: NavController) {
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         modifier = Modifier.fillMaxWidth(),
                         shape = BuddyShapes.CardSmall,
+                        colors = fieldColors,
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(R.drawable.ic_lock),
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = AuthFormFieldLeadingIconTint
                             )
                         }
                     )
@@ -204,7 +222,7 @@ fun RegisterScreen(navController: NavController) {
                                 "返回登录",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.primary
+                                color = BuddyColors.PrimaryVariant
                             )
                         }
                     }

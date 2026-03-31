@@ -63,6 +63,23 @@ object BuddyPageBrushes {
             BuddyColors.ParchmentDeep.copy(alpha = 0.85f)
         )
     )
+
+    /**
+     * 启动页专用：峡谷夜幕冷色底（深蓝 → 战令紫雾 → 赛博青微光），
+     * 与金/青 Logo 动效形成高对比，避免浅色 parchment 把光效「吃没」。
+     */
+    fun splashHonorCool(): Brush = Brush.linearGradient(
+        colors = listOf(
+            BuddyColors.BackgroundHighlight,
+            BuddyColors.CanyonMid,
+            BuddyColors.BattlePassPurple.copy(alpha = 0.42f),
+            BuddyColors.CanyonDeep,
+            BuddyColors.PrimaryVariant.copy(alpha = 0.14f),
+            BuddyColors.BackgroundMidTone
+        ),
+        start = Offset.Zero,
+        end = Offset(900f, 2000f)
+    )
 }
 
 /**

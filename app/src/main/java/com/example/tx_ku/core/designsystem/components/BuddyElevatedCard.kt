@@ -8,6 +8,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import com.example.tx_ku.core.designsystem.theme.BuddyColors
@@ -22,11 +23,17 @@ import com.example.tx_ku.core.designsystem.theme.LocalBuddyDarkTheme
 fun BuddyElevatedCard(
     modifier: Modifier = Modifier,
     shape: Shape = BuddyShapes.CardMedium,
+    /** 覆盖卡片面色（如认证页峡谷冷底上的偏冷白卡）。 */
+    containerColorOverride: Color? = null,
+    /** 覆盖描边色（如赛博青微光边）。 */
+    borderColorOverride: Color? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val dark = LocalBuddyDarkTheme.current
-    val borderColor = if (dark) BuddyColors.CardEdgeDark else BuddyColors.CardEdgeLight
-    val face = if (dark) MaterialTheme.colorScheme.surface else BuddyColors.SurfaceCardWarm
+    val borderColor = borderColorOverride
+        ?: if (dark) BuddyColors.CardEdgeDark else BuddyColors.CardEdgeLight
+    val face = containerColorOverride
+        ?: if (dark) MaterialTheme.colorScheme.surface else BuddyColors.SurfaceCardWarm
     Card(
         modifier = modifier.border(1.dp, borderColor, shape),
         shape = shape,

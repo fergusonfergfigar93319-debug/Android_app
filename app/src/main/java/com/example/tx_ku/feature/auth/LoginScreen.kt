@@ -1,5 +1,6 @@
 package com.example.tx_ku.feature.auth
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,9 +38,10 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.tx_ku.R
-import com.example.tx_ku.core.designsystem.components.BuddyBackground
 import com.example.tx_ku.core.designsystem.components.BuddyElevatedCard
+import com.example.tx_ku.core.designsystem.components.BuddyPageBrushes
 import com.example.tx_ku.core.designsystem.components.BuddyPrimaryButton
+import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.theme.BuddyDimens
 import com.example.tx_ku.core.designsystem.theme.BuddyShapes
 import com.example.tx_ku.core.model.CurrentUser
@@ -69,7 +71,11 @@ fun LoginScreen(navController: NavController) {
         }
     }
 
-    BuddyBackground(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BuddyPageBrushes.splashHonorCool())
+    ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
@@ -81,7 +87,9 @@ fun LoginScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingXl))
                 BuddyElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = BuddyShapes.CardLarge
+                    shape = BuddyShapes.CardLarge,
+                    containerColorOverride = BuddyColors.SurfaceElevatedLight,
+                    borderColorOverride = BuddyColors.HonorCyanAccent.copy(alpha = 0.28f)
                 ) {
                     Column(
                         Modifier
@@ -100,11 +108,12 @@ fun LoginScreen(navController: NavController) {
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                             modifier = Modifier.fillMaxWidth(),
                             shape = BuddyShapes.CardSmall,
+                            colors = authFormOutlinedTextFieldColors(),
                             leadingIcon = {
                                 Icon(
                                     painter = painterResource(R.drawable.ic_mail),
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    tint = AuthFormFieldLeadingIconTint
                                 )
                             }
                         )
@@ -118,11 +127,12 @@ fun LoginScreen(navController: NavController) {
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             modifier = Modifier.fillMaxWidth(),
                             shape = BuddyShapes.CardSmall,
+                            colors = authFormOutlinedTextFieldColors(),
                             leadingIcon = {
                                 Icon(
                                     painter = painterResource(R.drawable.ic_lock),
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    tint = AuthFormFieldLeadingIconTint
                                 )
                             }
                         )
@@ -175,7 +185,7 @@ fun LoginScreen(navController: NavController) {
                                     "去注册",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = BuddyColors.PrimaryVariant
                                 )
                             }
                         }
@@ -194,8 +204,8 @@ fun LoginScreen(navController: NavController) {
                         modifier = Modifier.semantics {
                             contentDescription = "开发者快速登录菜单"
                         },
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = MaterialTheme.colorScheme.onSurface
+                        containerColor = BuddyColors.SurfaceElevatedLight,
+                        contentColor = BuddyColors.CommunityHeaderDeep
                     ) {
                         Text(
                             text = "☰",
@@ -254,3 +264,4 @@ fun LoginScreen(navController: NavController) {
         }
     }
 }
+
