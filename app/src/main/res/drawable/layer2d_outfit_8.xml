@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 镜·裂空：不对称肩甲 -->
+    <path
+        android:fillColor="#FF3A4A6E"
+        android:pathData="M68,112 L62,194 L138,194 L132,112 Q100,98 68,112z" />
+    <path
+        android:fillColor="#FF2A3558"
+        android:pathData="M62,118 L55,145 L72,152 L68,118z M132,118 L145,145 L128,152 L132,118z" />
+    <path
+        android:fillColor="#FF4A5A8A"
+        android:pathData="M92,112 L100,130 L108,112z" />
+</vector>

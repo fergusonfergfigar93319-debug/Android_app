@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 曜·稚气：更圆更鼓 -->
+    <path
+        android:fillColor="#FFFFE4D0"
+        android:strokeColor="#FFDEBA9A"
+        android:strokeWidth="1.2"
+        android:pathData="M100,48 C132,48 152,76 152,108 C152,142 130,160 100,160 C70,160 48,142 48,108 C48,76 68,48 100,48z" />
+</vector>

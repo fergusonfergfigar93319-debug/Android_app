@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 坦克·铁壁：超宽肩 + 块面胸甲 -->
+    <path
+        android:fillColor="#FF2A3E6E"
+        android:pathData="M48,110 L40,198 L160,198 L152,110 Q100,92 48,110z" />
+    <path
+        android:fillColor="#FF1E2E58"
+        android:pathData="M52,110 L50,155 L72,162 L68,118z M148,110 L150,155 L128,162 L132,118z" />
+    <path
+        android:fillColor="#FF243A66"
+        android:pathData="M88,112 L100,128 L112,112z M88,138 L100,152 L112,138z" />
+</vector>

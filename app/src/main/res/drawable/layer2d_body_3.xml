@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 发育路·射架：单侧肩甲 + 利落腰线 -->
+    <path
+        android:fillColor="#FF2A3E6E"
+        android:pathData="M72,114 L64,194 L136,194 L128,114 Q100,106 72,114z" />
+    <path
+        android:fillColor="#FF1E2E58"
+        android:pathData="M118,114 L128,132 L122,150 L118,118z" />
+    <path
+        android:fillColor="#FF243A66"
+        android:pathData="M90,114 L100,130 L110,114z" />
+</vector>

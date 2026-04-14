@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 边塔·三分：外塔剪影 + 兵线格 -->
+    <path
+        android:fillColor="#FF263238"
+        android:pathData="M0,0h200v200h-200z" />
+    <path
+        android:fillColor="#FF546E7A"
+        android:pathData="M72,60 L100,28 L128,60 L124,140 L76,140z" />
+    <path
+        android:fillColor="#FF78909C"
+        android:pathData="M84,72 L100,52 L116,72 L114,120 L86,120z" />
+    <path
+        android:fillColor="#33FFD54F"
+        android:pathData="M0,160h200v40h-200z" />
+    <path
+        android:fillColor="#44FFFFFF"
+        android:pathData="M24,168h152v4h-152z M24,178h152v3h-152z" />
+</vector>

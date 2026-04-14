@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 灵耳·坠饰 -->
+    <path
+        android:fillColor="#FFFF80AB"
+        android:pathData="M52,88 L48,72 L56,80z M148,88 L152,72 L144,80z" />
+    <path
+        android:fillColor="#FFFF4081"
+        android:pathData="M50,92 L46,112 L54,108z M150,92 L154,112 L146,108z" />
+</vector>

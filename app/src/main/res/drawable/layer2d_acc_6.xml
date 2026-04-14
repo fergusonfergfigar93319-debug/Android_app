@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 峡谷·腰饰 -->
+    <path
+        android:fillColor="#FFFFD54F"
+        android:pathData="M68,148 L100,142 L132,148 L130,158 L70,158z" />
+    <path
+        android:fillColor="#FFE65100"
+        android:pathData="M96,150h8v10h-8z" />
+</vector>

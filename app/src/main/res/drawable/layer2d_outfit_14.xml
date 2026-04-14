@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 李白·剑歌 白衣 -->
+    <path
+        android:fillColor="#FFF6F6F6"
+        android:pathData="M80,140 L120,140 L140,200 L60,200z" />
+    <path
+        android:fillColor="#FFD0D0F0"
+        android:pathData="M80,140 L100,165 L120,140z" />
+    <path
+        android:fillColor="#FFB0C0FF"
+        android:pathData="M85,170 L115,170 L115,200 L85,200z" />
+    <path
+        android:fillColor="#FF8090E0"
+        android:pathData="M90,175 L110,175 L110,195 L90,195z" />
+    <!-- 飘带 -->
+    <path
+        android:fillColor="#FFF0E0D0"
+        android:pathData="M140,140 Q160,130 180,150z" />
+</vector>

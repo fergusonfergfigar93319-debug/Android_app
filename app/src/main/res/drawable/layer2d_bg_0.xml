@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 柔焦棚景：深靛底 + 极光带 + 星光散点 -->
+    <path
+        android:fillColor="#FF0E1428"
+        android:pathData="M0,0h200v200h-200z" />
+    <path
+        android:fillColor="#448E7CF7"
+        android:pathData="M0,120 Q100,60 200,120 L200,200 L0,200z" />
+    <path
+        android:fillColor="#33AB47BC"
+        android:pathData="M0,140 Q100,100 200,140 L200,200 L0,200z" />
+    <path
+        android:fillColor="#22FFFFFF"
+        android:pathData="M92,168 L100,52 L108,168z" />
+    <path
+        android:fillColor="#18FFFFFF"
+        android:pathData="M100,168 C52,168 28,148 28,124h144c0,24 -24,44 -72,44z" />
+    <path
+        android:fillColor="#88E1F5FE"
+        android:pathData="M24,32h3v3h-3z M64,20h4v4h-4z M140,28h3v3h-3z M172,48h2v2h-2z M96,14h2v2h-2z M48,52h2v2h-2z M156,72h2v2h-2z" />
+    <path
+        android:fillColor="#55FFFFFF"
+        android:pathData="M36,88a2,2 0 1,0 4,0a2,2 0 1,0 -4,0z M168,96a1.5,1.5 0 1,0 3,0a1.5,1.5 0 1,0 -3,0z" />
+</vector>

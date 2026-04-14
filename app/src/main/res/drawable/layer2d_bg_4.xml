@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 长安·金阙：层叠庑殿顶 -->
+    <path
+        android:fillColor="#FF1A237E"
+        android:pathData="M0,0h200v200h-200z" />
+    <path
+        android:fillColor="#FFFFB300"
+        android:pathData="M40,140 L100,88 L160,140 L152,148 L48,148z" />
+    <path
+        android:fillColor="#FFFFC107"
+        android:pathData="M56,120 L100,80 L144,120 L138,128 L62,128z" />
+    <path
+        android:fillColor="#FFFFD54F"
+        android:pathData="M72,104 L100,72 L128,104 L124,112 L76,112z" />
+    <path
+        android:fillColor="#33FFFFFF"
+        android:pathData="M0,160h200v40h-200z" />
+</vector>

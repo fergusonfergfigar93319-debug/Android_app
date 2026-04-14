@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 双丸子·萌 Q：大圆团子 + 短刘海弧 -->
+    <path
+        android:fillColor="#FF171D2C"
+        android:pathData="M44,96 Q46,28 100,20 Q154,28 156,96 Q148,60 100,52 Q52,60 44,96z" />
+    <path
+        android:fillColor="#FF2A3550"
+        android:pathData="M52,28 C52,6 76,4 82,26 C68,26 58,34 52,28z" />
+    <path
+        android:fillColor="#FF2A3550"
+        android:pathData="M148,28 C148,6 124,4 118,26 C132,26 142,34 148,28z" />
+    <path
+        android:fillColor="#FF242F48"
+        android:pathData="M50,96 Q46,138 56,170 L68,128 Q78,88 100,82 Q122,88 132,128 L144,170 Q154,138 150,96z" />
+    <path
+        android:fillColor="#44FFFFFF"
+        android:pathData="M58,22 Q68,12 78,22z M122,22 Q132,12 142,22z" />
+</vector>

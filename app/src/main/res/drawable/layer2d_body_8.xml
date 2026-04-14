@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 法师·长摆：拖尾长袍 -->
+    <path
+        android:fillColor="#FF2A3E6E"
+        android:pathData="M86,116 L46,200 L154,200 L114,116 Q100,100 86,116z" />
+    <path
+        android:fillColor="#FF1E2E58"
+        android:pathData="M92,116 L100,156 L108,116z" />
+    <path
+        android:fillColor="#FF243A66"
+        android:pathData="M76,168 Q100,188 124,168 L128,194 L72,194z" />
+</vector>

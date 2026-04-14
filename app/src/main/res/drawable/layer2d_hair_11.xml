@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 童颜·双辫 Q：粗麻花感 + 圆鼓头顶 -->
+    <path
+        android:fillColor="#FF171D2C"
+        android:pathData="M50,98 Q48,42 100,34 Q152,42 150,98 Q144,68 100,60 Q56,68 50,98z" />
+    <path
+        android:fillColor="#FF242F48"
+        android:pathData="M44,90 Q30,118 34,172 L50,128 Q54,100 64,96z" />
+    <path
+        android:fillColor="#FF242F48"
+        android:pathData="M156,90 Q170,118 166,172 L150,128 Q146,100 136,96z" />
+    <path
+        android:fillColor="#FF354566"
+        android:pathData="M54,96 Q50,128 58,158 L66,124 Q74,90 100,84 Q126,90 134,124 L142,158 Q150,128 146,96z" />
+    <path
+        android:fillColor="#55FFFFFF"
+        android:pathData="M48,100 Q54,88 62,100z M138,100 Q146,88 152,100z" />
+</vector>

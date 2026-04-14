@@ -31,7 +31,10 @@ object GameCatalog {
         "风暴龙王",
         "BP",
         "红蓝方",
-        "观赛"
+        "观赛",
+        "同城开黑",
+        "城市打卡",
+        "文旅联动"
     )
 
     /** 论坛全局推荐池 = 热门 + 细分（去重） */
@@ -42,5 +45,6 @@ object GameCatalog {
     fun searchAliasBlob(): String = buildString {
         append("王者 王者荣耀 峡谷 MOBA 排位 巅峰 ")
         append("王者电竞 KPL 世冠 挑战者杯 杯赛 电竞赛 观赛 ")
+        append("同城 本城 线下 城市 文旅 打卡 潮流 二创 ")
     }
 }

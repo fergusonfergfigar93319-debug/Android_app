@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 御姐·尖下巴 -->
+    <path
+        android:fillColor="#FFFFE4D0"
+        android:strokeColor="#FFDEBA9A"
+        android:strokeWidth="1.2"
+        android:pathData="M100,44 C130,44 150,72 150,104 C150,132 118,168 100,178 C82,168 50,132 50,104 C50,72 70,44 100,44z" />
+</vector>

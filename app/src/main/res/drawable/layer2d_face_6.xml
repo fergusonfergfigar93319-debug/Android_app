@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 冷感·瘦颊 -->
+    <path
+        android:fillColor="#FFFFE4D0"
+        android:strokeColor="#FFDEBA9A"
+        android:strokeWidth="1.2"
+        android:pathData="M100,48 C132,48 154,76 154,108 C154,142 132,162 100,162 C68,162 46,142 46,108 C46,76 68,48 100,48z" />
+</vector>

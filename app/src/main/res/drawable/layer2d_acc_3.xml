@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 战令·护额 -->
+    <path
+        android:fillColor="#FF5C6BC0"
+        android:pathData="M64,62 L100,52 L136,62 L134,76 L66,76z" />
+    <path
+        android:fillColor="#FF9575CD"
+        android:pathData="M72,64 L100,58 L128,64 L126,72 L74,72z" />
+</vector>

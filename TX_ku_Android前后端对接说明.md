@@ -5,6 +5,9 @@
 **代码版本依据**：仓库 `app` 模块当前实现（`AuthRepository` / `ForumRepository` / 社交仓库等为**内存或 SharedPreferences**，**未接入 Retrofit**）。  
 **配置占位**：`com.example.tx_ku.core.network.ApiConstants.BASE_URL` 现为 `https://api.buddycard.com/api/v1/`（可改为内网调试地址，如模拟器访问本机 `http://10.0.2.2:8000/api/v1/`）。
 
+**文档版本：V1.2（2026-04-09）**  
+相对 V1.1：**峡谷广场**分区 id 与 UI 展示名对照、文旅/同城向标签与场景快捷、**资讯详情** `relatedForumQueries`、**智能体聊天流式输出**接口约定（SSE/分块）、**会话外观**持久化项（沉浸式底图等）。修订时请同步 **《同频搭_API与数据定义文档.md》** §智能体对话。
+
 与根目录 **《同频搭_API与数据定义文档.md》**（历史文件名，可作为 **API 与表结构** 参考）对照阅读；本文补充 **Android 侧模型字段名、本地持久化、智能体成品预设（王者荣耀向）、论坛审核** 及 **联调清单**。
 
 **前端已实现能力与用户流程**（页面级说明）见：**`TX_ku_Android前端实现与流程说明.md`**。
@@ -20,8 +23,8 @@
 | **游戏兴趣** | 米游社式多选 `FollowGameOption.id`，影响资讯频道排序 | `GameInterestStore`（按登录 email） |
 | **主 Tab**（底栏展示名） | **版本速递**（资讯子 Tab + 推荐搭子）、**AI搭子**（创作台）、**峡谷广场**、**元流档案** | 资讯与推荐多为 mock |
 | **搭子创作台** | 官方成品预设以 **王者荣耀** 高热度英雄主题壳 + 分路话术为主，含 **王者电竞**（赛事实况台）、赛后复盘向成品；气质一键套组、形象/边框/气泡 Chip、`AgentTuning` 备忘与快捷句、「完成创作解锁聊天」 | `UserAgentStore` 按 email |
-| **智能体聊天** | 主题皮肤、快捷提问、任务路由（打开搜帖/发帖/分区等）、本地 `AgentPersonaResolver` 回复；`focusScenario` 影响话术与快捷语池 | `AgentChatPrefsStore` 主题 id |
-| **论坛（峡谷广场）** | 分区列表、搜索、发帖（含本地 AI 草稿规则）、详情、点赞/收藏演示、**审核态**；作者在 **元流档案** 内打开「峡谷广场 · 我的帖子」 | `ForumRepository` 内存 + 本地演示自动过审 |
+| **智能体聊天** | **沉浸式峡谷全屏底图**（可关，按账号记忆）、主题皮肤、**搭子回复打字效果**（当前：拿到整段文案后按 Unicode 码点本地步进 + 流式光标；接网后建议改服务端 **真流式**）、回复完成轻触觉、快捷提问（含 KPL/同城招募/观赛打卡/潮流二创等）；`AgentTaskRouter` 导航 + `AgentPersonaResolver` 本地闲聊；`focusScenario` 影响话术与快捷语池 | `AgentChatPrefsStore`：主题 id、沉浸式开关、悬浮球隐藏与偏移等（按 email） |
+| **论坛（峡谷广场）** | 分区 **id** 固定 `recruit` / `guide` / `social` / `event`，UI 展示为 **峡谷组队 / 攻略心得 / 潮流水友 / 城市赛事**（**接口与筛选仍用 id**）；列表、搜索、**主题场景**快捷（广场检索词、分区、招募发帖、智能体预填）；发帖与审核、详情、点赞/收藏演示；作者在 **元流档案 · 峡谷广场 · 我的帖子** | `ForumRepository` 内存 + 本地演示自动过审；`GameCatalog` / `ForumCategories` 提供标签与搜索别名（含同城、文旅、打卡等运营词） |
 | **社交** | 关注列表、按 ID 加好友、`UserDirectory` 种子、私信（先关注、未互关首条限制等） | 内存仓库，logout 清空 |
 | **资料** | `ProfileEditScreen` 扩展字段编辑，与 `AccountSummary` 同步昵称头像 | 本地 |
 
@@ -164,8 +167,8 @@ Android 模型为 **camelCase**（如 `avatarUrl`、`replyCount`）。若后端�
 
 **建议接口**
 
-- `POST /ai/agent/chat`：body：`{ "messages": [...], "profileId", "tuning": { ... } }`；返回 `reply` 文本或 SSE。  
-- 忌讳词过滤可在服务端再做一层。
+- **同步（兼容）**：`POST /ai/agent/chat`，body 含 `messages`（多轮）、`profile` 摘要或 `profileId`、`tuning`（与 `AgentTuning` 对齐或压缩摘要）；`data.reply` 为**完整** assistant 文本。  
+- **流式（推荐）**：见 **§3.10**，与客户端「打字输出」体验一致；忌讳词与合规在服务端处理。
 
 ---
 
@@ -197,11 +200,28 @@ Android 模型为 **camelCase**（如 `avatarUrl`、`replyCount`）。若后端�
 
 ### 2.6 资讯流 `GameNewsItem`（可选）
 
-**版本速递** Tab 资讯为 **本地 mock**（`FeedViewModel.mockGameNews()`）。若产品上收：
+**版本速递** Tab 资讯为 **本地 mock**（`GameNewsRepository` / `FeedViewModel`）。若产品上收：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | String | |
+| gameName | String | 与兴趣一致，如 `王者荣耀`、`王者电竞` |
+| topicTag | String? | 角标，如 KPL、杯赛 |
+| authorName | String | |
+| authorLevel | Int | 展示用等级 |
+| title / summary | String | 列表 |
+| detailBody | String | 详情正文；段落建议 `\n\n` 分隔 |
+| relatedForumQueries | List\<String\> | **详情页「去广场看看」**一键预填搜索词（可空） |
+| coverGradientStart / End | Long | 无封面时的渐变色（ARGB）；若有位图封面可忽略 |
+| commentCount / likeCount | Int | |
+| isOfficial | Boolean | |
+| timeLabel | String | 展示用时间文案 |
+| coverUrl | String? | **建议后端增加**：公网封面 URL；客户端无则可用渐变占位 |
 
 **建议接口**
 
-- `GET /feed/news?game=&page=`，返回标题、摘要、封面 URL、统计字段等与 `GameNewsItem` 对齐。
+- `GET /feed/news?game=&page=&size=` → `{ "list": [ GameNewsItem ], "hasMore": bool }`（字段 camelCase 或与客户端约定 snake_case）。  
+- **顶栏公告条**（可选）：`GET /feed/announcements` → `{ "list": [ { "id", "title", "body" } ] }`，对齐 `FeedAnnouncement`。
 
 ---
 
@@ -214,7 +234,18 @@ Android 模型为 **camelCase**（如 `avatarUrl`、`replyCount`）。若后端�
 | title / content | String | |
 | tags | List\<String\> | |
 | createdAt | String | |
-| categoryId | String | 与 `ForumCategories`：`recruit` / `guide` / `social` / `event` |
+| categoryId | String | **必须与下列 id 一致**（勿用中文作 id）：`recruit` / `guide` / `social` / `event` |
+
+**分区 id 与客户端展示名（后台配置、报表、埋点可对齐）**
+
+| categoryId | App 当前展示（文案可变，id 不可变） |
+|------------|-------------------------------------|
+| recruit | 峡谷组队 |
+| guide | 攻略心得 |
+| social | 潮流水友 |
+| event | 城市赛事 |
+
+标签 `tags` 为字符串数组，**自由文本**；客户端种子含「同城开黑」「城市打卡」「文旅联动」「KPL」等运营向词，后端可按热度返回 `GET /posts/hot-tags?category=`（可选）与列表筛选对齐。
 | replyCount | Int | |
 | likeCount | Int | |
 | pinned | Boolean | |
@@ -360,26 +391,65 @@ Android 模型为 **camelCase**（如 `avatarUrl`、`replyCount`）。若后端�
 
 - 请求宜带：`profile` 摘要、`AgentTuning`（或压缩摘要）、**多轮 messages**。  
 - 服务端尊重 `tabooNotes` 与合规策略；`focusScenario` 为 **`王者荣耀` / `王者电竞`** 时建议注入峡谷对局与赛事解说语境（兵线龙团、分路、版本变动、KPL/杯赛节奏等）。  
-- 客户端保留 **本地意图路由** `AgentTaskRouter`：导航类（打开峡谷广场搜索、发帖、分区、游戏兴趣页、复制档案等）可先本地执行；**自然语言回复**走后端。
+- 客户端保留 **本地意图路由** `AgentTaskRouter`：导航类（打开峡谷广场搜索、发帖、分区、游戏兴趣页、复制档案等）可先本地执行；**自然语言回复**走后端。  
+- **流式输出**（SSE/WebSocket）字段与事件约定见 **§3.9**。
 
 ### 3.7 游戏兴趣多选（建议接口）
 
 - 当前本地：`GameInterestStore` 存 `completed` + `Set<String>` 的 **`FollowGameOption.id`**（与 `FollowGameCatalog.options` 的 `id` 一致）。  
 - 建议：`GET / PUT /users/me/game-interests`，body 示例：`{ "completed": true, "gameIds": ["王者荣耀", "王者电竞"] }`（与 `FollowGameCatalog.options` 的 `id` 一致；具体字段名可 camelCase）。
 
-### 3.8 聊天外观主题（可选同步）
+### 3.8 聊天外观与沉浸（可选同步）
 
-- 当前本地：`AgentChatPrefsStore` 存 theme id（如 `community`）。  
-- 可选：`GET/PUT /users/me/preferences` 增加 `agentChatThemeId`。
+当前本地 `AgentChatPrefsStore`（按登录 email）包括但不限于：
 
-### 3.9 联调验收清单（后端可据此写用例）
+| 键语义 | 说明 |
+|--------|------|
+| 主题 preset id | 如 `community`、`canyon` 等，与 `AgentChatThemePreset.id` 一致 |
+| 沉浸式峡谷底图 | bool，全屏渐变背景开关（默认开） |
+| 悬浮搭子入口 | 是否收至底边、FAB 偏移（px）等 |
+
+建议：`GET/PUT /users/me/preferences`（或并入 profile）携带 `agentChatThemeId`、`immersiveChatEnabled`、可选 `buddyFabOffset` JSON，登录后覆盖本地，避免换机丢失。
+
+### 3.9 智能体回复流式输出（与客户端打字效果对齐）
+
+**现状（客户端）**：接口未接时，先得到**完整** `reply`，再在 UI 按 **Unicode 码点**步进展示并显示流式光标；**导航类指令**仍由本地 `AgentTaskRouter` 解析用户输入触发（打开广场搜索、发帖、分区等）。
+
+**目标（后端）**：提供**真流式**，减少首字延迟，并与多端 Web 对齐。
+
+**推荐方案 A — HTTP SSE**
+
+- 路径示例：`POST /ai/agent/chat/stream`（或与同步接口同路径，由 `Accept: text/event-stream` 区分）。  
+- Request：与同步版相同（`messages`、`profile`/`profileId`、`tuning`、可选 `conversationId`）。  
+- Response：`Content-Type: text/event-stream`（UTF-8）。每条事件一行或标准 SSE，建议事件类型：
+
+| event（或 JSON type） | data 示例 | 含义 |
+|----------------------|-----------|------|
+| `delta` | `{"text":"片段"}` 或纯文本片段 | 追加到当前 assistant 气泡 |
+| `done` | `{"messageId":"...","finishReason":"stop"}` | 本段回复结束；之后客户端可执行导航副作用（若约定由服务端下发指令，见下） |
+| `error` | `{"code":4xx,"message":"..."}` | 流失败，客户端结束气泡并 toast |
+
+- **收尾**：最后一个 `delta` 后必须发 `done`（或约定空 `delta` + `done`），便于客户端关闭 `isStreaming`、写时间戳、触发触觉与滚动稳定。  
+- **幂等**：同一 `messageId` 勿重复插入库。
+
+**方案 B — WebSocket**
+
+- 房间或 topic：`agent_chat:{userId}`；客户端发 `user_message`，服务端推 `delta` / `done` / `error` JSON，字段语义与上表一致。
+
+**与导航指令的关系**
+
+- **首版可维持**：自然语言导航仍由客户端 `AgentTaskRouter` 在用户**发送**时解析，不依赖流式正文。  
+- **进阶**：服务端在 `done` 的 data 中带 `nav: { "type":"OPEN_FORUM_SEARCH", "query":"..." }`（与客户端 `AgentNavCommand` 同名字段），客户端在流结束后执行；需单独约定枚举与鉴权。
+
+### 3.10 联调验收清单（后端可据此写用例）
 
 1. 注册 → 登录 → 建档 → `GET /profiles/me` 字段与客户端展示一致。  
 2. 发帖：`POST /posts` 返回 `PENDING_REVIEW` 时，**公域列表无该帖**；作者 **「我的帖子」** 可见；审核通过后公域出现。  
 3. 非作者 `GET /posts/{id}`：**未过审无正文**（404/403）。  
 4. 未过审帖：`POST .../comments` **失败**（4xx）。  
 5. 智能体：若已接同步接口，换设备登录后 `AgentTuning` + `agentChatUnlocked` 一致。  
-6. 游戏兴趣：若已接接口，重装后拉取与云端一致。
+6. **智能体流式**：SSE/WebSocket 连续 `delta` 后 `done`，客户端气泡无半截死锁；异常路径有 `error` 或 HTTP 4xx。  
+7. 游戏兴趣：若已接接口，重装后拉取与云端一致。
 
 ---
 
@@ -389,7 +459,7 @@ Android 模型为 **camelCase**（如 `avatarUrl`、`replyCount`）。若后端�
 |------|--------|------|
 | `UserAgentStore` | 按登录 email 前缀 | 完整 `AgentTuning` + `agentChatUnlocked` |
 | `GameInterestStore` | 按 email | 是否完成游戏多选 + 已选游戏 id（`FollowGameOption.id`） |
-| `AgentChatPrefsStore` | 按 email | 聊天页主题 preset id |
+| `AgentChatPrefsStore` | 按 email | 聊天页主题 preset id、沉浸式开关、悬浮球隐藏与偏移等 |
 
 **建议**：登录成功后由 `GET /profiles/me`（或 **§3.7 / §3.8** 专用接口）**下发**智能体配置、解锁状态、游戏兴趣、可选主题，**覆盖或合并**本地缓存，避免换机丢失。
 
@@ -426,13 +496,14 @@ Android 模型为 **camelCase**（如 `avatarUrl`、`replyCount`）。若后端�
 2. 点 **完成创作，解锁聊天** → `CurrentUser.agentChatUnlocked = true` 并持久化 → 可进 `AGENT_CHAT`。  
 3. **智能体聊天**：  
    - 用户消息经 `AgentTaskRouter.interpret`（关键词任务）可能触发导航指令（打开发帖、峡谷广场搜索、跳转元流档案等）；  
-   - 否则 `AgentPersonaResolver.replyToChat` 本地生成回复（**`focusScenario` 为 `王者荣耀` / `王者电竞` 等时在话术与角色皮上分支**）。  
-   - 聊天页 **快捷提问**：自定义 3 条 + 通用池（随主题与解锁状态合并）。  
-4. **活动提醒卡片**：`AgentChatViewModel` 内定时 `injectReminder` 模拟推送；文案可带 `BrandConfig.appDisplayName`（元流同频）；后续可换 WebSocket/API。
+   - 否则 `AgentPersonaResolver.replyToChat` 本地生成**完整**回复，再由 `AgentChatViewModel.streamAgentText` **模拟流式打字**（接后端 SSE 后替换为网络增量）。  
+   - **`focusScenario` 为 `王者荣耀` / `王者电竞` 等时在话术、快捷语池与 `AgentPersonaResolver` 分支上区分**。  
+   - 聊天页 **智能快捷**：自定义 3 条 + 场景短语（含赛事、同城、观赛文案、潮流二创等）+ 通用池。  
+4. **活动提醒卡片**：`AgentChatViewModel` 内定时 `injectReminder` 模拟推送；卡片操作后的搭子回复同样走**流式展示**；后续可换 WebSocket/API。
 
 ### 5.4 论坛流程
 
-- 列表数据来自 `ForumRepository.posts`（内存种子 + 本地发帖 `prepend`）。  
+- 列表数据来自 `ForumRepository.posts`（内存种子 + 本地发帖 `prepend`）。顶区 **主题场景**与搜索占位体现 **王者电竞 × 城市文旅 × 潮流** 运营方向；分区 **id** 不变，展示名见 §2.7。  
 - **内容审核**：新帖默认 `PENDING_REVIEW`，**峡谷广场**列表与搜索仅展示 `isVisibleInPublicForum()` 为 true 的帖；详情页对非作者隐藏未过审帖；作者可在 **元流档案** 底部 sheet「峡谷广场 · 我的帖子」查看全部状态并进入详情；未过审帖不开放评论 UI。  
 - 发帖支持本地媒体 `PostMedia.uriString`；上传需对接 **`POST /uploads/presign`（或等价）** + `POST /posts` 携带 `media_ids`**，与《论坛与媒体-内容审核（后端设计）》一致。  
 - 点赞/收藏当前仅本地状态，不接服务端。
@@ -458,9 +529,10 @@ Android 模型为 **camelCase**（如 `avatarUrl`、`replyCount`）。若后端�
 4. **GET/POST 评论**（非 `APPROVED` 拒评）。  
 5. **GET `/recommendations` + POST `/buddy-requests`**，接通 **版本速递** Tab 内「推荐搭子」与申请按钮（底栏首 Tab 文案为版本速递）。  
 6. **关注/私信** 或简化版 REST。  
-7. **智能体**：先同步 `AgentTuning` + `agentChatUnlocked`；再考虑 `POST /ai/agent/chat`（请求体带 `focusScenario` 等，见 §3.6）。  
+7. **智能体**：先同步 `AgentTuning` + `agentChatUnlocked`；`POST /ai/agent/chat`（同步完整回复，见 §2.4）；**再上线流式** `POST /ai/agent/chat/stream` 或 SSE（见 **§3.9**），替换客户端本地模拟打字。  
 8. **`GET/PUT /users/me/game-interests`**（或并入 profile），对齐 `GameInterestStore`。  
-9. 资讯、上传、收藏、点赞若需多端一致再排期。
+9. **`GET/PUT /users/me/preferences`**（可选）：聊天主题、沉浸式开关等（见 **§3.8**）。  
+10. 资讯 `GET /feed/news`（含 `relatedForumQueries`）、公告 `GET /feed/announcements`；上传、收藏、点赞若需多端一致再排期。
 
 ---
 
@@ -476,12 +548,13 @@ Android 模型为 **camelCase**（如 `avatarUrl`、`replyCount`）。若后端�
 | 发帖作者 ID | `core/model/CurrentUser.kt`（`effectiveForumAuthorId()`，与帖子 `authorId`、我的帖子筛选一致） |
 | 推荐 | `feature/feed/FeedViewModel.kt`、`Recommendation.kt` |
 | 关注/私信 | `feature/social/FollowRepository.kt`、`DirectMessageRepository.kt`、`UserDirectory.kt` |
-| 智能体 | `core/model/AgentTuning.kt`、`UserAgentStore.kt`、`AgentPersonaResolver.kt`、`feature/chat/AgentChatViewModel.kt` |
+| 智能体与消息流 | `core/model/AgentTuning.kt`、`UserAgentStore.kt`、`AgentPersonaResolver.kt`、`feature/chat/AgentChatViewModel.kt`、`feature/chat/AgentChatStreamItem.kt`、`feature/chat/agent/AgentTaskRouter.kt` |
+| 广场场景快捷 | `feature/feed/BuddyForumScenarioChips.kt`（首页与峡谷广场共用） |
+| 广场分区、标签与全局游戏词 | `feature/forum/ForumCategories.kt`、`core/model/GameCatalog.kt` |
+| 峡谷资讯 | `feature/feed/GameNewsRepository.kt`、`GameNewsDetailScreen.kt` |
 | 成品搭子数据 | `feature/profile/DesignedAgentPresets.kt`（王者荣耀英雄壳 + 赛事实况/复盘等） |
 | 游戏兴趣 | `core/prefs/GameInterestStore.kt`、`feature/onboarding/FollowGamesScreen.kt`、`core/model/FollowGameOption.kt` |
-| 聊天主题 | `core/prefs/AgentChatPrefsStore.kt`、`feature/chat/AgentChatTheme.kt` |
-| 智能体任务路由 | `feature/chat/agent/AgentTaskRouter.kt` |
-| 全局游戏标签 | `core/model/GameCatalog.kt`（广场热门标签池、发帖推荐、搜索别名等） |
+| 聊天外观与偏好 | `core/prefs/AgentChatPrefsStore.kt`、`feature/chat/AgentChatTheme.kt` |
 
 ---
 

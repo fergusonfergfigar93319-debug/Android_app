@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 星海大眼：多层虹膜 + 瞳孔 + 双高光 + 睫毛 -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M54,76 Q76,62 98,76 Q108,98 86,118 Q64,116 54,76z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M102,76 Q124,62 146,76 Q146,110 118,118 Q96,98 102,76z" />
+    <path
+        android:fillColor="#FF26C6DA"
+        android:pathData="M64,84 Q78,76 92,86 Q90,108 74,110 Q62,100 64,84z" />
+    <path
+        android:fillColor="#FF26C6DA"
+        android:pathData="M108,84 Q122,76 136,86 Q134,108 118,110 Q106,100 108,84z" />
+    <path
+        android:fillColor="#FF00838F"
+        android:pathData="M70,90 Q80,84 90,92 Q86,104 76,104 Q68,98 70,90z" />
+    <path
+        android:fillColor="#FF00838F"
+        android:pathData="M114,90 Q124,84 134,92 Q130,104 120,104 Q112,98 114,90z" />
+    <path
+        android:fillColor="#FF1A237E"
+        android:pathData="M74,94 Q80,90 88,96 Q84,102 76,100 Q72,98 74,94z" />
+    <path
+        android:fillColor="#FF1A237E"
+        android:pathData="M118,94 Q124,90 132,96 Q128,102 120,100 Q116,98 118,94z" />
+    <path
+        android:fillColor="#FF0D1426"
+        android:pathData="M78,98 Q82,94 88,98 Q84,104 78,98z" />
+    <path
+        android:fillColor="#FF0D1426"
+        android:pathData="M122,98 Q126,94 132,98 Q128,104 122,98z" />
+    <path
+        android:fillColor="#E6FFFFFF"
+        android:pathData="M66,80 Q70,78 74,80 Q72,86 66,80z" />
+    <path
+        android:fillColor="#CCFFFFFF"
+        android:pathData="M110,80 Q114,78 118,80 Q116,86 110,80z" />
+    <path
+        android:fillColor="#99FFFFFF"
+        android:pathData="M80,88 Q82,86 86,88 Q84,92 80,88z" />
+    <path
+        android:fillColor="#99FFFFFF"
+        android:pathData="M124,88 Q126,86 130,88 Q128,92 124,88z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#D8434E5A"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:pathData="M56,80 Q76,70 96,80" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#D8434E5A"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:pathData="M104,80 Q124,70 144,80" />
+</vector>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 盾山·方脸：略方下颌 -->
+    <path
+        android:fillColor="#FFFFE4D0"
+        android:strokeColor="#FFDEBA9A"
+        android:strokeWidth="1.2"
+        android:pathData="M100,50 C128,50 150,72 150,106 C150,140 128,158 100,158 C72,158 50,140 50,106 C50,72 72,50 100,50z" />
+</vector>

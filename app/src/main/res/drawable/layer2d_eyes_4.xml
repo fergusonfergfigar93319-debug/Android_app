@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 森系·猫眼偏光 -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M68,86 Q80,78 94,88 Q100,102 84,110 Q70,104 68,86z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M106,86 Q120,78 132,88 Q132,104 118,110 Q100,102 106,86z" />
+    <path
+        android:fillColor="#FF3DCC88"
+        android:pathData="M74,92 Q84,86 92,94 Q86,104 78,100 Q74,96 74,92z" />
+    <path
+        android:fillColor="#FF3DCC88"
+        android:pathData="M108,92 Q118,86 126,94 Q120,104 112,100 Q108,96 108,92z" />
+    <path
+        android:fillColor="#FF081018"
+        android:pathData="M80,96 Q84,92 88,96 Q84,100 80,96z" />
+    <path
+        android:fillColor="#FF081018"
+        android:pathData="M112,96 Q116,92 120,96 Q116,100 112,96z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M76,90 Q78,88 80,90 Q78,92 76,90z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M112,90 Q114,88 116,90 Q114,92 112,90z" />
+</vector>

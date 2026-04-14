@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 高马尾·战意 Q：厚刘海 + 翘马尾柱 -->
+    <path
+        android:fillColor="#FF151B2A"
+        android:pathData="M48,98 Q50,26 100,18 Q150,26 152,98 Q144,56 100,48 Q56,56 48,98z" />
+    <path
+        android:fillColor="#FF232E45"
+        android:pathData="M88,44 Q100,32 112,44 L118,118 Q100,108 82,118z" />
+    <path
+        android:fillColor="#FF232E45"
+        android:pathData="M100,52 Q118,118 124,192 L108,192 Q104,138 100,96 Q96,138 92,192 L76,192 Q82,118 100,52z" />
+    <path
+        android:fillColor="#FF354566"
+        android:pathData="M52,96 Q48,138 58,168 L70,124 Q78,88 100,82 Q122,88 130,124 L142,168 Q152,138 148,96z" />
+    <path
+        android:fillColor="#66FFFFFF"
+        android:pathData="M92,52 Q100,46 108,52 Q104,62 100,60 Q96,62 92,52z" />
+</vector>

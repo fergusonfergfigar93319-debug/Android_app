@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 司空震·雷纹：宽肩束腰 -->
+    <path
+        android:fillColor="#FF3A4A6E"
+        android:pathData="M64,112 L56,198 L144,198 L136,112 Q100,96 64,112z" />
+    <path
+        android:fillColor="#FF2A3558"
+        android:pathData="M72,125 L128,125 L130,142 L70,142z" />
+    <path
+        android:fillColor="#FF5A6AA8"
+        android:pathData="M88,112 L100,128 L112,112z" />
+    <path
+        android:fillColor="#FF2A3558"
+        android:pathData="M92,112 L100,104 L108,112z" />
+</vector>

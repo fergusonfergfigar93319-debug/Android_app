@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 束发·战冠 Q：圆冠 + 短束发尾 -->
+    <path
+        android:fillColor="#FF171D2C"
+        android:pathData="M50,100 Q48,40 100,32 Q152,40 150,100 Q144,70 100,62 Q56,70 50,100z" />
+    <path
+        android:fillColor="#FF2E3A54"
+        android:pathData="M84,32 L116,32 L112,18 L88,18z" />
+    <path
+        android:fillColor="#FF3D4D6E"
+        android:pathData="M94,62 L106,78 L100,90 L94,78z" />
+    <path
+        android:fillColor="#66C0C8D8"
+        android:pathData="M88,20 L112,20 L110,28 L90,28z" />
+</vector>

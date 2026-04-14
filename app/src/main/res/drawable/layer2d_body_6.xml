@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 战士·均衡：倒三角胸甲 -->
+    <path
+        android:fillColor="#FF2A3E6E"
+        android:pathData="M64,112 L56,196 L144,196 L136,112 Q100,100 64,112z" />
+    <path
+        android:fillColor="#FF1E2E58"
+        android:pathData="M80,118 L100,108 L120,118 L118,148 L82,148z" />
+    <path
+        android:fillColor="#FF243A66"
+        android:pathData="M92,112 L100,124 L108,112z" />
+</vector>

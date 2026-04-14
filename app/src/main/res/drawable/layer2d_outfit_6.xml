@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 云缨·掠火：斜襟短摆 -->
+    <path
+        android:fillColor="#FF3A4A6E"
+        android:pathData="M70,112 L58,192 L142,192 L130,112 Q100,100 70,112z" />
+    <path
+        android:fillColor="#FF2A3558"
+        android:pathData="M100,112 L108,128 L96,132z" />
+    <path
+        android:fillColor="#FF4A5A8A"
+        android:pathData="M78,125 L122,132 L120,145 L76,138z" />
+</vector>

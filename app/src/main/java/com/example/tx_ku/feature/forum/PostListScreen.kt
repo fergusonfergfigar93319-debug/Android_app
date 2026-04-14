@@ -57,6 +57,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -69,6 +70,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -78,12 +80,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Size
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tx_ku.R
+import kotlinx.coroutines.launch
 import com.example.tx_ku.core.designsystem.components.BuddyEmptyState
 import com.example.tx_ku.core.designsystem.components.BuddyErrorState
 import com.example.tx_ku.core.designsystem.components.BuddyTag
@@ -92,11 +96,16 @@ import com.example.tx_ku.core.designsystem.components.buddyPressScale
 import com.example.tx_ku.core.designsystem.components.rememberBuddyHaptic
 import com.example.tx_ku.core.designsystem.theme.BuddyDimens
 import com.example.tx_ku.core.designsystem.theme.BuddyShapes
+import com.example.tx_ku.core.model.FeedHomeSubTab
+import com.example.tx_ku.core.navigation.FeedSubTabBridge
+import com.example.tx_ku.core.navigation.MainTab
+import com.example.tx_ku.core.navigation.MainTabBridge
 import com.example.tx_ku.core.navigation.Routes
 import com.example.tx_ku.feature.chat.AgentChatQuickBridge
 import com.example.tx_ku.feature.feed.BuddyForumScenarioChips
 import com.example.tx_ku.feature.feed.ScenarioChipKind
 import com.example.tx_ku.feature.feed.ScenarioQuickItem
+import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.core.model.GameCatalog
 import com.example.tx_ku.core.model.Post
 import com.example.tx_ku.core.model.PostMedia
@@ -110,6 +119,7 @@ fun PostListContent(
     onPostClick: (String) -> Unit
 ) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
+    val buddyRecState by viewModel.buddyUiState.collectAsStateWithLifecycle()
     val selectedCategory by viewModel.selectedCategoryId.collectAsStateWithLifecycle()
     val selectedTag by viewModel.selectedTag.collectAsStateWithLifecycle()
     val hotTags by viewModel.hotTags.collectAsStateWithLifecycle()
@@ -121,6 +131,7 @@ fun PostListContent(
         selectedTag != null ||
         searchQuery.isNotBlank()
     val listState = rememberLazyListState()
+    val forumScope = rememberCoroutineScope()
     val haptic = rememberBuddyHaptic()
     val context = LocalContext.current
     val pullState = rememberPullToRefreshState()
@@ -189,6 +200,15 @@ fun PostListContent(
                                 viewModel.clearFilters()
                                 viewModel.selectCategory(ForumCategories.RECRUIT)
                             },
+                            onFocusCultureCategory = {
+                                viewModel.clearFilters()
+                                viewModel.selectCategory(ForumCategories.CULTURE)
+                                forumScope.launch { listState.scrollToItem(0) }
+                            },
+                            onOpenHomeCultureTab = {
+                                FeedSubTabBridge.requestSubTab(FeedHomeSubTab.CITY_CULTURE)
+                                MainTabBridge.requestTab(MainTab.FEED)
+                            },
                             onScenarioItem = { item ->
                                 when (item.kind) {
                                     ScenarioChipKind.FORUM_SEARCH ->
@@ -211,9 +231,37 @@ fun PostListContent(
                                     }
                                     ScenarioChipKind.GAME_INTEREST ->
                                         navController?.navigate(Routes.GAME_INTEREST)
+                                    ScenarioChipKind.FEED_CULTURE_TAB -> {
+                                        haptic.buddyPrimaryClick()
+                                        viewModel.clearFilters()
+                                        viewModel.selectCategory(ForumCategories.CULTURE)
+                                        forumScope.launch { listState.scrollToItem(0) }
+                                    }
                                 }
                             }
                         )
+                    }
+                    if (selectedCategory == ForumCategories.SOCIAL) {
+                        item(key = "forum_buddy_recommend") {
+                            ForumBuddyRecommendSection(
+                                state = buddyRecState,
+                                showAgentSection = CurrentUser.profile != null && navController != null,
+                                onRetry = { viewModel.refreshBuddyRecommendations() },
+                                onSendBuddyRequest = { viewModel.sendBuddyRequest(it) },
+                                navController = navController,
+                                onOpenRecruitEditor = {
+                                    if (navController != null) {
+                                        ForumEditorBridge.prepareOpenAsRecruitEditor()
+                                        navController.navigate(Routes.POST_EDITOR)
+                                    }
+                                },
+                                onFocusRecruitFeed = {
+                                    viewModel.clearFilters()
+                                    viewModel.selectCategory(ForumCategories.RECRUIT)
+                                    forumScope.launch { listState.scrollToItem(0) }
+                                }
+                            )
+                        }
                     }
                     if (ui.errorMessage != null) {
                         item(key = "error") {
@@ -253,7 +301,7 @@ fun PostListContent(
                                 BuddyEmptyState(
                                     title = if (filtered) "没筛到帖" else "这儿还安静",
                                     message = when {
-                                        !filtered -> "发一条，喊人上车"
+                                        !filtered -> "发一条：同城开黑、观赛搭子或峡谷梗图，让更多人看见"
                                         selectedTag != null && searchQuery.isNotBlank() ->
                                             "筛太狠了，减点条件或点「重置」"
                                         selectedTag != null ->
@@ -406,7 +454,7 @@ private fun ForumScenarioQuickStrip(
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Text(
-            text = "场景快捷",
+            text = "主题场景 · 电竞 × 城市 × 潮流",
             color = subCol,
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium
@@ -472,110 +520,136 @@ private fun ForumFeedHeader(
     haptic: HapticFeedback,
     navController: NavController?,
     onFocusRecruitFeed: () -> Unit,
+    onFocusCultureCategory: () -> Unit,
+    onOpenHomeCultureTab: () -> Unit,
     onScenarioItem: (ScenarioQuickItem) -> Unit
 ) {
     var hotTagsExpanded by rememberSaveable { mutableStateOf(false) }
+
     Column(modifier = Modifier.fillMaxWidth()) {
-        ForumCyberTopBar(
-            title = "峡谷广场",
-            subtitle = "开黑招募 · 攻略 · 赛评唠局",
+        // 2026 沉浸式顶栏
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = BuddyDimens.ListContentPadding)
-        )
+                .background(
+                    if (isForumCyberDark) {
+                        Brush.verticalGradient(listOf(Color(0xFF0A0E1A), Color(0xFF111827)))
+                    } else {
+                        Brush.verticalGradient(listOf(BuddyColors.CommunityHeaderDeep, BuddyColors.CommunityHeaderMid))
+                    }
+                )
+                .padding(horizontal = BuddyDimens.ListContentPadding, vertical = 12.dp)
+        ) {
+            ForumCyberTopBar(
+                title = "峡谷广场",
+                subtitle = "王者电竞 × 文旅策展 × 分区发帖 · 潮流水友含合拍搭子推荐",
+                modifier = Modifier.fillMaxWidth(),
+                darkHeaderBackground = true
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = BuddyDimens.ListContentPadding)
         ) {
+            Spacer(Modifier.height(BuddyDimens.SpacingSm))
+
+            // 2026 搜索栏：圆角胶囊 + 玻璃态
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = onSearchChange,
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(
-                        "搜招募、攻略词、英雄或 KPL 话题（空格分词）",
-                        color = if (isForumCyberDark) ForumCyberColors.TextMuted
-                        else MaterialTheme.colorScheme.onSurfaceVariant
+                        "搜同城开黑、城市打卡、KPL、攻略或英雄",
+                        color = if (isForumCyberDark) ForumCyberColors.TextMuted else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
                 singleLine = true,
-                shape = BuddyShapes.CardSmall,
+                shape = RoundedCornerShape(28.dp),
                 colors = if (isForumCyberDark) {
                     OutlinedTextFieldDefaults.colors(
                         focusedTextColor = ForumCyberColors.TextPrimary,
                         unfocusedTextColor = ForumCyberColors.TextPrimary,
                         focusedBorderColor = ForumCyberColors.NeonCyan,
-                        unfocusedBorderColor = ForumCyberColors.NeonPink.copy(alpha = 0.45f),
+                        unfocusedBorderColor = ForumCyberColors.NeonPink.copy(alpha = 0.35f),
                         cursorColor = ForumCyberColors.NeonCyan,
-                        focusedContainerColor = ForumCyberColors.Panel.copy(alpha = 0.55f),
+                        focusedContainerColor = ForumCyberColors.Panel.copy(alpha = 0.6f),
                         unfocusedContainerColor = ForumCyberColors.Panel.copy(alpha = 0.4f)
                     )
                 } else {
-                    OutlinedTextFieldDefaults.colors()
+                    OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = BuddyColors.HonorGold.copy(alpha = 0.7f),
+                        unfocusedBorderColor = BuddyColors.HonorGold.copy(alpha = 0.3f)
+                    )
                 }
             )
+
             Spacer(modifier = Modifier.height(BuddyDimens.SpacingXs))
             ForumScenarioQuickStrip(
                 items = BuddyForumScenarioChips.quickItems,
                 isForumCyberDark = isForumCyberDark,
                 onScenarioItem = onScenarioItem,
                 haptic = haptic,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = BuddyDimens.SpacingXs)
+                modifier = Modifier.fillMaxWidth().padding(bottom = BuddyDimens.SpacingXs)
             )
+
+            ForumEsportsCultureRail(
+                navController = navController,
+                isForumCyberDark = isForumCyberDark,
+                haptic = haptic,
+                onFocusCultureCategory = onFocusCultureCategory,
+                onOpenHomeCultureTab = onOpenHomeCultureTab,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // 排序筛选 - 2026 胶囊风格
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingSm),
                 contentPadding = PaddingValues(vertical = 4.dp)
             ) {
                 val sorts = listOf(
-                    Triple(ForumSortMode.RECOMMENDED, "推荐", ""),
-                    Triple(ForumSortMode.LATEST, "最新", ""),
-                    Triple(ForumSortMode.HOT, "热门", "")
+                    Triple(ForumSortMode.RECOMMENDED, "⭐ 推荐", ""),
+                    Triple(ForumSortMode.LATEST, "🕐 最新", ""),
+                    Triple(ForumSortMode.HOT, "🔥 热门", "")
                 )
                 items(sorts.size, key = { sorts[it].first.name }) { i ->
                     val (mode, label, _) = sorts[i]
                     val selected = sortMode == mode
                     FilterChip(
                         selected = selected,
-                        onClick = {
-                            haptic.buddyPrimaryClick()
-                            onSelectSort(mode)
-                        },
+                        onClick = { haptic.buddyPrimaryClick(); onSelectSort(mode) },
                         label = { Text(label) },
+                        shape = RoundedCornerShape(20.dp),
                         colors = if (isForumCyberDark) {
                             FilterChipDefaults.filterChipColors(
                                 containerColor = ForumCyberColors.PanelElevated.copy(alpha = 0.65f),
                                 labelColor = ForumCyberColors.TextMuted,
-                                selectedContainerColor = ForumCyberColors.NeonCyan.copy(alpha = 0.22f),
+                                selectedContainerColor = ForumCyberColors.NeonCyan.copy(alpha = 0.25f),
                                 selectedLabelColor = ForumCyberColors.TextPrimary
                             )
                         } else {
                             FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                selectedContainerColor = BuddyColors.HonorGold.copy(alpha = 0.2f),
+                                selectedLabelColor = BuddyColors.HonorGoldDark
                             )
                         }
                     )
                 }
             }
+
             if (hasActiveFilters) {
-                Spacer(modifier = Modifier.height(BuddyDimens.SpacingXs))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                     TextButton(onClick = onClearFilters) {
-                        Text(
-                            "重置",
-                            color = if (isForumCyberDark) ForumCyberColors.NeonCyan
-                            else MaterialTheme.colorScheme.primary
-                        )
+                        Text("重置", color = if (isForumCyberDark) ForumCyberColors.NeonCyan else BuddyColors.HonorGold)
                     }
                 }
             }
+
             Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
+
+            // 分区筛选
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingSm),
                 contentPadding = PaddingValues(vertical = 4.dp)
@@ -587,15 +661,14 @@ private fun ForumFeedHeader(
                         onClick = {
                             haptic.buddyPrimaryClick()
                             if (chip.id == ForumCategories.ALL) {
-                                if (selectedCategory != ForumCategories.ALL) {
-                                    onSelectCategory(ForumCategories.ALL)
-                                }
+                                if (selectedCategory != ForumCategories.ALL) onSelectCategory(ForumCategories.ALL)
                                 onOpenAllCategoriesSheet()
                             } else {
                                 onSelectCategory(chip.id)
                             }
                         },
                         label = { Text("${chip.emoji} ${chip.label}") },
+                        shape = RoundedCornerShape(20.dp),
                         colors = if (isForumCyberDark) {
                             FilterChipDefaults.filterChipColors(
                                 containerColor = ForumCyberColors.PanelElevated.copy(alpha = 0.65f),
@@ -605,87 +678,44 @@ private fun ForumFeedHeader(
                             )
                         } else {
                             FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                selectedContainerColor = BuddyColors.BattlePassPurple.copy(alpha = 0.15f),
+                                selectedLabelColor = BuddyColors.BattlePassPurple
                             )
                         }
                     )
                 }
             }
+
+            // 话题标签
             if (hotTags.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
-                val tagMetaColor =
-                    if (isForumCyberDark) ForumCyberColors.TextMuted
-                    else MaterialTheme.colorScheme.onSurfaceVariant
-                val toggleTint =
-                    if (isForumCyberDark) ForumCyberColors.NeonCyan
-                    else MaterialTheme.colorScheme.primary
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "话题标签 · ${hotTags.size}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = tagMetaColor,
-                        modifier = Modifier.weight(1f),
-                        maxLines = 1
-                    )
+                val tagMetaColor = if (isForumCyberDark) ForumCyberColors.TextMuted else MaterialTheme.colorScheme.onSurfaceVariant
+                val toggleTint = if (isForumCyberDark) ForumCyberColors.NeonCyan else BuddyColors.HonorGold
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "话题标签 · ${hotTags.size}", style = MaterialTheme.typography.labelMedium, color = tagMetaColor, modifier = Modifier.weight(1f), maxLines = 1)
                     if (!hotTagsExpanded && selectedTag != null) {
-                        BuddyTag(
-                            text = "#$selectedTag",
-                            isHighlight = true,
-                            modifier = Modifier.padding(end = 4.dp)
-                        )
+                        BuddyTag(text = "#$selectedTag", isHighlight = true, modifier = Modifier.padding(end = 4.dp))
                     }
-                    TextButton(
-                        onClick = {
-                            haptic.buddyPrimaryClick()
-                            hotTagsExpanded = !hotTagsExpanded
-                        }
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            Text(
-                                text = if (hotTagsExpanded) "收起" else "展开",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = toggleTint
-                            )
-                            Icon(
-                                painter = painterResource(R.drawable.ic_expand_more),
-                                contentDescription = if (hotTagsExpanded) "收起话题标签" else "展开话题标签",
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .rotate(if (hotTagsExpanded) 180f else 0f),
-                                tint = toggleTint
-                            )
+                    TextButton(onClick = { haptic.buddyPrimaryClick(); hotTagsExpanded = !hotTagsExpanded }) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(text = if (hotTagsExpanded) "收起" else "展开", style = MaterialTheme.typography.labelLarge, color = toggleTint)
+                            Icon(painterResource(R.drawable.ic_expand_more), if (hotTagsExpanded) "收起" else "展开", modifier = Modifier.size(20.dp).rotate(if (hotTagsExpanded) 180f else 0f), tint = toggleTint)
                         }
                     }
                 }
-                AnimatedVisibility(
-                    visible = hotTagsExpanded,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically()
-                ) {
+                AnimatedVisibility(visible = hotTagsExpanded, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
                     LazyRow(
                         modifier = Modifier.padding(top = BuddyDimens.SpacingXs),
                         horizontalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingSm),
                         contentPadding = PaddingValues(vertical = 4.dp)
                     ) {
-                        itemsIndexed(
-                            hotTags,
-                            key = { index, tag -> "${index}_$tag" }
-                        ) { _, tag ->
+                        itemsIndexed(hotTags, key = { index, tag -> "${index}_$tag" }) { _, tag ->
                             val selected = tag.equals(selectedTag, ignoreCase = true)
                             FilterChip(
                                 selected = selected,
-                                onClick = {
-                                    haptic.buddyPrimaryClick()
-                                    onToggleTag(tag)
-                                },
+                                onClick = { haptic.buddyPrimaryClick(); onToggleTag(tag) },
                                 label = { Text("#$tag") },
+                                shape = RoundedCornerShape(20.dp),
                                 colors = if (isForumCyberDark) {
                                     FilterChipDefaults.filterChipColors(
                                         containerColor = ForumCyberColors.PanelElevated.copy(alpha = 0.65f),
@@ -871,7 +901,7 @@ private fun ForumTagPickerSheetContent(
         }
         item {
             Text(
-                text = "场景与话题",
+                text = "场景 · 文旅与潮流话题",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = onMain,
@@ -976,14 +1006,26 @@ private fun PostItem(
                             color = onVar
                         )
                     }
-                    if (post.categoryId == ForumCategories.RECRUIT) {
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "招募帖 · 进详情可申请搭子",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (cyber) ForumCyberColors.NeonCyan
-                            else ForumPlazaTheme.LeadingAccentStart
-                        )
+                    when (post.categoryId) {
+                        ForumCategories.RECRUIT -> {
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "招募帖 · 进详情可申请搭子",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (cyber) ForumCyberColors.NeonCyan
+                                else ForumPlazaTheme.LeadingAccentStart
+                            )
+                        }
+                        ForumCategories.CULTURE -> {
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "电竞文旅 · 与首页策展、详情动线同源",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (cyber) ForumCyberColors.NeonPurple
+                                else BuddyColors.BattlePassPurple
+                            )
+                        }
+                        else -> Unit
                     }
                 }
             }

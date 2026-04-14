@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 赛事·队服条纹 -->
+    <path
+        android:fillColor="#FF3A4A6E"
+        android:pathData="M68,112 L60,192 L140,192 L132,112 Q100,100 68,112z" />
+    <path
+        android:fillColor="#FF5A6AA8"
+        android:pathData="M68,128 L132,128 L132,136 L68,136z" />
+    <path
+        android:fillColor="#FF5A6AA8"
+        android:pathData="M68,148 L132,148 L132,156 L68,156z" />
+    <path
+        android:fillColor="#FF2A3558"
+        android:pathData="M92,112 L108,112 L106,128 L94,128z" />
+    <path
+        android:fillColor="#FF4A5A8A"
+        android:pathData="M96,112 L104,112 L102,122 L98,122z" />
+</vector>

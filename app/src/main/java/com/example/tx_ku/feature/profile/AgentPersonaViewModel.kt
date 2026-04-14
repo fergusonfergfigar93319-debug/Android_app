@@ -108,6 +108,13 @@ class AgentPersonaViewModel : ViewModel() {
         recomputePersona()
     }
 
+    /** 自定义创作路径：允许在未选官方/气质套组前编辑展示名（与 [AgentTuning.customCreationNamingUnlocked] 对应） */
+    fun unlockCustomCreationNaming() {
+        if (CurrentUser.agentTuning.customCreationNamingUnlocked) return
+        CurrentUser.agentTuning = CurrentUser.agentTuning.copy(customCreationNamingUnlocked = true)
+        recomputePersona()
+    }
+
     fun setExtraInstructions(value: String) {
         CurrentUser.agentTuning = CurrentUser.agentTuning.copy(extraInstructions = value)
         recomputePersona()
@@ -138,9 +145,96 @@ class AgentPersonaViewModel : ViewModel() {
         recomputePersona()
     }
 
+    fun setSculptFaceRoundness(v: Float) {
+        CurrentUser.agentTuning = CurrentUser.agentTuning.copy(sculptFaceRoundness = v.coerceIn(0f, 1f))
+        recomputePersona()
+    }
+
+    fun setSculptEyeDistance(v: Float) {
+        CurrentUser.agentTuning = CurrentUser.agentTuning.copy(sculptEyeDistance = v.coerceIn(0f, 1f))
+        recomputePersona()
+    }
+
+    fun setSculptEyeOpen(v: Float) {
+        CurrentUser.agentTuning = CurrentUser.agentTuning.copy(sculptEyeOpen = v.coerceIn(0f, 1f))
+        recomputePersona()
+    }
+
+    fun setSculptMouthSmile(v: Float) {
+        CurrentUser.agentTuning = CurrentUser.agentTuning.copy(sculptMouthSmile = v.coerceIn(0f, 1f))
+        recomputePersona()
+    }
+
+    fun setSculptBlush(v: Float) {
+        CurrentUser.agentTuning = CurrentUser.agentTuning.copy(sculptBlush = v.coerceIn(0f, 1f))
+        recomputePersona()
+    }
+
+    fun setSculptBrowTilt(v: Float) {
+        CurrentUser.agentTuning = CurrentUser.agentTuning.copy(sculptBrowTilt = v.coerceIn(0f, 1f))
+        recomputePersona()
+    }
+
+    fun setUseSculptAvatarForDisplay(enabled: Boolean) {
+        CurrentUser.agentTuning = CurrentUser.agentTuning.copy(useSculptAvatarForDisplay = enabled)
+        recomputePersona()
+    }
+
+    fun resetSculptToDefault() {
+        val d = AgentTuning()
+        CurrentUser.agentTuning = CurrentUser.agentTuning.copy(
+            sculptFaceRoundness = d.sculptFaceRoundness,
+            sculptEyeDistance = d.sculptEyeDistance,
+            sculptEyeOpen = d.sculptEyeOpen,
+            sculptMouthSmile = d.sculptMouthSmile,
+            sculptBlush = d.sculptBlush,
+            sculptBrowTilt = d.sculptBrowTilt
+        )
+        recomputePersona()
+    }
+
+    /** 捏脸预设 / 随机：仅覆盖 sculpt*，其余维度保持不变 */
+    fun applyPreset(presetTuning: AgentTuning) {
+        val s = CurrentUser.agentTuning
+        CurrentUser.agentTuning = s.copy(
+            sculptFaceRoundness = presetTuning.sculptFaceRoundness,
+            sculptEyeDistance = presetTuning.sculptEyeDistance,
+            sculptEyeOpen = presetTuning.sculptEyeOpen,
+            sculptMouthSmile = presetTuning.sculptMouthSmile,
+            sculptBlush = presetTuning.sculptBlush,
+            sculptBrowTilt = presetTuning.sculptBrowTilt
+        )
+        recomputePersona()
+    }
+
+    /** 应用可爱推荐配置 */
+    fun applyCutePreset() {
+        CurrentUser.agentTuning = CurrentUser.agentTuning.copy(
+            sculptFaceRoundness = 0.8f,
+            sculptEyeDistance = 0.6f,
+            sculptEyeOpen = 0.85f,
+            sculptMouthSmile = 0.75f,
+            sculptBlush = 0.7f,
+            sculptBrowTilt = 0.4f
+        )
+        recomputePersona()
+    }
+
     /** 官方成品搭子：整包写入 [AgentTuning]（展示名、备忘、快捷句等一并替换） */
     fun applyDesignedAgentPreset(preset: DesignedAgentPreset) {
-        CurrentUser.agentTuning = preset.tuning
+        val s = CurrentUser.agentTuning
+        CurrentUser.agentTuning = preset.tuning.copy(
+            sculptFaceRoundness = s.sculptFaceRoundness,
+            sculptEyeDistance = s.sculptEyeDistance,
+            sculptEyeOpen = s.sculptEyeOpen,
+            sculptMouthSmile = s.sculptMouthSmile,
+            sculptBlush = s.sculptBlush,
+            sculptBrowTilt = s.sculptBrowTilt,
+            useSculptAvatarForDisplay = s.useSculptAvatarForDisplay,
+            avatarDisplayMode = s.avatarDisplayMode,
+            layeredAvatarJson = s.layeredAvatarJson,
+            customCreationNamingUnlocked = s.customCreationNamingUnlocked
+        )
         recomputePersona()
     }
 
@@ -153,6 +247,16 @@ class AgentPersonaViewModel : ViewModel() {
         val keepP1 = CurrentUser.agentTuning.customPhrase1
         val keepP2 = CurrentUser.agentTuning.customPhrase2
         val keepP3 = CurrentUser.agentTuning.customPhrase3
+        val keepSf = CurrentUser.agentTuning.sculptFaceRoundness
+        val keepSd = CurrentUser.agentTuning.sculptEyeDistance
+        val keepSo = CurrentUser.agentTuning.sculptEyeOpen
+        val keepSm = CurrentUser.agentTuning.sculptMouthSmile
+        val keepSb = CurrentUser.agentTuning.sculptBlush
+        val keepSbr = CurrentUser.agentTuning.sculptBrowTilt
+        val keepSculptDisplay = CurrentUser.agentTuning.useSculptAvatarForDisplay
+        val keepAvatarMode = CurrentUser.agentTuning.avatarDisplayMode
+        val keepLayeredJson = CurrentUser.agentTuning.layeredAvatarJson
+        val keepNamingUnlocked = CurrentUser.agentTuning.customCreationNamingUnlocked
         val t = when (preset) {
             AgentTuningOptions.QuickPreset.RANK -> AgentTuning(
                 intensity = "犀利",
@@ -209,7 +313,17 @@ class AgentPersonaViewModel : ViewModel() {
             customPersonaScript = keepScript,
             customPhrase1 = keepP1,
             customPhrase2 = keepP2,
-            customPhrase3 = keepP3
+            customPhrase3 = keepP3,
+            sculptFaceRoundness = keepSf,
+            sculptEyeDistance = keepSd,
+            sculptEyeOpen = keepSo,
+            sculptMouthSmile = keepSm,
+            sculptBlush = keepSb,
+            sculptBrowTilt = keepSbr,
+            useSculptAvatarForDisplay = keepSculptDisplay,
+            avatarDisplayMode = keepAvatarMode,
+            layeredAvatarJson = keepLayeredJson,
+            customCreationNamingUnlocked = keepNamingUnlocked
         )
         CurrentUser.agentTuning = t
         recomputePersona()

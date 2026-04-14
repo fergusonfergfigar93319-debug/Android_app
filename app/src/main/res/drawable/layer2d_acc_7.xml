@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 回城·纹环 -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF7C4DFF"
+        android:strokeWidth="3"
+        android:pathData="M60,172 A40,16 0 1,1 140,172" />
+    <path
+        android:fillColor="#337C4DFF"
+        android:pathData="M70,176 Q100,168 130,176 Q100,184 70,176z" />
+</vector>

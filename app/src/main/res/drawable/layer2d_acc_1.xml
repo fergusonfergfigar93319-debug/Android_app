@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 晶冠·王者 -->
+    <path
+        android:fillColor="#FFFFD54F"
+        android:pathData="M72,52 L80,28 L100,44 L120,28 L128,52 L100,58z" />
+    <path
+        android:fillColor="#FFFFB300"
+        android:pathData="M88,52 L100,40 L112,52 L108,62 L92,62z" />
+    <path
+        android:fillColor="#FFE65100"
+        android:pathData="M96,58h8v8h-8z" />
+</vector>

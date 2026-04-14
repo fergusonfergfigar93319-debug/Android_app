@@ -24,6 +24,7 @@ object AgentTuningOptions {
 
     val avatarStyles = listOf(
         "英雄主题·澜",
+        "英雄主题·韩信",
         "英雄主题·瑶",
         "英雄主题·貂蝉",
         "英雄主题·铠",
@@ -45,8 +46,8 @@ object AgentTuningOptions {
         "我的刀盾",
         "峡谷军师"
     )
-    val avatarFrames = listOf("霓虹边框", "金属徽章", "极简纯色")
-    val bubbleStyles = listOf("圆角卡片", "HUD 玻璃", "胶囊")
+    val avatarFrames = listOf("峡谷金环", "战令紫环", "Q萌星环", "霓虹边框", "金属徽章", "极简纯色")
+    val bubbleStyles = listOf("Q萌云朵", "荣耀播报", "圆角卡片", "HUD 玻璃", "胶囊")
     val voiceMoods = listOf("清晰播报", "柔和陪伴", "热血激励")
 
     /** 一键预设：多维度组合，降低选择成本 */

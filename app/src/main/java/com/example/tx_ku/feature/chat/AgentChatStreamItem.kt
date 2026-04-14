@@ -11,6 +11,8 @@ sealed class AgentChatStreamItem {
         override val id: String,
         val text: String,
         val isFromUser: Boolean,
+        /** 搭子侧是否仍在流式输出（用于打字光标与禁止重复发送） */
+        val isStreaming: Boolean = false,
         val timeLabel: String = "",
         override val sortKey: Long = id.hashCode().toLong()
     ) : AgentChatStreamItem()

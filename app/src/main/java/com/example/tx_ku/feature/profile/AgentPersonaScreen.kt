@@ -36,6 +36,8 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.Icon
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,9 +48,12 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ripple
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -60,6 +65,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.drawBehind
@@ -78,6 +84,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import kotlinx.coroutines.launch
 import com.example.tx_ku.R
 import com.example.tx_ku.core.designsystem.components.BuddyBackground
@@ -97,10 +105,14 @@ import com.example.tx_ku.core.designsystem.theme.BuddyShapes
 import com.example.tx_ku.core.domain.AgentPersonaResolver
 import com.example.tx_ku.core.model.AgentTuning
 import com.example.tx_ku.core.model.BuddyAgentPersona
+import com.example.tx_ku.core.model.canEditDisplayName
 import com.example.tx_ku.core.model.isFactoryDefault
 import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.core.navigation.Routes
 import com.example.tx_ku.core.prefs.UserAgentStore
+import com.example.tx_ku.feature.chat.AgentFusionAvatarPortrait
+import com.example.tx_ku.feature.chat.agentAvatarAccentForStyle
+import com.example.tx_ku.feature.chat.avatarDrawableResForStyle
 
 /**
  * 智能体编辑页呈现方式。
@@ -121,6 +133,14 @@ fun AgentPersonaScreen(
 ) {
     val viewModel: AgentPersonaViewModel = viewModel()
     LaunchedEffect(Unit) { viewModel.refreshFromCache() }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val obs = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) viewModel.refreshFromCache()
+        }
+        lifecycleOwner.lifecycle.addObserver(obs)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(obs) }
+    }
     val persona by viewModel.persona.collectAsState()
     val tuning by viewModel.tuning.collectAsState()
     val profile = CurrentUser.profile
@@ -148,7 +168,7 @@ fun AgentPersonaScreen(
             BuddyTopBar(
                 title = if (useStudio) "搭子创作台" else "我的游戏搭子",
                 subtitle = if (useStudio) {
-                    "四步捏脸 · 全端同步：会话、峡谷广场、元流档案"
+                    "默认官方立绘；可在捏脸页开启「纯捏脸头像」· 全端同步"
                 } else {
                     "形象语气定好再开聊 · 三处界面一起更新"
                 },
@@ -185,7 +205,8 @@ fun AgentPersonaScreen(
                 PersonaHeroCard(
                     persona = p,
                     tuning = tuning,
-                    displayNameEditable = !factoryDefaultLocked,
+                    displayNameEditable = tuning.canEditDisplayName(),
+                    factoryPersonaLocked = factoryDefaultLocked,
                     onAvatarClick = { showAvatarStyleSheet = true },
                     onDisplayNameClick = {
                         nameEditDraft = tuning.agentDisplayNameOverride.ifBlank { p.displayName }
@@ -231,11 +252,33 @@ fun AgentPersonaScreen(
                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
 
                 BuddySectionHeader(
+                    title = "自定义创作",
+                    subtitle = "捏脸、立绘主题、边框气泡与声线；可先起名再进工坊，与下方成品搭子可随时切换",
+                    emoji = "✨"
+                )
+                Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
+                CustomAgentCreationEntryCard(
+                    onNavigateToStudio = {
+                        presetHaptic.buddyPrimaryClick()
+                        viewModel.unlockCustomCreationNaming()
+                        navController.navigate(Routes.AGENT_FACE_STUDIO)
+                    },
+                    onRequestName = {
+                        presetHaptic.buddySelectionTick()
+                        viewModel.unlockCustomCreationNaming()
+                        nameEditDraft = tuning.agentDisplayNameOverride.ifBlank { p.displayName }
+                        showNameEditDialog = true
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
+
+                BuddySectionHeader(
                     title = "官方成品搭子",
                     subtitle = if (factoryDefaultLocked) {
                         "澜瑶貂蝉铠等热门英雄壳+分路逻辑，附 KPL 看台与复盘；点击卡片套上完整人设，再改展示名与备忘"
                     } else {
-                        "澜瑶貂蝉铠等热门英雄壳+分路逻辑，附 KPL 看台与复盘；点击卡片一键换肤，名称与细项仍可改"
+                        "澜瑶韩信貂蝉铠等热门英雄壳+分路逻辑，附 KPL 看台与复盘；点击卡片一键换肤，名称与细项仍可改"
                     },
                     emoji = "🎁"
                 )
@@ -782,7 +825,7 @@ private fun AgentAvatarStylePickerSheet(
                         horizontalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingMd)
                     ) {
                         Image(
-                            painter = painterResource(avatarDrawableRes(style)),
+                            painter = painterResource(avatarDrawableResForStyle(style)),
                             contentDescription = null,
                             modifier = Modifier
                                 .size(56.dp)
@@ -813,6 +856,8 @@ private fun PersonaHeroCard(
     persona: BuddyAgentPersona,
     tuning: AgentTuning,
     displayNameEditable: Boolean,
+    /** 气质维度是否仍为出厂默认（用于区分「仅解锁命名」与「已套模板」的提示） */
+    factoryPersonaLocked: Boolean,
     onAvatarClick: () -> Unit,
     onDisplayNameClick: () -> Unit,
     onJumpToTuningSection: () -> Unit,
@@ -827,7 +872,7 @@ private fun PersonaHeroCard(
             MaterialTheme.colorScheme.surface.copy(alpha = 1f)
         )
     )
-    val avatarRes = avatarDrawableRes(tuning.avatarStyle)
+    val avatarRes = avatarDrawableResForStyle(tuning.avatarStyle)
     val haptic = rememberBuddyHaptic()
     val cardClickInteraction = remember { MutableInteractionSource() }
     val avatarTapModifier = Modifier.clickable(
@@ -934,22 +979,17 @@ private fun PersonaHeroCard(
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .clip(CircleShape),
+                                .clip(CircleShape)
+                                .then(avatarTapModifier),
                             contentAlignment = Alignment.Center
                         ) {
-                            Image(
-                                painter = painterResource(avatarRes),
-                                contentDescription = "搭子头像，点按可换画风",
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(CircleShape)
-                                    .then(avatarTapModifier),
-                                contentScale = ContentScale.Crop
-                            )
-                            AgentAvatarFrameOverlay(
+                            AgentFusionAvatarPortrait(
+                                tuning = tuning,
+                                avatarRes = avatarRes,
                                 avatarFrame = tuning.avatarFrame,
-                                accent = accent,
-                                modifier = Modifier.fillMaxSize().then(avatarTapModifier)
+                                accent = agentAvatarAccentForStyle(tuning.avatarStyle),
+                                size = heroAvatarDiameter,
+                                contentDescription = "搭子头像，点按可换画风"
                             )
                         }
                     }
@@ -963,10 +1003,13 @@ private fun PersonaHeroCard(
             )
             Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
             Text(
-                text = if (displayNameEditable) {
-                    "轻触名称可改展示名"
-                } else {
-                    "出厂默认搭子展示名固定，请下滑选成品或气质套组后再改"
+                text = when {
+                    displayNameEditable && factoryPersonaLocked ->
+                        "轻触名称可改展示名；备忘与小纸条需先选下方成品或气质套组"
+                    displayNameEditable ->
+                        "轻触名称可改展示名"
+                    else ->
+                        "出厂默认搭子展示名固定，请下滑选成品或气质套组，或使用上方「给搭子起名」"
                 },
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1015,133 +1058,6 @@ private fun PersonaHeroCard(
     }
 }
 
-/**
- * 头像边框叠加：三种均为 Canvas 圆环，避免位图透明通道/导出棋盘格在真机上的异常叠层。
- */
-@Composable
-private fun AgentAvatarFrameOverlay(avatarFrame: String, accent: Color, modifier: Modifier = Modifier) {
-    val full = modifier.fillMaxSize().clip(CircleShape)
-    when (avatarFrame) {
-        "金属徽章" -> MetalBadgeRingOverlay(accent = accent, modifier = full)
-        "极简纯色" -> MinimalAvatarRingOverlay(accent = accent, modifier = full)
-        else -> NeonAvatarRingOverlay(accent = accent, modifier = full)
-    }
-}
-
-/** 金属徽章：枪灰 + 电紫描边，语义对齐原 HUD 徽章，不加载位图。 */
-@Composable
-private fun MetalBadgeRingOverlay(accent: Color, modifier: Modifier = Modifier) {
-    val cyberViolet = Color(0xFF9D4EDD)
-    val gunmetal = Color(0xFF4A4E57)
-    val chromeHi = Color(0xFFE8EAEF)
-    Canvas(modifier.clip(CircleShape)) {
-        val c = Offset(size.width / 2f, size.height / 2f)
-        val r = size.minDimension / 2f
-        val outerW = 2.6.dp.toPx()
-        drawCircle(
-            brush = Brush.sweepGradient(
-                colors = listOf(
-                    gunmetal,
-                    cyberViolet.copy(alpha = 0.88f),
-                    chromeHi,
-                    accent.copy(alpha = 0.5f),
-                    cyberViolet.copy(alpha = 0.72f),
-                    gunmetal.copy(alpha = 0.88f),
-                    cyberViolet.copy(alpha = 0.82f),
-                    gunmetal
-                ),
-                center = c
-            ),
-            radius = (r - outerW / 2f).coerceAtLeast(0f),
-            center = c,
-            style = Stroke(width = outerW)
-        )
-        val gap = 2.8.dp.toPx()
-        val innerW = 1.2.dp.toPx()
-        val innerR = (r - outerW - gap - innerW / 2f).coerceAtLeast(0f)
-        drawCircle(
-            brush = Brush.linearGradient(
-                colors = listOf(
-                    cyberViolet.copy(alpha = 0.65f),
-                    Color.White.copy(alpha = 0.38f),
-                    cyberViolet.copy(alpha = 0.42f)
-                ),
-                start = Offset(c.x - innerR, c.y - innerR),
-                end = Offset(c.x + innerR, c.y + innerR)
-            ),
-            radius = innerR,
-            center = c,
-            style = Stroke(width = innerW)
-        )
-    }
-}
-
-@Composable
-private fun NeonAvatarRingOverlay(accent: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier.clip(CircleShape)) {
-        val c = Offset(size.width / 2f, size.height / 2f)
-        val r = size.minDimension / 2f
-        val outerW = 2.5.dp.toPx()
-        val innerW = 1.2.dp.toPx()
-        val gap = 3.2.dp.toPx()
-        val hi = Color(0xFFFFF8F3)
-        drawCircle(
-            brush = Brush.sweepGradient(
-                colors = listOf(
-                    accent,
-                    Color.White.copy(alpha = 0.92f),
-                    accent.copy(alpha = 0.74f),
-                    hi,
-                    accent.copy(alpha = 0.84f),
-                    accent
-                ),
-                center = c
-            ),
-            radius = (r - outerW / 2f).coerceAtLeast(0f),
-            center = c,
-            style = Stroke(width = outerW)
-        )
-        val innerR = (r - outerW - gap - innerW / 2f).coerceAtLeast(0f)
-        drawCircle(
-            brush = Brush.linearGradient(
-                colors = listOf(
-                    Color.White.copy(alpha = 0.65f),
-                    accent.copy(alpha = 0.32f),
-                    Color.White.copy(alpha = 0.5f)
-                ),
-                start = Offset(c.x - innerR, c.y - innerR),
-                end = Offset(c.x + innerR, c.y + innerR)
-            ),
-            radius = innerR,
-            center = c,
-            style = Stroke(width = innerW)
-        )
-    }
-}
-
-@Composable
-private fun MinimalAvatarRingOverlay(accent: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier.clip(CircleShape)) {
-        val c = Offset(size.width / 2f, size.height / 2f)
-        val r = size.minDimension / 2f
-        val w = 1.65.dp.toPx()
-        drawCircle(
-            brush = Brush.sweepGradient(
-                colors = listOf(
-                    accent.copy(alpha = 0.55f),
-                    accent.copy(alpha = 0.95f),
-                    Color.White.copy(alpha = 0.65f),
-                    accent.copy(alpha = 0.7f)
-                ),
-                center = c
-            ),
-            radius = (r - w / 2f).coerceAtLeast(0f),
-            center = c,
-            style = Stroke(width = w)
-        )
-    }
-}
-
 private fun uiThemeKeyForAvatarStyle(avatarStyle: String): String = when {
     avatarStyle == "元气辅助" || avatarStyle == "企鹅萌妹" ||
         avatarStyle == "咕咕嘎嘎" || avatarStyle == "我的刀盾" ||
@@ -1153,6 +1069,7 @@ private fun uiThemeKeyForAvatarStyle(avatarStyle: String): String = when {
         avatarStyle == "中路参谋" || avatarStyle == "发育路教官" ||
         avatarStyle == "对抗路教头" ||
         avatarStyle == "英雄主题·澜" ||
+        avatarStyle == "英雄主题·韩信" ||
         avatarStyle == "英雄主题·貂蝉" ||
         avatarStyle == "英雄主题·铠" ||
         avatarStyle == "英雄主题·鲁班" ||
@@ -1160,6 +1077,103 @@ private fun uiThemeKeyForAvatarStyle(avatarStyle: String): String = when {
         avatarStyle == "英雄主题·后羿" -> "tactical"
     avatarStyle == "治愈陪玩" -> "ink"
     else -> "cyber"
+}
+
+/**
+ * 搭子创作台：进入 [Routes.AGENT_FACE_STUDIO]（元流捏脸），与官方成品搭子并列的自定义入口。
+ */
+@Composable
+private fun CustomAgentCreationEntryCard(
+    onNavigateToStudio: () -> Unit,
+    onRequestName: () -> Unit
+) {
+    val shape = RoundedCornerShape(18.dp)
+    val accent = BuddyColors.HonorCyanAccent
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = shape,
+        color = Color.Transparent,
+        border = BorderStroke(1.5.dp, accent.copy(alpha = 0.45f)),
+        shadowElevation = 4.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .clip(shape)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            accent.copy(alpha = 0.12f),
+                            MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.94f)
+                        )
+                    )
+                )
+                .padding(horizontal = 16.dp, vertical = 14.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(accent.copy(alpha = 0.22f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Palette,
+                        contentDescription = null,
+                        tint = BuddyColors.CommunityPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "元流捏脸工坊",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "滑杆捏脸、立绘与装饰、声线与展示名；头像默认立绘，可在工坊内切换纯捏脸",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedButton(
+                    onClick = onRequestName,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
+                ) {
+                    Text(
+                        "给搭子起名",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                FilledTonalButton(
+                    onClick = onNavigateToStudio,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        "进入工坊",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -1201,7 +1215,7 @@ private fun DesignedAgentMiniCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
-                painter = painterResource(avatarDrawableRes(preset.tuning.avatarStyle)),
+                painter = painterResource(avatarDrawableResForStyle(preset.tuning.avatarStyle)),
                 contentDescription = null,
                 modifier = Modifier
                     .size(58.dp)
@@ -1241,25 +1255,5 @@ private fun agentUiAccent(key: String): Color = when (key) {
     "ink" -> Color(0xFF90CAF9)
     "pixel" -> Color(0xFFFFEA00)
     else -> BuddyColors.PrimaryVariant
-}
-
-private fun avatarDrawableRes(avatarStyle: String): Int = when (avatarStyle) {
-    "英雄主题·铠" -> R.drawable.agent_hero_kael
-    "英雄主题·澜" -> R.drawable.agent_hero_lan
-    "英雄主题·貂蝉" -> R.drawable.agent_hero_diaochan
-    "英雄主题·鲁班" -> R.drawable.agent_hero_luban
-    "英雄主题·瑶" -> R.drawable.agent_hero_yao
-    "英雄主题·李白" -> R.drawable.agent_hero_libai
-    "英雄主题·后羿" -> R.drawable.agent_hero_houyi
-    "英雄主题·孙悟空" -> R.drawable.agent_hero_wukong
-    "指挥官", "对抗路教头" -> R.drawable.agent_avatar_commander
-    "元气辅助", "游走先锋" -> R.drawable.agent_avatar_support
-    "战术导师", "中路参谋" -> R.drawable.agent_avatar_coach
-    "发育路教官", "峡谷军师", "赛事实况台" -> R.drawable.agent_avatar_preset_honor_strategist
-    "野核节拍器" -> R.drawable.agent_avatar_preset_honor_jungle
-    "治愈陪玩" -> R.drawable.agent_avatar_healing
-    "企鹅萌妹", "咕咕嘎嘎" -> R.drawable.agent_avatar_penguin
-    "我的刀盾" -> R.drawable.agent_avatar_daodun
-    else -> R.drawable.agent_avatar_commander
 }
 

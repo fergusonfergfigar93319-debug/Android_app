@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 赤瞳·战意 -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M62,84 Q78,74 96,84 Q102,100 88,112 Q72,110 62,84z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M104,84 Q122,74 138,84 Q138,110 118,112 Q100,100 104,84z" />
+    <path
+        android:fillColor="#FFE53935"
+        android:pathData="M70,90 Q82,82 92,90 Q90,104 78,104 Q70,98 70,90z" />
+    <path
+        android:fillColor="#FFE53935"
+        android:pathData="M108,90 Q118,82 130,90 Q128,104 116,104 Q108,98 108,90z" />
+    <path
+        android:fillColor="#FF0A1020"
+        android:pathData="M76,94 Q82,90 88,94 Q82,100 76,94z" />
+    <path
+        android:fillColor="#FF0A1020"
+        android:pathData="M114,94 Q118,90 124,94 Q118,100 114,94z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M72,88 Q74,86 76,88 Q74,90 72,88z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M112,88 Q114,86 116,88 Q114,90 112,88z" />
+</vector>

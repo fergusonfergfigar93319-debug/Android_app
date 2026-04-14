@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 赛博·目镜 -->
+    <path
+        android:fillColor="#6600E5FF"
+        android:pathData="M58,86 L100,80 L142,86 L140,102 L60,102z" />
+    <path
+        android:fillColor="#FF00BCD4"
+        android:pathData="M62,88 L96,84 L96,98 L64,98z M104,84 L138,88 L136,98 L104,98z" />
+    <path
+        android:fillColor="#FF263238"
+        android:pathData="M96,88h8v10h-8z" />
+</vector>

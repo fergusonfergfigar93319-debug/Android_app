@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 双马尾·元气 Q：圆鼓颅顶 + 粗短双马尾球 -->
+    <path
+        android:fillColor="#FF171D2C"
+        android:pathData="M46,94 Q48,28 100,20 Q152,28 154,94 Q146,58 100,50 Q54,58 46,94z" />
+    <path
+        android:fillColor="#FF242F48"
+        android:pathData="M50,92 Q48,128 56,168 L70,124 Q76,96 88,100z" />
+    <path
+        android:fillColor="#FF242F48"
+        android:pathData="M150,92 Q152,128 144,168 L130,124 Q124,96 112,100z" />
+    <path
+        android:fillColor="#FF2C3954"
+        android:pathData="M32,96 Q24,138 30,178 L46,178 L52,128 Q56,100 70,108z" />
+    <path
+        android:fillColor="#FF2C3954"
+        android:pathData="M168,96 Q176,138 170,178 L154,178 L148,128 Q144,100 130,108z" />
+    <path
+        android:fillColor="#FF3D4D6E"
+        android:pathData="M54,96 Q50,132 60,162 L68,128 Q76,90 100,84 Q124,90 132,128 L140,162 Q150,132 146,96z" />
+    <path
+        android:fillColor="#55FFFFFF"
+        android:pathData="M38,108 Q44,96 52,108z M148,108 Q156,96 162,108z" />
+</vector>

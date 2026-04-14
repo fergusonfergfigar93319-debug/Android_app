@@ -21,18 +21,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -71,10 +69,9 @@ import com.example.tx_ku.core.designsystem.components.rememberBuddyHaptic
 import com.example.tx_ku.core.designsystem.components.buddyPrimaryClick
 import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.core.model.GameNewsItem
-import com.example.tx_ku.core.model.Recommendation
+import com.example.tx_ku.core.navigation.FeedSubTabBridge
 import com.example.tx_ku.core.navigation.Routes
 import com.example.tx_ku.core.utils.UiState
-import kotlinx.coroutines.CoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 
@@ -83,7 +80,7 @@ data class FeedHeaderNavigation(
     val openForumTab: () -> Unit,
     /** 带关键词进入广场并写入搜索框（[ForumSearchBridge.handoffPrefill]） */
     val openForumWithSearch: (String) -> Unit,
-    /** 进入广场并自动选中「招募组队」分区（[ForumFeedBridge]） */
+    /** 进入广场并自动选中「峡谷组队」分区（[ForumFeedBridge]） */
     val openForumRecruitOnly: () -> Unit,
     /** 进入广场并选中指定分区 id（如 guide / event） */
     val openForumCategory: (String) -> Unit,
@@ -92,7 +89,7 @@ data class FeedHeaderNavigation(
 )
 
 /**
- * **首页**：以 **官方更新、活动、维护通知** 为核心（资讯 / 官方 Tab）；**交友区** 与底栏 **峡谷广场** 在招募流上互通（发帖 / 分区 / 详情申请搭子）。
+ * **首页（峡谷速递）**：峡谷版本动态、官方活动与 **KPL/杯赛** 资讯（资讯 / 官方 Tab）；**合拍搭子** 已并入底栏 **峡谷广场 · 潮流水友** 分区。
  */
 @Composable
 fun FeedScreen(
@@ -102,26 +99,34 @@ fun FeedScreen(
     viewModel: FeedViewModel = viewModel()
 ) {
     val newsState by viewModel.newsUiState.collectAsStateWithLifecycle()
-    val buddyState by viewModel.buddyUiState.collectAsStateWithLifecycle()
     val subTab by viewModel.subTab.collectAsStateWithLifecycle()
     val gameChannel by viewModel.gameChannel.collectAsStateWithLifecycle()
+    val announcements by viewModel.announcements.collectAsStateWithLifecycle()
+    val cultureRefreshing by viewModel.cultureRefreshing.collectAsStateWithLifecycle()
     val snackbarHost = LocalBuddySnackbarHostState.current
     val snackScope = LocalBuddySnackbarScope.current
     val haptic = rememberBuddyHaptic()
     var homeMenuOpen by remember { mutableStateOf(false) }
     val homeMenuSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var announcementSheetOpen by remember { mutableStateOf(false) }
+    val announcementSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val animMs = BuddyDimens.ScreenTransitionMs
-    val showAgentSection = com.example.tx_ku.core.model.CurrentUser.profile != null && navController != null
     val gameChannels = remember {
         val pickIds = FollowGameCatalog.options.map { it.id }
         val merged = pickIds + GameCatalog.popularGameTags.filter { it !in pickIds.toSet() }
         GameInterestStore.orderedChannels(merged).take(16)
     }
-    val defaultHotQueries = remember { listOf("王者荣耀", "KPL") }
+    val defaultHotQueries = remember {
+        listOf("KPL 赛程", "BP 复盘", "王者电竞", "挑战者杯", "王者荣耀")
+    }
     // 避免每次重组都读 SharedPreferences（状态流 / 动画会导致高频重组，易拖慢主线程）
     var searchHistoryVersion by remember { mutableIntStateOf(0) }
     val quickSearchChips = remember(searchHistoryVersion, defaultHotQueries) {
         (HomeSearchHistoryStore.getQueries() + defaultHotQueries).distinct().take(8)
+    }
+
+    SideEffect {
+        FeedSubTabBridge.consumePendingSubTab()?.let { viewModel.setSubTab(it) }
     }
 
     Column(
@@ -233,11 +238,23 @@ fun FeedScreen(
                             )
                         }
                     }
+                    ScenarioChipKind.FEED_CULTURE_TAB -> {
+                        viewModel.setSubTab(FeedHomeSubTab.CITY_CULTURE)
+                    }
                 }
             }
         )
         GameNewsAnnouncementBar(
-            text = "官方活动、版本动态看这里；想发帖求助请去「峡谷广场」。"
+            announcements = announcements,
+            fallbackText = "峡谷版本与 KPL/杯赛速递看这里；招募、攻略发帖请去「峡谷广场」。",
+            onSeeAll = {
+                haptic.buddyPrimaryClick()
+                announcementSheetOpen = true
+            },
+            onTapMessage = {
+                haptic.buddyPrimaryClick()
+                announcementSheetOpen = true
+            }
         )
         GameNewsSubTabs(
             selected = subTab,
@@ -251,35 +268,23 @@ fun FeedScreen(
                 .background(BuddyPageBrushes.lightListBand())
         ) {
             when (subTab) {
-                FeedHomeSubTab.BUDDY -> {
-                    AnimatedContent(
-                        targetState = buddyState,
-                        transitionSpec = {
-                            fadeIn(tween(animMs)) togetherWith fadeOut(tween(animMs))
-                        },
-                        label = "buddyFeed"
-                    ) { state ->
-                        when (state) {
-                            is UiState.Loading -> FeedNewsListSkeleton(
-                                modifier = Modifier.fillMaxSize(),
-                                tone = FeedListSkeletonTone.Light
-                            )
-                            is UiState.Error -> BuddyErrorState(
-                                title = "加载失败",
-                                message = state.message,
-                                onRetry = { viewModel.loadFeed() },
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(BuddyDimens.ListContentPadding)
-                            )
-                            is UiState.Success -> FeedBuddyTabContent(
-                                state = state,
-                                showAgentSection = showAgentSection,
-                                navController = navController,
-                                headerNavigation = headerNavigation,
-                                viewModel = viewModel,
-                                snackbarHost = snackbarHost,
-                                snackScope = snackScope
+                FeedHomeSubTab.CITY_CULTURE -> {
+                    if (navController != null) {
+                        EsportsCityCultureTabContent(
+                            navController = navController,
+                            isRefreshing = cultureRefreshing,
+                            onRefresh = { viewModel.refreshCultureCatalog() }
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(BuddyDimens.ListContentPadding),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            BuddyEmptyState(
+                                title = "文旅策展",
+                                message = "登录并进入首页后即可浏览城市动线与潮流现场"
                             )
                         }
                     }
@@ -319,6 +324,34 @@ fun FeedScreen(
         }
     }
 
+    if (announcementSheetOpen) {
+        ModalBottomSheet(
+            onDismissRequest = { announcementSheetOpen = false },
+            sheetState = announcementSheetState
+        ) {
+            FeedAnnouncementListSheet(
+                announcements = announcements,
+                onGoOfficial = {
+                    announcementSheetOpen = false
+                    haptic.buddyPrimaryClick()
+                    viewModel.setSubTab(FeedHomeSubTab.OFFICIAL)
+                },
+                onGoForum = {
+                    announcementSheetOpen = false
+                    haptic.buddyPrimaryClick()
+                    if (headerNavigation != null) {
+                        headerNavigation.openForumTab()
+                    } else {
+                        snackScope.showBuddySnackbar(
+                            snackbarHost,
+                            "请从底栏进入「峡谷广场」"
+                        )
+                    }
+                }
+            )
+        }
+    }
+
     if (homeMenuOpen) {
         ModalBottomSheet(
             onDismissRequest = { homeMenuOpen = false },
@@ -334,6 +367,24 @@ fun FeedScreen(
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
+                TextButton(
+                    onClick = {
+                        homeMenuOpen = false
+                        haptic.buddyPrimaryClick()
+                        viewModel.setSubTab(FeedHomeSubTab.CITY_CULTURE)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text("电竞文旅 · 城市与潮流")
+                        Text(
+                            text = "主场动线、潮流卡片、跳转广场与搭子",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                HorizontalDivider()
                 TextButton(
                     onClick = {
                         homeMenuOpen = false
@@ -433,7 +484,7 @@ private fun GameNewsListContent(
             val tabOk = when (subTab) {
                 FeedHomeSubTab.DISCOVER -> true
                 FeedHomeSubTab.OFFICIAL -> item.isOfficial
-                FeedHomeSubTab.BUDDY -> false
+                FeedHomeSubTab.CITY_CULTURE -> false
             }
             gameOk && tabOk
         }
@@ -454,6 +505,7 @@ private fun GameNewsListContent(
         }
         return
     }
+    val openNewsHaptic = rememberBuddyHaptic()
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 24.dp)
@@ -493,7 +545,7 @@ private fun GameNewsListContent(
                     )
             ) {
                 Text(
-                    text = "👇 下滑浏览更多官方资讯与活动",
+                    text = "👇 下滑浏览峡谷动态、赛事与官方活动",
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
                     style = MaterialTheme.typography.labelLarge,
                     color = BuddyColors.BattlePassPurple.copy(alpha = 0.82f),
@@ -506,158 +558,14 @@ private fun GameNewsListContent(
             key = { it.id },
             contentType = { _ -> "game_news_row" }
         ) { item ->
-            GameNewsCard(item = item)
-        }
-    }
-}
-
-@Composable
-private fun FeedBuddyTabContent(
-    state: UiState.Success<List<Recommendation>>,
-    showAgentSection: Boolean,
-    navController: NavController?,
-    headerNavigation: FeedHeaderNavigation?,
-    viewModel: FeedViewModel,
-    snackbarHost: SnackbarHostState?,
-    snackScope: CoroutineScope
-) {
-    val data = state.data
-    val hapticBuddy = rememberBuddyHaptic()
-    if (data.isEmpty()) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(BuddyDimens.ListContentPadding),
-            contentAlignment = Alignment.Center
-        ) {
-            BuddyEmptyState(
-                title = "今天先空着",
-                message = "晚点再来滑，或把档案补全好匹配",
-                actionLabel = "再刷一次",
-                onAction = { viewModel.loadFeed() }
-            )
-        }
-        return
-    }
-    val pagerState = rememberPagerState(pageCount = { data.size })
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            horizontal = BuddyDimens.ListContentPadding,
-            vertical = BuddyDimens.SpacingMd
-        ),
-        verticalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingMd)
-    ) {
-        if (showAgentSection) {
-            item(key = "agent_collapsible") {
-                CollapsibleSmartAgentCard(navController = navController)
-            }
-        }
-        item(key = "section_header") {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = "合拍搭子",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        color = GameNewsTheme.TextPrimary,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                )
-                Text(
-                    text = "共 ${data.size} 位",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = GameNewsTheme.TextSecondary
-                )
-            }
-        }
-        item(key = "buddy_forum_bridge") {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                color = GameNewsTheme.AccentSky.copy(alpha = 0.1f)
-            ) {
-                Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
-                    Text(
-                        text = "与论坛招募互补",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = GameNewsTheme.TextPrimary,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "这里是系统推荐；也可以去「峡谷广场」发开黑招募，评论对齐后再申请搭子。",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = GameNewsTheme.TextSecondary
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        TextButton(
-                            onClick = {
-                                hapticBuddy.buddyPrimaryClick()
-                                if (navController != null) {
-                                    ForumEditorBridge.prepareOpenAsRecruitEditor()
-                                    navController.navigate(Routes.POST_EDITOR)
-                                }
-                            },
-                            enabled = navController != null,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                "写招募帖",
-                                color = GameNewsTheme.AccentSky,
-                                maxLines = 1
-                            )
-                        }
-                        TextButton(
-                            onClick = {
-                                hapticBuddy.buddyPrimaryClick()
-                                if (headerNavigation != null) {
-                                    headerNavigation.openForumRecruitOnly()
-                                }
-                            },
-                            enabled = headerNavigation != null,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                "逛招募分区",
-                                color = GameNewsTheme.TextPrimary,
-                                maxLines = 1
-                            )
-                        }
+            GameNewsCard(
+                item = item,
+                onOpen = {
+                    if (navController != null) {
+                        openNewsHaptic.buddyPrimaryClick()
+                        navController.navigate(Routes.gameNewsDetail(item.id))
                     }
                 }
-            }
-        }
-        item(key = "pager") {
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(520.dp),
-                contentPadding = PaddingValues(horizontal = 4.dp),
-                pageSpacing = 16.dp
-            ) { page ->
-                HomeSwipeRecommendationCard(
-                    data = data[page],
-                    onRequestClick = { userId ->
-                        val rec = data[page]
-                        viewModel.sendRequest(userId)
-                        snackScope.showBuddySnackbar(
-                            snackbarHost,
-                            "已向「${rec.nickname}」发送搭子申请"
-                        )
-                        navController?.navigate(Routes.buddyRoom("rel_$userId"))
-                    }
-                )
-            }
-        }
-        item(key = "dots") {
-            HomePagerDots(
-                pagerState = pagerState,
-                pageCount = data.size,
-                modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
             )
         }
     }

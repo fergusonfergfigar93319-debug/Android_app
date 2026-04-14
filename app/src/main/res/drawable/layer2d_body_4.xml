@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 游走·协护：短身 + 大下摆斗篷感 -->
+    <path
+        android:fillColor="#FF2A3E6E"
+        android:pathData="M76,118 L52,198 L148,198 L124,118 Q100,108 76,118z" />
+    <path
+        android:fillColor="#FF1E2E58"
+        android:pathData="M60,150 Q100,175 140,150 L144,182 L56,182z" />
+    <path
+        android:fillColor="#FF243A66"
+        android:pathData="M94,118 L100,132 L106,118z" />
+</vector>

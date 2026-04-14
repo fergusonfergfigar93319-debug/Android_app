@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 元气·肉感 -->
+    <path
+        android:fillColor="#FFFFE4D0"
+        android:strokeColor="#FFDEBA9A"
+        android:strokeWidth="1.2"
+        android:pathData="M100,46 C136,46 158,78 158,112 C158,146 132,168 100,168 C68,168 42,146 42,112 C42,78 64,46 100,46z" />
+    <path
+        android:fillColor="#33FFAB91"
+        android:pathData="M72,118 Q100,132 128,118 Q100,140 72,118z" />
+</vector>

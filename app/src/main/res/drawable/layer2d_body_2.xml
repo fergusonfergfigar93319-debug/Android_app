@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 中路·御法：A 字法袍 -->
+    <path
+        android:fillColor="#FF2A3E6E"
+        android:pathData="M88,116 L58,200 L142,200 L112,116 Q100,102 88,116z" />
+    <path
+        android:fillColor="#FF1E2E58"
+        android:pathData="M92,116 L100,148 L108,116z" />
+    <path
+        android:fillColor="#FF243A66"
+        android:pathData="M76,150 Q100,172 124,150 L128,188 L72,188z" />
+</vector>

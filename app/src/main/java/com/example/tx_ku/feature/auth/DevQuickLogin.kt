@@ -1,6 +1,5 @@
 package com.example.tx_ku.feature.auth
 
-import com.example.tx_ku.BuildConfig
 import com.example.tx_ku.core.domain.AgentPersonaResolver
 import com.example.tx_ku.core.model.AgentTuning
 import com.example.tx_ku.core.model.BuddyCard
@@ -10,15 +9,15 @@ import com.example.tx_ku.feature.onboarding.parseAnswersToProfile
 
 /**
  * **仅 Debug 包**：一键注册/登录固定演示账号，可选注入 Mock 画像以跳过建档。
- * Release 中 [isEnabled] 为 false，逻辑入口均有 [BuildConfig.DEBUG] 守卫。
+ * Release 中 [isEnabled] 为 false，逻辑入口均有 [DeveloperAuthConfig.isDebugBuild] 守卫。
  */
 object DevQuickLogin {
 
-    const val DEMO_EMAIL: String = "dev@buddy.local"
-    const val DEMO_PASSWORD: String = "dev123456"
-    private const val DEMO_NICKNAME: String = "Dev 搭子"
+    const val DEMO_EMAIL: String = DeveloperAuthConfig.EMAIL
+    const val DEMO_PASSWORD: String = DeveloperAuthConfig.PASSWORD
+    private val DEMO_NICKNAME: String = DeveloperAuthConfig.NICKNAME
 
-    fun isEnabled(): Boolean = BuildConfig.DEBUG
+    fun isEnabled(): Boolean = DeveloperAuthConfig.isDebugBuild()
 
     /** 预填表单用（与一键登录同一套账号）。 */
     fun demoCredentials(): Pair<String, String> = DEMO_EMAIL to DEMO_PASSWORD
@@ -27,7 +26,7 @@ object DevQuickLogin {
      * 确保演示账号存在于内存表并登录；不改动画像（若需清空请再调 [clearProfileOnly]）。
      */
     fun ensureAccountAndLogin(): Boolean {
-        if (!BuildConfig.DEBUG) return false
+        if (!DeveloperAuthConfig.isDebugBuild()) return false
         val email = DEMO_EMAIL.trim().lowercase()
         if (!AuthRepository.isEmailRegistered(email)) {
             val r = AuthRepository.register(DEMO_EMAIL, DEMO_PASSWORD, DEMO_NICKNAME, null)
@@ -42,7 +41,7 @@ object DevQuickLogin {
 
     /** 登录后清空画像，进入建档流。 */
     fun clearProfileOnly() {
-        if (!BuildConfig.DEBUG) return
+        if (!DeveloperAuthConfig.isDebugBuild()) return
         CurrentUser.profile = null
         CurrentUser.buddyCard = null
         CurrentUser.buddyAgent = null
@@ -53,12 +52,12 @@ object DevQuickLogin {
 
     /** 写入与问卷选项一致的 Mock 答案，生成画像 + 名片 + 智能体（等同走完建档）。 */
     fun injectMockProfile() {
-        if (!BuildConfig.DEBUG) return
+        if (!DeveloperAuthConfig.isDebugBuild()) return
         val answers = mapOf(
             "nickname" to listOf(DEMO_NICKNAME),
             "preferred_games" to listOf(
-                "王者荣耀（峡谷排位 / 巅峰）",
-                "王者电竞（赛事 / KPL）"
+                "王者荣耀（峡谷对局 / 排位巅峰）",
+                "王者电竞（KPL / 杯赛 / 观赛唠嗑）"
             ),
             "rank" to listOf("中高分段"),
             "active_time" to listOf("工作日晚上", "周末全天"),

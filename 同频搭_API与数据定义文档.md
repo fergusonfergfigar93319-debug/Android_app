@@ -2,7 +2,7 @@
 
 > **说明**：工程与历史文档曾用代号 **同频搭 (BuddyCard)**；当前 Android 客户端对外产品名为 **元流同频**（与 `app_name` / `BrandConfig.appDisplayName` 一致）。本文档仍以 **REST 路径与表结构** 为主，与 **`TX_ku_Android前后端对接说明.md`** 同步修订。
 
-**版本**：V1.1（对齐元流同频客户端命名与王者向业务范围）
+**版本**：V1.2（2026-04-09：补充智能体多轮对话同步/流式、资讯 `relatedForumQueries`；与 **`TX_ku_Android前后端对接说明.md` V1.2** 对齐）
 
 **制定者**：Gemini Antigravity (架构组)
 
@@ -144,6 +144,27 @@
 
 * **Response data**: 同上文 buddy\_cards 表结构。
 
+#### **3.5 智能体多轮对话（同步与流式，Android/Web 共用）**
+
+* **功能说明**：根据用户画像 `AgentTuning`、多轮 `messages` 生成搭子回复；**流式**与 App 内打字效果对齐（详见 **`TX_ku_Android前后端对接说明.md` §3.9**）。
+
+* **同步接口**：`POST /ai/agent/chat`  
+  * **Request Body**（示例，字段 camelCase 或与客户端书面约定 snake\_case）：  
+    `messages`: OpenAI 风格数组 `[{ "role":"user"|"assistant", "content":"..." }]`；  
+    `profileId` 或内联 `profile` 摘要；`tuning` 对象（与客户端 `AgentTuning` 一致或压缩字段）。  
+  * **Response data**：`{ "reply": "完整回复文本", "messageId": "可选" }`（包裹在全局 `data` 内）。
+
+* **流式接口（推荐）**：`POST /ai/agent/chat/stream`  
+  * **Header**：`Accept: text/event-stream`（或贵司约定等价路径）。  
+  * **Request Body**：与同步版相同。  
+  * **Response**：`Content-Type: text/event-stream`；事件类型建议：  
+    * `delta`：`data` 为 JSON `{"text":"追加片段"}` 或约定纯文本行；  
+    * `done`：`data` 为 `{"messageId":"...","finishReason":"stop"}`；  
+    * `error`：失败时携带 `code` / `message`。  
+  * **收尾**：须在流末尾发送 `done`，避免客户端长期处于「输出中」状态。
+
+* **WebSocket（可选）**：同语义推送 `delta` / `done` / `error` JSON，topic 如 `agent_chat:{userId}`。
+
 #### **4\. 获取智能匹配推荐流**
 
 * **接口路径**: GET /recommendations  
@@ -240,6 +261,16 @@
   \],  
   "common\_goal": "本周末双排一起冲上星耀段位！"  
 }
+
+### **模块补充：峡谷速递资讯与公告（可选）**
+
+与 Android `GameNewsItem`、`FeedAnnouncement` 对齐，详见 **`TX_ku_Android前后端对接说明.md` §2.6**。
+
+* **`GET /feed/news?game=&page=&size=`**  
+  * 列表项建议含：`id`、`gameName`、`topicTag`、`authorName`、`title`、`summary`、`detailBody`、`relatedForumQueries`（字符串数组，用于详情页跳转广场搜索）、`commentCount`、`likeCount`、`isOfficial`、`timeLabel`、`coverUrl`（可选）等。
+
+* **`GET /feed/announcements`**（可选）  
+  * 顶栏轮播：`{ "list": [ { "id", "title", "body" } ] }`。
 
 ## **4\. 全局状态码字典 (Status Codes Mapping)**
 

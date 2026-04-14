@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 学院开衫：V 区高光 + 门襟边 + 下摆层次 -->
+    <path
+        android:fillColor="#FF4A5D8C"
+        android:pathData="M64,118 L58,192 L142,192 L136,118 Q100,106 64,118z" />
+    <path
+        android:fillColor="#FF35456E"
+        android:pathData="M78,118 L100,148 L122,118 L118,132 L82,132z" />
+    <path
+        android:fillColor="#FFE8EAF6"
+        android:pathData="M90,118 L100,142 L110,118 L106,128 L94,128z" />
+    <path
+        android:fillColor="#FF2A3758"
+        android:pathData="M74,128 L126,128 L124,142 L76,142z" />
+    <path
+        android:fillColor="#33FFFFFF"
+        android:pathData="M68,124 Q100,116 132,124 L130,132 Q100,126 70,132z" />
+</vector>

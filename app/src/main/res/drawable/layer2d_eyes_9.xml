@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 电光·锐目：亮黄虹膜 -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M62,84 Q78,74 96,84 Q102,100 88,112 Q72,110 62,84z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M104,84 Q122,74 138,84 Q138,110 118,112 Q100,100 104,84z" />
+    <path
+        android:fillColor="#FFFFEE58"
+        android:pathData="M70,90 Q82,82 92,90 Q90,104 78,104 Q70,98 70,90z" />
+    <path
+        android:fillColor="#FFFFEE58"
+        android:pathData="M108,90 Q118,82 130,90 Q128,104 116,104 Q108,98 108,90z" />
+    <path
+        android:fillColor="#FF212121"
+        android:pathData="M76,94 Q82,90 88,94 Q82,100 76,94z" />
+    <path
+        android:fillColor="#FF212121"
+        android:pathData="M114,94 Q118,90 124,94 Q118,100 114,94z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M72,86 Q74,84 76,86 Q74,88 72,86z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M112,86 Q114,84 116,86 Q114,88 112,86z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFEB3B"
+        android:strokeWidth="1"
+        android:pathData="M64,88 L92,92" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFEB3B"
+        android:strokeWidth="1"
+        android:pathData="M108,92 L136,88" />
+</vector>

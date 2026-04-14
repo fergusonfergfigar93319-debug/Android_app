@@ -152,9 +152,17 @@ fun OnboardingScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
-                        if (question.id == "preferred_games" || question.id == "main_roles") {
+                        if (question.id == "preferred_games") {
                             Text(
                                 text = "不必全选：勾 1～3 个最符合你的即可，后续可随时改。",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
+                        }
+                        if (question.pairedOptions != null) {
+                            Text(
+                                text = "时段、分路、组队偏好等可在「元流档案 → 编辑资料」再补。",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -169,6 +177,64 @@ fun OnboardingScreen(
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
+                        } else if (question.pairedOptions != null) {
+                            val primaryLabel = question.primarySectionLabel
+                            if (!primaryLabel.isNullOrBlank()) {
+                                Text(
+                                    text = primaryLabel,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
+                            }
+                            val voiceSelected = state.answers[question.id].orEmpty()
+                            FlowRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingSm),
+                                verticalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingSm)
+                            ) {
+                                question.options.forEach { opt ->
+                                    val isSelected = opt in voiceSelected
+                                    Box(
+                                        modifier = Modifier.clickable {
+                                            haptic.buddySelectionTick()
+                                            viewModel.setAnswer(question.id, listOf(opt))
+                                        }
+                                    ) {
+                                        BuddyTag(text = opt, isHighlight = isSelected)
+                                    }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
+                            val pairedId = question.pairedId!!
+                            Text(
+                                text = question.pairedTitle.orEmpty(),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
+                            val visualSelected = state.answers[pairedId].orEmpty()
+                            FlowRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingSm),
+                                verticalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingSm)
+                            ) {
+                                question.pairedOptions.forEach { opt ->
+                                    val isSelected = opt in visualSelected
+                                    Box(
+                                        modifier = Modifier.clickable {
+                                            haptic.buddySelectionTick()
+                                            val newList = if (question.pairedMultiSelect) {
+                                                if (isSelected) visualSelected - opt
+                                                else visualSelected + opt
+                                            } else listOf(opt)
+                                            viewModel.setAnswer(pairedId, newList)
+                                        }
+                                    ) {
+                                        BuddyTag(text = opt, isHighlight = isSelected)
+                                    }
+                                }
+                            }
                         } else {
                             val selectedList = state.answers[question.id].orEmpty()
                             FlowRow(

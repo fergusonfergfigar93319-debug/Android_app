@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 野区·红营：红 BUFF 圈 + 草丛块 -->
+    <path
+        android:fillColor="#FF0D2810"
+        android:pathData="M0,0h200v200h-200z" />
+    <path
+        android:fillColor="#44C62828"
+        android:pathData="M100,100m-48,0a48,48 0 1,1 96,0a48,48 0 1,1 -96,0" />
+    <path
+        android:fillColor="#66E53935"
+        android:pathData="M100,100m-28,0a28,28 0 1,1 56,0a28,28 0 1,1 -56,0" />
+    <path
+        android:fillColor="#FF2E7D32"
+        android:pathData="M16,120 Q40,100 56,128 Q32,150 16,140z M144,96 Q168,80 184,108 Q160,132 144,120z M96,160 Q120,148 132,176 Q108,188 96,160z" />
+</vector>

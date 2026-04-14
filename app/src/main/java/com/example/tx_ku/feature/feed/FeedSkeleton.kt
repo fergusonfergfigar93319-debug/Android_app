@@ -28,7 +28,7 @@ import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.theme.BuddyDimens
 import com.example.tx_ku.core.designsystem.theme.BuddyShapes
 
-/** 与资讯流底色一致：浅色交友区 / 峡谷深色资讯官方区 */
+/** 与资讯流底色一致：浅色列表区 / 峡谷深色资讯官方区 */
 enum class FeedListSkeletonTone {
     Light,
     Canyon

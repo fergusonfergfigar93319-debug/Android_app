@@ -3,7 +3,7 @@ package com.example.tx_ku.feature.forum
 import java.util.concurrent.atomic.AtomicReference
 
 /**
- * 从首页切到「广场」Tab 时的一次性聚焦：指定分区或招募组队。
+ * 从首页切到「广场」Tab 时的一次性聚焦：指定分区或峡谷组队分区。
  */
 sealed class ForumOpenFocus {
     data object None : ForumOpenFocus()

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 韩信·龙甲 战衣 -->
+    <path
+        android:fillColor="#FFD0D0D0"
+        android:pathData="M70,140 L130,140 L140,190 L60,190z" />
+    <path
+        android:fillColor="#FFA0A0A0"
+        android:pathData="M70,140 L60,160 L50,145z M130,140 L140,160 L150,145z" />
+    <path
+        android:fillColor="#FF304060"
+        android:pathData="M80,140 L100,160 L120,140z" />
+    <path
+        android:fillColor="#FFB0B0B0"
+        android:pathData="M85,150 L115,150 L115,185 L85,185z" />
+    <path
+        android:fillColor="#FF607090"
+        android:pathData="M90,155 L110,155 L110,180 L90,180z" />
+</vector>

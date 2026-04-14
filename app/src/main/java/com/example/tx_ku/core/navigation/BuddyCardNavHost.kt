@@ -14,6 +14,7 @@ import com.example.tx_ku.feature.forum.PostDetailScreen
 import com.example.tx_ku.feature.onboarding.FollowGamesScreen
 import com.example.tx_ku.feature.onboarding.OnboardingScreen
 import com.example.tx_ku.feature.relation.BuddyRoomScreen
+import com.example.tx_ku.feature.profile.facestudio.FaceStudioScreen
 import com.example.tx_ku.feature.profile.AgentPersonaScreen
 import com.example.tx_ku.feature.chat.AgentChatScreen
 import com.example.tx_ku.feature.profile.ProfileEditScreen
@@ -23,6 +24,8 @@ import com.example.tx_ku.feature.social.UserDirectMessageScreen
 import com.example.tx_ku.feature.auth.LoginScreen
 import com.example.tx_ku.feature.auth.RegisterScreen
 import com.example.tx_ku.feature.splash.SplashScreen
+import com.example.tx_ku.feature.feed.EsportsCultureDetailScreen
+import com.example.tx_ku.feature.feed.GameNewsDetailScreen
 
 @Composable
 fun BuddyCardNavHost(navController: NavHostController) {
@@ -52,8 +55,25 @@ fun BuddyCardNavHost(navController: NavHostController) {
         composable(Routes.MY_AGENT) {
             AgentPersonaScreen(navController = navController)
         }
+        composable(Routes.AGENT_FACE_STUDIO) {
+            FaceStudioScreen(navController = navController)
+        }
         composable(Routes.AGENT_CHAT) {
             AgentChatScreen(navController = navController)
+        }
+        composable(
+            route = Routes.GAME_NEWS_DETAIL + "/{newsId}",
+            arguments = listOf(navArgument("newsId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val newsId = backStackEntry.arguments?.getString("newsId")
+            GameNewsDetailScreen(newsId = newsId, navController = navController)
+        }
+        composable(
+            route = Routes.ESPORTS_CULTURE_DETAIL + "/{cultureId}",
+            arguments = listOf(navArgument("cultureId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val cultureId = backStackEntry.arguments?.getString("cultureId")
+            EsportsCultureDetailScreen(cultureId = cultureId, navController = navController)
         }
         composable(Routes.PROFILE_EDIT) {
             ProfileEditScreen(navController = navController)

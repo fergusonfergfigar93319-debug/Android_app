@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 长城·烽烟：垛口墙 + 烽火 -->
+    <path
+        android:fillColor="#FF37474F"
+        android:pathData="M0,0h200v200h-200z" />
+    <path
+        android:fillColor="#FF78909C"
+        android:pathData="M0,120h40v48h-40z M80,120h40v48h-40z M160,120h40v48h-40z" />
+    <path
+        android:fillColor="#FF546E7A"
+        android:pathData="M0,100h200v28h-200z" />
+    <path
+        android:fillColor="#FFFF6F00"
+        android:pathData="M168,72 L176,48 L184,72 L180,88 L172,88z" />
+    <path
+        android:fillColor="#66FF9800"
+        android:pathData="M172,48 L176,32 L180,48z" />
+</vector>

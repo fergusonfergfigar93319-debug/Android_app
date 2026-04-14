@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tx_ku.core.model.GameCatalog
 import com.example.tx_ku.core.model.Post
+import com.example.tx_ku.core.model.Recommendation
+import com.example.tx_ku.core.utils.UiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -59,6 +61,10 @@ class ForumViewModel : ViewModel() {
     private val _sortMode = MutableStateFlow(ForumSortMode.RECOMMENDED)
     val sortMode: StateFlow<ForumSortMode> = _sortMode.asStateFlow()
 
+    /** 潮流水友分区顶区：合拍搭子推荐（原首页「交友区」） */
+    private val _buddyUiState = MutableStateFlow<UiState<List<Recommendation>>>(UiState.Loading)
+    val buddyUiState: StateFlow<UiState<List<Recommendation>>> = _buddyUiState.asStateFlow()
+
     /** 当前筛选后的全量（用于分页切片） */
     private var filteredAll: List<Post> = emptyList()
     private val pageSize = 8
@@ -76,6 +82,10 @@ class ForumViewModel : ViewModel() {
         viewModelScope.launch {
             delay(400)
             runInitialLoad()
+        }
+        viewModelScope.launch {
+            delay(400)
+            _buddyUiState.value = UiState.Success(BuddyRecommendationsMock.list())
         }
         viewModelScope.launch {
             ForumRepository.posts.collect { newList ->
@@ -116,6 +126,7 @@ class ForumViewModel : ViewModel() {
         viewModelScope.launch {
             _ui.update { it.copy(isRefreshing = true, errorMessage = null) }
             delay(600)
+            refreshBuddyRecommendationsSync()
             refreshHotTags()
             filteredAll = withContext(Dispatchers.Default) { applyFilterToList(ForumRepository.posts.value) }
             lastRepositoryFirstPostId = ForumRepository.posts.value.firstOrNull()?.postId
@@ -128,6 +139,25 @@ class ForumViewModel : ViewModel() {
                     isInitialLoading = false
                 )
             }
+        }
+    }
+
+    private suspend fun refreshBuddyRecommendationsSync() {
+        _buddyUiState.value = UiState.Loading
+        delay(650)
+        _buddyUiState.value = UiState.Success(BuddyRecommendationsMock.list())
+    }
+
+    /** 下拉刷新或重试时拉取合拍搭子（演示：本地 mock） */
+    fun refreshBuddyRecommendations() {
+        viewModelScope.launch {
+            refreshBuddyRecommendationsSync()
+        }
+    }
+
+    fun sendBuddyRequest(targetUserId: String) {
+        viewModelScope.launch {
+            // TODO: POST /buddy-requests
         }
     }
 

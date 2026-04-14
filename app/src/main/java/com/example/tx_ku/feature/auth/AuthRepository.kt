@@ -51,6 +51,25 @@ object AuthRepository {
 
     fun login(email: String, password: String): Boolean {
         val key = email.trim().lowercase()
+
+        // Debug：预留开发者账号无需事先注册，冷启动也可直接登录
+        if (DeveloperAuthConfig.matchesLogin(email, password)) {
+            if (accounts[key] == null) {
+                accounts[key] = StoredAccount(
+                    DeveloperAuthConfig.PASSWORD,
+                    DeveloperAuthConfig.NICKNAME,
+                    null
+                )
+            }
+            val stored = accounts[key]!!
+            CurrentUser.account = AccountSummary(
+                email = key,
+                regNickname = stored.nickname,
+                avatarUrl = stored.avatarUrl
+            )
+            return true
+        }
+
         val stored = accounts[key] ?: return false
         if (stored.password != password) return false
         CurrentUser.account = AccountSummary(

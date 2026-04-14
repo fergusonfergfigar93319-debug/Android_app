@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="45"
+                android:endColor="#FFFFCA28"
+                android:startColor="#FF5D4037"
+                android:type="linear" />
+        </shape>
+    </item>
+    <item>
+        <vector
+            android:width="360dp"
+            android:height="120dp"
+            android:viewportWidth="360"
+            android:viewportHeight="120">
+            <!-- 快闪纸袋轮廓 -->
+            <path
+                android:fillColor="#4DFFFFFF"
+                android:pathData="M240,28 L290,28 L296,40 L296,92 L234,92 L234,40 Z" />
+            <path
+                android:fillColor="#00000000"
+                android:pathData="M234,40 L296,40"
+                android:strokeWidth="2"
+                android:strokeColor="#99FFFFFF" />
+            <path
+                android:fillColor="#00000000"
+                android:pathData="M252,28 L252,46"
+                android:strokeWidth="3"
+                android:strokeColor="#66FFFFFF" />
+            <path
+                android:fillColor="#00000000"
+                android:pathData="M278,28 L278,46"
+                android:strokeWidth="3"
+                android:strokeColor="#66FFFFFF" />
+        </vector>
+    </item>
+</layer-list>

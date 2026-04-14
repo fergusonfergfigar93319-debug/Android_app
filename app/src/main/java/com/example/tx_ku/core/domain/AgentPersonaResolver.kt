@@ -4,6 +4,7 @@ import com.example.tx_ku.core.brand.BrandConfig
 import com.example.tx_ku.core.model.AgentTuning
 import com.example.tx_ku.core.model.BuddyAgentPersona
 import com.example.tx_ku.core.model.Profile
+import com.example.tx_ku.core.model.faceSculptSummary
 
 /**
  * 轻量版智能体人设合成器：保证稳定可编译，并支持实时定制字段联动。
@@ -41,6 +42,7 @@ object AgentPersonaResolver {
                 tuning.avatarStyle == "中路参谋" || tuning.avatarStyle == "发育路教官" ||
                 tuning.avatarStyle == "对抗路教头" ||
                 tuning.avatarStyle == "英雄主题·澜" ||
+                tuning.avatarStyle == "英雄主题·韩信" ||
                 tuning.avatarStyle == "英雄主题·貂蝉" ||
                 tuning.avatarStyle == "英雄主题·铠" ||
                 tuning.avatarStyle == "英雄主题·鲁班" ||
@@ -93,6 +95,7 @@ object AgentPersonaResolver {
             add("头像边框：${tuning.avatarFrame}")
             add("对话气泡：${tuning.bubbleStyle}")
             add("语音氛围：${tuning.voiceMood}")
+            add(tuning.faceSculptSummary())
             val note = tuning.extraInstructions.trim()
             if (note.isNotEmpty()) {
                 add("补充说明：${note.take(80)}${if (note.length > 80) "…" else ""}")

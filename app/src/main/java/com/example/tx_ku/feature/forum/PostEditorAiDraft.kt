@@ -83,7 +83,17 @@ fun buildForumAiDraft(
             append("【发帖意向】\n$intentBody\n\n")
             append(tagLine)
             append("关联游戏/主题：$games。\n")
-            append("建议补充：时间地点（或线上房间规则）、报名方式、人数上限、注意事项。")
+            append("建议补充：城市或主场、线下集合/打卡点、观赛或联动时间、报名方式与人数；若为文旅联动可写打卡玩法与合影规则。")
+        }
+        return t to c
+    }
+
+    if (categoryId == ForumCategories.CULTURE) {
+        val t = "【电竞文旅】$firstLineTitle"
+        val c = buildString {
+            append("【发帖意向】\n$intentBody\n\n")
+            append(tagLine)
+            append("建议写清：城市/主场氛围、一日动线或打卡点（勿精确到私人住址）、观赛礼仪与合影边界；可提潮流穿搭或二创灵感，避免拉踩选手与侵权素材。")
         }
         return t to c
     }

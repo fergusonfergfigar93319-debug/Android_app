@@ -35,7 +35,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,6 +55,12 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -68,7 +73,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -111,6 +116,13 @@ import kotlinx.coroutines.delay
 import androidx.compose.ui.platform.ClipboardManager
 
 private const val AgentNavLogTag = "TxKuAgentNav"
+
+/** 消息列表中搭子头像尺寸（略大于正文行高，细边框不抢戏） */
+private val ChatAgentAvatarDp = 44.dp
+
+private val ChatInputFieldOnWhite = Color(0xFF1A1D24)
+private val ChatInputPlaceholderGray = Color(0xFF9CA3AF)
+private val ChatInputBorderSubtle = Color(0xFFE5E7EB)
 
 private fun popToMainTabs(navController: NavController) {
     val popped = runCatching {
@@ -187,7 +199,15 @@ private val esportsQuickPhrases = listOf(
     QuickPhrase("搜赛评词", "去广场搜王者电竞 / KPL 讨论，帮我起几个好搜的关键词。")
 )
 
-/** 创作页自定义短语优先展示；场景侧重追加专属快捷语，再接通用池。 */
+/** 城市文旅、潮流表达与峡谷语境交叉的快捷语（全场景可用）。 */
+private val fusionCityQuickPhrases = listOf(
+    QuickPhrase("同城招募", "帮我写条「同城晚间开黑」招募：分工、时段、不压力，好复制到广场。"),
+    QuickPhrase("观赛安利", "用玩家口吻把这场王者电竞主场观赛安利给没看过比赛的朋友，三句内。"),
+    QuickPhrase("打卡文案", "把峡谷梗自然塞进一条城市打卡朋友圈，八十字内，不拉踩选手。"),
+    QuickPhrase("潮流二创", "想做个王者梗图配文，给两句短文案，轻松不引战。")
+)
+
+/** 创作页自定义短语优先展示；场景侧重追加专属快捷语，再接融合场景与通用池。 */
 private fun mergedQuickPhrases(tuning: AgentTuning): List<QuickPhrase> {
     val custom = listOfNotNull(
         tuning.customPhrase1.trim().takeIf { it.isNotEmpty() },
@@ -201,7 +221,7 @@ private fun mergedQuickPhrases(tuning: AgentTuning): List<QuickPhrase> {
         "王者电竞" -> esportsQuickPhrases
         else -> emptyList()
     }
-    return custom + scenarioExtras + quickPhrases
+    return custom + scenarioExtras + fusionCityQuickPhrases + quickPhrases
 }
 
 /** 顶栏下分段筛选：浅灰条 + 白底轨道 + 选中浅青灰，对齐产品稿 */
@@ -298,7 +318,8 @@ private fun AgentChatLockedGate(navController: NavController) {
 }
 
 /**
- * 与专属智能体对话；支持主题配色持久化、快捷短语与创作页联动的气泡圆角风格。
+ * 与专属智能体对话：主题配色持久化、快捷短语、长按复制；
+ * **沉浸式**：可选全屏峡谷渐变底图；**临场反馈**：搭子回复时轻触觉、输入中动画点。
  */
 @Composable
 fun AgentChatScreen(navController: NavController) {
@@ -314,6 +335,9 @@ fun AgentChatScreen(navController: NavController) {
 private fun AgentChatContent(navController: NavController) {
     val viewModel: AgentChatViewModel = viewModel()
     val ui by viewModel.ui.collectAsStateWithLifecycle()
+    val agentReplyStreaming = ui.messages.any {
+        it is AgentChatStreamItem.TextBubble && !it.isFromUser && it.isStreaming
+    }
     val profile = CurrentUser.profile
     var tuningRefresh by remember { mutableStateOf(0) }
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -358,6 +382,12 @@ private fun AgentChatContent(navController: NavController) {
     var showPersonalizeSheet by remember { mutableStateOf(false) }
     var showClearConfirm by remember { mutableStateOf(false) }
     val personalizeSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var immersiveSurface by remember(accountEmail) {
+        mutableStateOf(AgentChatPrefsStore.isImmersiveChatEnabled())
+    }
+    LaunchedEffect(accountEmail) {
+        immersiveSurface = AgentChatPrefsStore.isImmersiveChatEnabled()
+    }
 
     LaunchedEffect(Unit) {
         AgentChatReminderHub.clearSurfaceState()
@@ -388,8 +418,18 @@ private fun AgentChatContent(navController: NavController) {
         }
     }
 
+    val lastAgentBubble = ui.messages
+        .filterIsInstance<AgentChatStreamItem.TextBubble>()
+        .lastOrNull { !it.isFromUser }
+    LaunchedEffect(lastAgentBubble?.id, lastAgentBubble?.isStreaming) {
+        val b = lastAgentBubble ?: return@LaunchedEffect
+        if (b.id == "welcome_seed") return@LaunchedEffect
+        if (b.isStreaming) return@LaunchedEffect
+        haptic.buddySelectionTick()
+    }
+
     // 与下方 LazyColumn 的 item 结构严格一致，避免 scrollToItem 越界导致闪退（首项为人设提示条）
-    LaunchedEffect(ui.displayMessages.size, ui.isAgentTyping, ui.streamFilter) {
+    LaunchedEffect(ui.displayMessages.size, ui.isAgentTyping, ui.streamFilter, ui.streamRevision) {
         delay(48)
         val hintRow = 1
         val itemCount = if (ui.displayMessages.isEmpty() && ui.streamFilter == ChatStreamFilter.IMPORTANT) {
@@ -420,9 +460,13 @@ private fun AgentChatContent(navController: NavController) {
         "想说点什么…"
     }
 
-    Scaffold(
-        containerColor = palette.screenBg,
-        topBar = {
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (immersiveSurface) {
+            BuddyBackground(modifier = Modifier.fillMaxSize()) {}
+        }
+        Scaffold(
+            containerColor = if (immersiveSurface) Color.Transparent else palette.screenBg,
+            topBar = {
             // 顶栏抬高到状态栏/挖孔之下，并提高绘制层级，避免被下方列表误挡触控
             Column(
                 modifier = Modifier
@@ -439,7 +483,7 @@ private fun AgentChatContent(navController: NavController) {
                                 colors = listOf(palette.headerDeep, palette.headerMid)
                             )
                         )
-                        // 顶栏底部金色细线，与版本速递顶栏统一
+                        // 顶栏底部金色细线，与峡谷速递顶栏统一
                         .border(
                             width = androidx.compose.ui.unit.Dp.Hairline,
                             brush = Brush.horizontalGradient(
@@ -492,9 +536,18 @@ private fun AgentChatContent(navController: NavController) {
                                             .map { it.text.trim() }
                                             .filter { it.isNotEmpty() }
                                         if (pool.isEmpty()) return@DropdownMenuItem
-                                        if (profile == null || ui.isAgentTyping) return@DropdownMenuItem
+                                        if (profile == null || ui.isAgentTyping || agentReplyStreaming) return@DropdownMenuItem
                                         haptic.buddyPrimaryClick()
                                         viewModel.sendInstant(pool.random())
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(if (immersiveSurface) "关闭沉浸式背景" else "开启沉浸式背景") },
+                                    onClick = {
+                                        menuExpanded = false
+                                        immersiveSurface = !immersiveSurface
+                                        AgentChatPrefsStore.setImmersiveChatEnabled(immersiveSurface)
+                                        haptic.buddySelectionTick()
                                     }
                                 )
                                 DropdownMenuItem(
@@ -517,7 +570,7 @@ private fun AgentChatContent(navController: NavController) {
                 }
             }
         }
-    ) { innerPadding ->
+        ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -615,7 +668,8 @@ private fun AgentChatContent(navController: NavController) {
                                 AgentBubble(
                                     text = item.text,
                                     timeLabel = item.timeLabel,
-                                    avatarStyle = tuning.avatarStyle,
+                                    isStreaming = item.isStreaming,
+                                    tuning = tuning,
                                     palette = palette,
                                     bubbleStyle = tuning.bubbleStyle,
                                     onLongPressCopy = { copyBubbleText(item.text) }
@@ -625,7 +679,7 @@ private fun AgentChatContent(navController: NavController) {
                         is AgentChatStreamItem.EventReminder -> {
                             EventReminderCard(
                                 item = item,
-                                avatarStyle = tuning.avatarStyle,
+                                tuning = tuning,
                                 palette = palette,
                                 onPrimary = {
                                     haptic.buddyPrimaryClick()
@@ -650,7 +704,7 @@ private fun AgentChatContent(navController: NavController) {
                 if (ui.streamFilter == ChatStreamFilter.ALL && ui.isAgentTyping) {
                     item(key = "typing") {
                         AgentTypingRow(
-                            avatarStyle = tuning.avatarStyle,
+                            tuning = tuning,
                             palette = palette,
                             bubbleStyle = tuning.bubbleStyle
                         )
@@ -664,7 +718,7 @@ private fun AgentChatContent(navController: NavController) {
                 color = palette.filterBorder.copy(alpha = 0.4f)
             )
             Surface(
-                color = palette.inputBarBg.copy(alpha = 0.98f),
+                color = palette.inputBarBg.copy(alpha = if (immersiveSurface) 0.88f else 0.98f),
                 tonalElevation = 0.dp,
                 shadowElevation = 0.dp
             ) {
@@ -677,7 +731,7 @@ private fun AgentChatContent(navController: NavController) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "快捷提问",
+                            text = "智能快捷",
                             style = MaterialTheme.typography.labelMedium,
                             color = BuddyColors.HonorGold,   // 峡谷金标题
                             fontWeight = FontWeight.SemiBold
@@ -698,7 +752,7 @@ private fun AgentChatContent(navController: NavController) {
                             key = { index, _ -> "qp_$index" },
                             contentType = { _, _ -> "quick_phrase" }
                         ) { index, phrase ->
-                            val chipClickable = phrase.text.isNotBlank() && !ui.isAgentTyping
+                            val chipClickable = phrase.text.isNotBlank() && !ui.isAgentTyping && !agentReplyStreaming
                             val chipInteraction = remember(index) { MutableInteractionSource() }
                             Surface(
                                 modifier = Modifier.clickable(
@@ -734,13 +788,14 @@ private fun AgentChatContent(navController: NavController) {
                             haptic.buddyPrimaryClick()
                             viewModel.send()
                         },
-                        enabled = profile != null && !ui.isAgentTyping,
+                        enabled = profile != null && !ui.isAgentTyping && !agentReplyStreaming,
                         palette = palette,
                         placeholderText = inputPlaceholder
                     )
                 }
             }
         }
+    }
     }
 
     if (showClearConfirm) {
@@ -893,7 +948,7 @@ private fun UserBubble(
 
 @Composable
 private fun UserAvatarChip(profile: com.example.tx_ku.core.model.Profile?) {
-    val size = 40.dp
+    val size = ChatAgentAvatarDp
     val letter = profile?.nickname?.trim()?.firstOrNull()?.uppercaseChar()?.toString() ?: "我"
     val avatarUri = profile?.avatarUrl?.trim().orEmpty()
     if (avatarUri.isNotEmpty()) {
@@ -927,12 +982,35 @@ private fun UserAvatarChip(profile: com.example.tx_ku.core.model.Profile?) {
     }
 }
 
+@Composable
+private fun StreamingCaret(color: Color) {
+    val t = rememberInfiniteTransition(label = "streamCaret")
+    val a by t.animateFloat(
+        initialValue = 0.28f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(480, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "caretA"
+    )
+    Text(
+        text = "▍",
+        color = color.copy(alpha = a),
+        style = MaterialTheme.typography.bodyLarge,
+        lineHeight = 22.sp,
+        fontWeight = FontWeight.Light,
+        modifier = Modifier.padding(start = 2.dp)
+    )
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AgentBubble(
     text: String,
     timeLabel: String,
-    avatarStyle: String,
+    isStreaming: Boolean,
+    tuning: AgentTuning,
     palette: AgentChatPalette,
     bubbleStyle: String,
     onLongPressCopy: () -> Unit
@@ -946,15 +1024,17 @@ private fun AgentBubble(
     ) {
         Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(ChatAgentAvatarDp)
                 .clip(CircleShape)
-                .border(1.5.dp, BuddyColors.GoldOutline, CircleShape)
         ) {
-            Image(
-                painter = painterResource(agentAvatarDrawableRes(avatarStyle)),
+            AgentFusionAvatarPortrait(
+                tuning = tuning,
+                avatarRes = avatarDrawableResForStyle(tuning.avatarStyle),
+                avatarFrame = tuning.avatarFrame,
+                accent = agentAvatarAccentForStyle(tuning.avatarStyle),
+                size = ChatAgentAvatarDp,
                 contentDescription = "搭子头像",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+                chatCompactFrame = true
             )
         }
         Spacer(modifier = Modifier.size(8.dp))
@@ -974,13 +1054,20 @@ private fun AgentBubble(
                         onLongClick = onLongPressCopy
                     )
             ) {
-                Text(
-                    text = text,
-                    color = palette.agentText,
-                    style = MaterialTheme.typography.bodyLarge,
-                    lineHeight = 22.sp,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 11.dp)
-                )
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 11.dp),
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Text(
+                        text = text,
+                        color = palette.agentText,
+                        style = MaterialTheme.typography.bodyLarge,
+                        lineHeight = 22.sp
+                    )
+                    if (isStreaming) {
+                        StreamingCaret(color = palette.agentText)
+                    }
+                }
             }
             if (timeLabel.isNotEmpty()) {
                 Text(
@@ -995,8 +1082,35 @@ private fun AgentBubble(
 }
 
 @Composable
+private fun TypingPulseDots(accent: Color = BuddyColors.HonorGold) {
+    val infinite = rememberInfiniteTransition(label = "typingDots")
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        repeat(3) { i ->
+            val alpha by infinite.animateFloat(
+                initialValue = 0.32f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(520, easing = FastOutSlowInEasing, delayMillis = i * 160),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "dot$i"
+            )
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(accent.copy(alpha = alpha))
+            )
+        }
+    }
+}
+
+@Composable
 private fun AgentTypingRow(
-    avatarStyle: String,
+    tuning: AgentTuning,
     palette: AgentChatPalette,
     bubbleStyle: String
 ) {
@@ -1008,20 +1122,22 @@ private fun AgentTypingRow(
     ) {
         Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(ChatAgentAvatarDp)
                 .clip(CircleShape)
-                .border(1.dp, Color(0x22000000), CircleShape)
         ) {
-            Image(
-                painter = painterResource(agentAvatarDrawableRes(avatarStyle)),
+            AgentFusionAvatarPortrait(
+                tuning = tuning,
+                avatarRes = avatarDrawableResForStyle(tuning.avatarStyle),
+                avatarFrame = tuning.avatarFrame,
+                accent = agentAvatarAccentForStyle(tuning.avatarStyle),
+                size = ChatAgentAvatarDp,
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+                chatCompactFrame = true
             )
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .clip(shape)
                 .background(palette.agentBubble)
@@ -1032,13 +1148,9 @@ private fun AgentTypingRow(
                 )
                 .padding(horizontal = 14.dp, vertical = 10.dp)
         ) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(16.dp),
-                strokeWidth = 2.dp,
-                color = BuddyColors.HonorGold   // 峡谷金打字指示器
-            )
+            TypingPulseDots(accent = BuddyColors.HonorGold)
             Text(
-                "搭子在打字…",
+                "搭子在组织语言…",
                 style = MaterialTheme.typography.bodySmall,
                 color = palette.hint
             )
@@ -1049,7 +1161,7 @@ private fun AgentTypingRow(
 @Composable
 private fun EventReminderCard(
     item: AgentChatStreamItem.EventReminder,
-    avatarStyle: String,
+    tuning: AgentTuning,
     palette: AgentChatPalette,
     onPrimary: () -> Unit,
     onSecondary: () -> Unit,
@@ -1064,15 +1176,17 @@ private fun EventReminderCard(
     ) {
         Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(ChatAgentAvatarDp)
                 .clip(CircleShape)
-                .border(1.dp, Color(0x22000000), CircleShape)
         ) {
-            Image(
-                painter = painterResource(agentAvatarDrawableRes(avatarStyle)),
+            AgentFusionAvatarPortrait(
+                tuning = tuning,
+                avatarRes = avatarDrawableResForStyle(tuning.avatarStyle),
+                avatarFrame = tuning.avatarFrame,
+                accent = agentAvatarAccentForStyle(tuning.avatarStyle),
+                size = ChatAgentAvatarDp,
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+                chatCompactFrame = true
             )
         }
         Spacer(modifier = Modifier.size(8.dp))
@@ -1158,7 +1272,7 @@ private fun ChatInputBar(
             modifier = Modifier
                 .weight(1f)
                 .heightIn(min = 48.dp, max = 120.dp),
-            placeholder = { Text(placeholderText, color = palette.hint) },
+            placeholder = { Text(placeholderText, color = ChatInputPlaceholderGray) },
             enabled = enabled,
             shape = RoundedCornerShape(24.dp),
             trailingIcon = {
@@ -1175,13 +1289,19 @@ private fun ChatInputBar(
                 }
             },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = BuddyColors.CanyonSurface,
-                unfocusedContainerColor = BuddyColors.CanyonMid,
-                focusedBorderColor = BuddyColors.HonorGold.copy(alpha = 0.75f),
-                unfocusedBorderColor = BuddyColors.GoldOutline,
-                focusedTextColor = Color(0xFFEEE8D5),
-                unfocusedTextColor = Color(0xFFCDD5E0),
-                cursorColor = BuddyColors.HonorGold
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                disabledContainerColor = Color(0xFFF3F4F6),
+                focusedBorderColor = BuddyColors.HonorGold.copy(alpha = 0.55f),
+                unfocusedBorderColor = ChatInputBorderSubtle,
+                disabledBorderColor = ChatInputBorderSubtle,
+                focusedTextColor = ChatInputFieldOnWhite,
+                unfocusedTextColor = ChatInputFieldOnWhite,
+                disabledTextColor = ChatInputPlaceholderGray,
+                cursorColor = BuddyColors.HonorGold,
+                focusedPlaceholderColor = ChatInputPlaceholderGray,
+                unfocusedPlaceholderColor = ChatInputPlaceholderGray,
+                disabledPlaceholderColor = ChatInputPlaceholderGray
             ),
             maxLines = 4
         )
@@ -1193,8 +1313,8 @@ private fun ChatInputBar(
             colors = IconButtonDefaults.filledIconButtonColors(
                 containerColor = BuddyColors.HonorGold,
                 contentColor = Color(0xFF1A1000),   // 深棕黑，金底高对比
-                disabledContainerColor = BuddyColors.CanyonSurface,
-                disabledContentColor = Color(0xFF8B95B0)
+                disabledContainerColor = Color(0xFFE5E7EB),
+                disabledContentColor = Color(0xFF9CA3AF)
             )
         ) {
             Icon(
@@ -1203,24 +1323,4 @@ private fun ChatInputBar(
             )
         }
     }
-}
-
-private fun agentAvatarDrawableRes(avatarStyle: String): Int = when (avatarStyle) {
-    "英雄主题·铠" -> R.drawable.agent_hero_kael
-    "英雄主题·澜" -> R.drawable.agent_hero_lan
-    "英雄主题·貂蝉" -> R.drawable.agent_hero_diaochan
-    "英雄主题·鲁班" -> R.drawable.agent_hero_luban
-    "英雄主题·瑶" -> R.drawable.agent_hero_yao
-    "英雄主题·李白" -> R.drawable.agent_hero_libai
-    "英雄主题·后羿" -> R.drawable.agent_hero_houyi
-    "英雄主题·孙悟空" -> R.drawable.agent_hero_wukong
-    "指挥官", "对抗路教头" -> R.drawable.agent_avatar_commander
-    "元气辅助", "游走先锋" -> R.drawable.agent_avatar_support
-    "战术导师", "中路参谋" -> R.drawable.agent_avatar_coach
-    "发育路教官", "峡谷军师", "赛事实况台" -> R.drawable.agent_avatar_preset_honor_strategist
-    "野核节拍器" -> R.drawable.agent_avatar_preset_honor_jungle
-    "治愈陪玩" -> R.drawable.agent_avatar_healing
-    "企鹅萌妹", "咕咕嘎嘎" -> R.drawable.agent_avatar_penguin
-    "我的刀盾" -> R.drawable.agent_avatar_daodun
-    else -> R.drawable.agent_avatar_commander
 }

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 赛事·耳麦 -->
+    <path
+        android:fillColor="#FF37474F"
+        android:pathData="M56,76 Q100,60 144,76 L142,92 L58,92z" />
+    <path
+        android:fillColor="#FF78909C"
+        android:pathData="M52,80 L48,100 L56,104z M148,80 L152,100 L144,104z" />
+    <path
+        android:fillColor="#FFFF5722"
+        android:pathData="M96,84h8v6h-8z" />
+</vector>

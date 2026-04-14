@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="135"
+                android:endColor="#FFFFD54F"
+                android:startColor="#FFB71C1C"
+                android:type="linear" />
+        </shape>
+    </item>
+    <item>
+        <vector
+            android:width="360dp"
+            android:height="120dp"
+            android:viewportWidth="360"
+            android:viewportHeight="120">
+            <!-- 辣锅蒸汽简笔 -->
+            <path
+                android:fillColor="#30FFFFFF"
+                android:pathData="M200,75 L240,75 L248,95 L192,95 Z" />
+            <path
+                android:fillColor="#00000000"
+                android:pathData="M208,64 Q212,50 216,64 T224,64"
+                android:strokeWidth="2"
+                android:strokeColor="#77FFFFFF" />
+            <path
+                android:fillColor="#00000000"
+                android:pathData="M222,58 Q228,44 234,58 T246,58"
+                android:strokeWidth="2"
+                android:strokeColor="#55FFFFFF" />
+        </vector>
+    </item>
+</layer-list>

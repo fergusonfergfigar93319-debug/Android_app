@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 短发·利落 Q：蓬松颅顶 + M 字刘海分簇 + 呆毛 -->
+    <path
+        android:fillColor="#FF141A28"
+        android:pathData="M38,108 Q34,36 100,20 Q166,36 162,108 Q154,56 100,46 Q46,56 38,108z" />
+    <path
+        android:fillColor="#FF222B3F"
+        android:pathData="M42,104 Q40,128 48,172 L64,128 Q72,84 100,78 Q128,84 136,128 L152,172 Q160,128 158,104 Q152,62 100,52 Q48,62 42,104z" />
+    <path
+        android:fillColor="#FF2E3A54"
+        android:pathData="M68,82 Q84,68 100,74 Q116,68 132,82 Q120,92 100,88 Q80,92 68,82z" />
+    <path
+        android:fillColor="#FF3A4866"
+        android:pathData="M76,76 Q88,70 100,76 Q112,70 124,76 Q112,82 100,80 Q88,82 76,76z" />
+    <path
+        android:fillColor="#55FFFFFF"
+        android:pathData="M82,48 Q100,38 118,48 Q108,54 100,52 Q92,54 82,48z" />
+    <path
+        android:fillColor="#FF141A28"
+        android:pathData="M96,22 L102,42 L100,50 L98,42z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#448FA0BF"
+        android:strokeWidth="1"
+        android:pathData="M54,94 Q100,72 146,94" />
+</vector>

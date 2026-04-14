@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 月牙·笑眼 -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF2A2A38"
+        android:strokeWidth="3"
+        android:pathData="M72,98 Q82,88 92,98" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF2A2A38"
+        android:strokeWidth="3"
+        android:pathData="M108,98 Q118,88 128,98" />
+    <path
+        android:fillColor="#88FFB6C8"
+        android:pathData="M78,108 Q82,104 86,108 Q82,112 78,108z" />
+    <path
+        android:fillColor="#88FFB6C8"
+        android:pathData="M114,108 Q118,104 122,108 Q118,112 114,108z" />
+</vector>

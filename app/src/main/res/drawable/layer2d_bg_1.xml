@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 发育路·花雨：粉线道 + 花瓣 -->
+    <path
+        android:fillColor="#FFFFF0F5"
+        android:pathData="M0,0h200v200h-200z" />
+    <path
+        android:fillColor="#33D4A574"
+        android:pathData="M0,0h200v200h-200z" />
+    <path
+        android:fillColor="#44FFCCBC"
+        android:pathData="M0,80 Q100,60 200,80v120h-200z" />
+    <path
+        android:fillColor="#88F48FB1"
+        android:pathData="M20,60 L24,68 L28,60z M160,100 L164,108 L168,100z M120,40 L124,48 L128,40z" />
+    <path
+        android:fillColor="#5590A4AE"
+        android:pathData="M0,100h200v8h-200z" />
+</vector>

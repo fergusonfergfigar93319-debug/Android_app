@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="0"
+                android:endColor="#FF80DEEA"
+                android:startColor="#FF00695C"
+                android:type="linear" />
+        </shape>
+    </item>
+    <item>
+        <vector
+            android:width="360dp"
+            android:height="120dp"
+            android:viewportWidth="360"
+            android:viewportHeight="120">
+            <!-- 桥拱 + 湖光 -->
+            <path
+                android:fillColor="#00000000"
+                android:pathData="M40,95 Q180,45 320,95"
+                android:strokeWidth="3"
+                android:strokeColor="#44FFFFFF" />
+            <path
+                android:fillColor="#22000000"
+                android:pathData="M0,98 L360,98 L360,120 L0,120 Z" />
+            <path
+                android:fillColor="#33FFFFFF"
+                android:pathData="M260,55 L290,40 L320,55 L290,70 Z" />
+        </vector>
+    </item>
+</layer-list>

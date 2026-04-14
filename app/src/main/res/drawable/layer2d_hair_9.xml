@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 灵耳·狐款 Q：圆钝狐耳 + 短蓬发 -->
+    <path
+        android:fillColor="#FF171D2C"
+        android:pathData="M50,100 Q48,40 100,32 Q152,40 150,100 Q144,70 100,62 Q56,70 50,100z" />
+    <path
+        android:fillColor="#FF242F48"
+        android:pathData="M58,76 L48,44 L68,60z" />
+    <path
+        android:fillColor="#FF242F48"
+        android:pathData="M142,76 L152,44 L132,60z" />
+    <path
+        android:fillColor="#FFFFB8D8"
+        android:pathData="M56,72 L52,52 L64,64z M144,72 L148,52 L136,64z" />
+    <path
+        android:fillColor="#FF354566"
+        android:pathData="M100,62 L108,80 L100,90 L92,80z" />
+</vector>

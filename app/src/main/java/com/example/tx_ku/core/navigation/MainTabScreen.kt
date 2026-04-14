@@ -17,6 +17,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -52,8 +53,8 @@ enum class MainTab(
     val title: String,
     val iconResId: Int
 ) {
-    /** 版本与活动速递（首页资讯流） */
-    FEED("版本速递", R.drawable.ic_tab_discover),
+    /** 峡谷与赛事速递（首页资讯流：版本 · 活动 · KPL） */
+    FEED("峡谷速递", R.drawable.ic_tab_discover),
     /** 专属 AI 搭子人设与快捷句 */
     AGENT("AI搭子", R.drawable.ic_tab_agent),
     /** 开黑招募 · 攻略 · 赛评 */
@@ -64,9 +65,14 @@ enum class MainTab(
 
 @Composable
 fun MainTabScreen(navController: NavController? = null) {
-    // 首 Tab 为版本速递（资讯流）；AI 搭子为独立 Tab
+    // 首 Tab 为峡谷速递（资讯流）；AI 搭子为独立 Tab
     var selectedIndex by rememberSaveable { mutableIntStateOf(MainTab.FEED.ordinal) }
     val tabs = MainTab.entries
+    SideEffect {
+        MainTabBridge.consumePendingTab()?.let { tab ->
+            selectedIndex = tab.ordinal
+        }
+    }
     val haptic = rememberBuddyHaptic()
     val bubblePreview by AgentChatReminderHub.bubblePreview.collectAsStateWithLifecycle()
     val unreadReminders by AgentChatReminderHub.unreadReminders.collectAsStateWithLifecycle()
@@ -221,6 +227,7 @@ fun MainTabScreen(navController: NavController? = null) {
         if (showAgentFab) {
             val bottomPad = if (tabs[selectedIndex] == MainTab.FORUM) 156.dp else 88.dp
             AgentChatFloatingEntry(
+                tuning = CurrentUser.agentTuning,
                 preview = bubblePreview,
                 unreadCount = unreadReminders,
                 onOpenChat = {
@@ -231,7 +238,8 @@ fun MainTabScreen(navController: NavController? = null) {
                     .align(Alignment.BottomEnd)
                     .navigationBarsPadding()
                     .padding(end = 16.dp, bottom = bottomPad),
-                contentColor = MaterialTheme.colorScheme.primary
+                contentColor = MaterialTheme.colorScheme.primary,
+                bottomPaddingDp = bottomPad
             )
         }
     }

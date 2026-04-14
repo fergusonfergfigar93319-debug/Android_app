@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 身形：肩颈体积 + 锁骨暗示 + 外套暗部 -->
+    <path
+        android:fillColor="#FFFFE8D8"
+        android:pathData="M88,104 L86,118 L114,118 L112,104 Q100,100 88,104z" />
+    <path
+        android:fillColor="#FF2C3A5C"
+        android:pathData="M52,114 L44,198 L156,198 L148,114 Q100,94 52,114z" />
+    <path
+        android:fillColor="#FF1F2A44"
+        android:pathData="M58,118 L54,168 L72,174 L68,122z M142,118 L146,168 L128,174 L132,122z" />
+    <path
+        android:fillColor="#FF3D4F78"
+        android:pathData="M86,114 L100,132 L114,114z" />
+    <path
+        android:fillColor="#55FFFFFF"
+        android:pathData="M76,128 Q100,118 124,128 L122,138 L78,138z" />
+</vector>

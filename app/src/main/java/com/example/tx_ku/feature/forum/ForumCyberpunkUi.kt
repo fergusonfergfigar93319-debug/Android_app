@@ -21,8 +21,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -61,6 +64,8 @@ object ForumCyberColors {
     val PanelElevated = BuddyColors.CanyonSurface
     val TextPrimary = Color(0xFFEEE8D5)   // 暖白，在深蓝底上更舒适
     val TextMuted = Color(0xFF8B95B0)
+    /** 深蓝顶栏副标题：比 [TextMuted] 略亮，满足与深底对比 */
+    val TextSubtitleOnDeepHeader = Color(0xFFC8D4E4)
 }
 
 @Composable
@@ -93,34 +98,37 @@ fun ForumCyberTopBar(
     title: String,
     subtitle: String? = null,
     modifier: Modifier = Modifier,
-    /** 浅色下左侧紫青竖条，与全局主色一致 */
-    showPlazaLeadingAccent: Boolean = true
+    showPlazaLeadingAccent: Boolean = true,
+    /** 顶区实际为深蓝渐变底（与全局浅色主题并存）时须为 true，否则标题会用 onSurface 导致看不清 */
+    darkHeaderBackground: Boolean = false
 ) {
-    val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
-    val titleColor = if (isLight) MaterialTheme.colorScheme.onSurface else ForumCyberColors.TextPrimary
-    val subColor = if (isLight) MaterialTheme.colorScheme.onSurfaceVariant else ForumCyberColors.TextMuted
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.Top
-        ) {
-            if (isLight && showPlazaLeadingAccent) {
+    val themeLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+    val isLight = themeLight && !darkHeaderBackground
+    val titleColor = when {
+        darkHeaderBackground -> ForumCyberColors.TextPrimary
+        themeLight -> MaterialTheme.colorScheme.onSurface
+        else -> ForumCyberColors.TextPrimary
+    }
+    val subColor = when {
+        darkHeaderBackground -> ForumCyberColors.TextSubtitleOnDeepHeader
+        themeLight -> MaterialTheme.colorScheme.onSurfaceVariant
+        else -> ForumCyberColors.TextMuted
+    }
+    val titleShadow = if (darkHeaderBackground) {
+        Shadow(color = Color.Black.copy(alpha = 0.42f), offset = Offset(0f, 1f), blurRadius = 6f)
+    } else null
+
+    Column(modifier = modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            if (themeLight && showPlazaLeadingAccent) {
+                // 2026：双色渐变竖条 + 光晕
                 Box(
                     modifier = Modifier
                         .width(4.dp)
-                        .height(40.dp)
+                        .height(44.dp)
                         .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    ForumPlazaTheme.LeadingAccentStart,
-                                    ForumPlazaTheme.LeadingAccentEnd
-                                )
-                            ),
-                            shape = RoundedCornerShape(2.dp)
+                            Brush.verticalGradient(listOf(BuddyColors.HonorGold, BuddyColors.HonorCyanAccent.copy(alpha = 0.7f))),
+                            RoundedCornerShape(2.dp)
                         )
                 )
                 Spacer(modifier = Modifier.width(BuddyDimens.SpacingMd))
@@ -129,36 +137,40 @@ fun ForumCyberTopBar(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = titleColor
+                        fontWeight = FontWeight.Bold,
+                        color = titleColor,
+                        shadow = titleShadow
                     ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    maxLines = 1, overflow = TextOverflow.Ellipsis
                 )
                 if (!subtitle.isNullOrBlank()) {
                     Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = subColor,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = subColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }
-        Spacer(modifier = Modifier.height(6.dp))
-        HorizontalDivider(
-            thickness = 1.dp,
-            color = if (isLight) {
-                BuddyColors.HonorGold.copy(alpha = 0.22f)
-            } else {
-                ForumCyberColors.TextMuted.copy(alpha = 0.22f)
-            }
+        Spacer(modifier = Modifier.height(8.dp))
+        // 2026：渐变分割线
+        Box(
+            modifier = Modifier.fillMaxWidth().height(1.5.dp).background(
+                Brush.horizontalGradient(
+                    listOf(
+                        Color.Transparent,
+                        if (themeLight) BuddyColors.HonorGold.copy(alpha = 0.5f) else ForumCyberColors.NeonGold.copy(alpha = 0.4f),
+                        if (themeLight) BuddyColors.HonorCyanAccent.copy(alpha = 0.4f) else ForumCyberColors.NeonPurple.copy(alpha = 0.4f),
+                        Color.Transparent
+                    )
+                )
+            )
         )
     }
 }
 
+/**
+ * 2026 Glassmorphism 帖子卡片
+ * 浅色：暖白面 + 金色渐变边框 + 微阴影
+ * 深色：半透明玻璃面 + 霓虹描边 + 模糊背景
+ */
 @Composable
 fun ForumCyberPostCard(
     modifier: Modifier = Modifier,
@@ -168,37 +180,41 @@ fun ForumCyberPostCard(
     val isLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
     if (isLight) {
         val rim = Brush.linearGradient(
-            colors = listOf(
-                BuddyColors.HonorGold.copy(alpha = 0.55f),
-                BuddyColors.BattlePassPurpleLight.copy(alpha = 0.38f),
-                BuddyColors.HonorCyanAccent.copy(alpha = 0.32f),
-                BuddyColors.HonorGold.copy(alpha = 0.55f)
+            listOf(
+                BuddyColors.HonorGold.copy(alpha = 0.45f),
+                BuddyColors.HonorCyanAccent.copy(alpha = 0.25f),
+                BuddyColors.BattlePassPurpleLight.copy(alpha = 0.30f),
+                BuddyColors.HonorGold.copy(alpha = 0.45f)
             )
         )
         Card(
             modifier = modifier.border(1.dp, brush = rim, shape = shape),
             shape = shape,
             colors = CardDefaults.cardColors(containerColor = ForumPlazaTheme.CardLight),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-        ) {
-            Column(content = content)
-        }
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        ) { Column(content = content) }
         return
     }
+    // 深色：Glassmorphism
     val borderBrush = Brush.linearGradient(
-        colors = listOf(
-            ForumCyberColors.NeonGold.copy(alpha = 0.55f),
-            ForumCyberColors.NeonPurple.copy(alpha = 0.40f),
-            ForumCyberColors.NeonGoldBright.copy(alpha = 0.45f)
+        listOf(
+            ForumCyberColors.NeonGold.copy(alpha = 0.6f),
+            ForumCyberColors.NeonPurple.copy(alpha = 0.45f),
+            ForumCyberColors.NeonGoldBright.copy(alpha = 0.5f)
         )
     )
-    Card(
-        modifier = modifier.border(1.dp, brush = borderBrush, shape = shape),
-        shape = shape,
-        colors = CardDefaults.cardColors(
-            containerColor = ForumCyberColors.PanelElevated.copy(alpha = 0.90f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    Box(
+        modifier = modifier
+            .border(1.dp, brush = borderBrush, shape = shape)
+            .clip(shape)
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        ForumCyberColors.PanelElevated.copy(alpha = 0.85f),
+                        ForumCyberColors.Panel.copy(alpha = 0.75f)
+                    )
+                )
+            )
     ) {
         Column(content = content)
     }

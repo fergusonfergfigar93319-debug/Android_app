@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 凤求凰·散发 Q：银白大波浪 + 软飘带 -->
+    <path
+        android:fillColor="#FFF2F4F8"
+        android:pathData="M88,34 Q100,8 118,34 Q128,52 112,62 Q88,52 88,34z" />
+    <path
+        android:fillColor="#FFE0E4EC"
+        android:pathData="M108,44 Q142,28 156,88 Q150,158 124,178 Q108,140 116,100 Q124,68 108,44z" />
+    <path
+        android:fillColor="#FFE8ECF4"
+        android:pathData="M48,92 Q28,132 46,188 Q72,188 68,140 Q64,100 48,92z" />
+    <path
+        android:fillColor="#FFD04858"
+        android:pathData="M118,38 Q148,16 172,36 L166,56 Q132,40 112,64z" />
+    <path
+        android:fillColor="#FFF8FAFC"
+        android:pathData="M56,64 Q100,52 144,68 Q128,96 100,86 Q72,96 56,64z" />
+    <path
+        android:fillColor="#CCB8C0D0"
+        android:pathData="M100,56 Q120,88 128,128 Q116,96 100,56z M52,100 Q48,140 58,168 Q54,140 52,100z" />
+</vector>

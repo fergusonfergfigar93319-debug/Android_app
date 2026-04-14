@@ -65,6 +65,31 @@ object BuddyPageBrushes {
     )
 
     /**
+     * 元流档案（浅色）列表区：比 [lightListBand] 多一层紫雾与略深 parchment，让暖白卡「浮起」、层次更清晰。
+     */
+    fun lightProfileArchiveBand(): Brush = Brush.verticalGradient(
+        colors = listOf(
+            BuddyColors.ParchmentDeep,
+            BuddyColors.BattlePassPurple.copy(alpha = 0.10f),
+            BuddyColors.CommunityAnnouncementBg.copy(alpha = 0.55f),
+            BuddyColors.ParchmentDeep.copy(alpha = 0.92f),
+            BuddyColors.CommunityPageBackground.copy(alpha = 0.88f)
+        )
+    )
+
+    /**
+     * 深色 Tab 内列表区纵向带，与 [lightListBand] 对应：略压层次，仍与 [dark] 全页底同系。
+     * 用于主 Tab 内子页（如元流档案）承接 [BuddyBackground]，与首页资讯列表区用法一致。
+     */
+    fun darkListBand(): Brush = Brush.verticalGradient(
+        colors = listOf(
+            BuddyColors.BackgroundMidTone,
+            BuddyColors.CanyonDeep.copy(alpha = 0.92f),
+            BuddyColors.BackgroundMidTone.copy(alpha = 0.98f)
+        )
+    )
+
+    /**
      * 启动页专用：峡谷夜幕冷色底（深蓝 → 战令紫雾 → 赛博青微光），
      * 与金/青 Logo 动效形成高对比，避免浅色 parchment 把光效「吃没」。
      */

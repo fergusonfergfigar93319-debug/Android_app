@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 竖瞳·魔意 -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M62,84 Q78,74 96,84 Q102,100 88,112 Q72,110 62,84z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M104,84 Q122,74 138,84 Q138,110 118,112 Q100,100 104,84z" />
+    <path
+        android:fillColor="#FF7B1FA2"
+        android:pathData="M74,88 L88,100 L74,112 L70,100z" />
+    <path
+        android:fillColor="#FF7B1FA2"
+        android:pathData="M112,88 L126,100 L112,112 L108,100z" />
+    <path
+        android:fillColor="#FF0A1020"
+        android:pathData="M78,96 L84,100 L78,104z" />
+    <path
+        android:fillColor="#FF0A1020"
+        android:pathData="M116,96 L122,100 L116,104z" />
+</vector>

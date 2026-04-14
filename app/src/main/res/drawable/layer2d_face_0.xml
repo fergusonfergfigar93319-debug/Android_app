@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 默认脸：赛璐璐明暗 + 软腮红 + 简化鼻唇（与五官层对齐） -->
+    <path
+        android:fillColor="#FFFFF0E8"
+        android:pathData="M100,40 C142,40 162,72 162,112 C162,150 134,172 100,172 C66,172 38,150 38,112 C38,72 58,40 100,40z" />
+    <path
+        android:fillColor="#FFFFF5EE"
+        android:pathData="M100,46 C134,46 154,74 154,110 C154,142 130,162 100,162 C70,162 46,142 46,110 C46,74 66,46 100,46z" />
+    <path
+        android:fillColor="#18C4716A"
+        android:pathData="M100,152 C78,152 62,138 58,124 L142,124 C138,138 122,152 100,152z" />
+    <path
+        android:fillColor="#44FFAB91"
+        android:pathData="M62,118 Q74,106 86,118 Q74,130 62,118z" />
+    <path
+        android:fillColor="#44FFAB91"
+        android:pathData="M114,118 Q126,106 138,118 Q126,130 114,118z" />
+    <path
+        android:fillColor="#FF8D6E63"
+        android:pathData="M96,122 Q100,124 104,122 Q100,128 96,122z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#66BCAAA4"
+        android:strokeWidth="1"
+        android:strokeLineCap="round"
+        android:pathData="M88,134 Q100,142 112,134" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#55A1887F"
+        android:strokeWidth="1.2"
+        android:pathData="M100,46 C134,46 154,74 154,110 C154,142 130,162 100,162 C70,162 46,142 46,110 C46,74 66,46 100,46z" />
+</vector>

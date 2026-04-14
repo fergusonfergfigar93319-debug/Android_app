@@ -24,7 +24,7 @@ data class Post(
     val content: String,
     val tags: List<String> = emptyList(),
     val createdAt: String = "",
-    /** 分区：recruit / guide / social / event（与 ForumCategories 常量一致） */
+    /** 分区：recruit / guide / social / event / culture（与 ForumCategories 常量一致） */
     val categoryId: String = "recruit",
     val replyCount: Int = 0,
     /** 点赞数（本地演示；接后端后以服务端为准） */

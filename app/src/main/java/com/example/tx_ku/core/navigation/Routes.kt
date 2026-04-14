@@ -16,6 +16,8 @@ object Routes {
     const val BUDDY_ROOM = "buddy_room"
     /** 专属搭子智能体（工坊式编辑页） */
     const val MY_AGENT = "my_agent"
+    /** 三步捏脸：形象主题 / 边框与气泡 / 声线与展示名（轻量入口，与 [MY_AGENT] 数据同源） */
+    const val AGENT_FACE_STUDIO = "agent_face_studio"
     /** 编辑个人资料（画像扩展字段） */
     const val PROFILE_EDIT = "profile_edit"
     /** 我关注的用户列表 */
@@ -28,7 +30,13 @@ object Routes {
     fun userDm(peerUserId: String): String = "$USER_DM/$peerUserId"
     /** 与专属智能体聊天（QQ 风格会话页） */
     const val AGENT_CHAT = "agent_chat"
+    /** 峡谷速递资讯详情（正文 / 分享 / 跳转广场） */
+    const val GAME_NEWS_DETAIL = "game_news_detail"
+    /** 电竞文旅 / 潮流策展详情（城市动线、潮流卡片） */
+    const val ESPORTS_CULTURE_DETAIL = "esports_culture_detail"
 
     fun postDetail(postId: String) = "post_detail/$postId"
+    fun gameNewsDetail(newsId: String) = "$GAME_NEWS_DETAIL/$newsId"
+    fun esportsCultureDetail(cultureId: String) = "$ESPORTS_CULTURE_DETAIL/$cultureId"
     fun buddyRoom(relationId: String) = "buddy_room/$relationId"
 }

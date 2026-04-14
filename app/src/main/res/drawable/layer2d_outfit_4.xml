@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 射手·半身披风 -->
+    <path
+        android:fillColor="#FF3A4A6E"
+        android:pathData="M64,112 L52,198 L148,198 L136,112 Q100,100 64,112z" />
+    <path
+        android:fillColor="#FF2A3558"
+        android:pathData="M88,112 L100,130 L112,112z" />
+    <path
+        android:fillColor="#FF4A5A8A"
+        android:pathData="M96,112 L100,125 L104,112z" />
+    <path
+        android:fillColor="#FF2A3558"
+        android:pathData="M58,140 L70,188 L58,188z" />
+    <path
+        android:fillColor="#FF2A3558"
+        android:pathData="M142,140 L130,188 L142,188z" />
+</vector>

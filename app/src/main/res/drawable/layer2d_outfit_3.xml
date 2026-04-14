@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 法师·长摆星纹 -->
+    <path
+        android:fillColor="#FF3A4A6E"
+        android:pathData="M78,112 L62,198 L138,198 L122,112 Q100,96 78,112z" />
+    <path
+        android:fillColor="#FF2A3558"
+        android:pathData="M92,112 L100,138 L108,112z" />
+    <path
+        android:fillColor="#FF5A6AA8"
+        android:pathData="M88,150 L100,162 L112,150 L110,178 L90,178z" />
+    <path
+        android:fillColor="#FF2A3558"
+        android:pathData="M72,125 L128,125 L130,138 L70,138z" />
+</vector>

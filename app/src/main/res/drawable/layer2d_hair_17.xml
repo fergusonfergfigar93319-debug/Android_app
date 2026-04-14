@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 剑冠·高髻 Q：尖耸发髻 + 垂顺后发 -->
+    <path
+        android:fillColor="#FF151B2A"
+        android:pathData="M48,102 Q46,42 100,34 Q154,42 152,102 Q146,72 100,64 Q54,72 48,102z" />
+    <path
+        android:fillColor="#FF2E3A54"
+        android:pathData="M86,26 L100,4 L114,26 L108,46 L92,46z" />
+    <path
+        android:fillColor="#FF232E45"
+        android:pathData="M50,102 Q44,152 60,182 L72,124 Q82,90 100,86 Q118,90 128,124 L140,182 Q156,152 150,102z" />
+    <path
+        android:fillColor="#55FFFFFF"
+        android:pathData="M90,30 L100,12 L110,30" />
+</vector>

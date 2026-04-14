@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 白龙·长辫 Q：高束马尾 + 侧飘带 + 圆润刘海 -->
+    <path
+        android:fillColor="#FF141A28"
+        android:pathData="M42,102 Q40,38 100,28 Q160,38 158,102 Q150,58 100,48 Q50,58 42,102z" />
+    <path
+        android:fillColor="#FF222B3F"
+        android:pathData="M100,40 Q128,32 148,72 Q158,108 148,148 Q138,120 124,88 Q110,58 100,52 Q90,58 76,88 Q62,120 52,148 Q42,108 52,72 Q72,32 100,40z" />
+    <path
+        android:fillColor="#FF2E3A54"
+        android:pathData="M100,48 L108,68 L100,88 L92,68z" />
+    <path
+        android:fillColor="#FF3D4D6E"
+        android:pathData="M72,84 Q100,72 128,84 Q100,78 72,84z" />
+    <path
+        android:fillColor="#44FFFFFF"
+        android:pathData="M56,96 Q100,76 144,96" />
+</vector>

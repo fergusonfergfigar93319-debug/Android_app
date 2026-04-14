@@ -162,6 +162,15 @@ object ForumRepository {
         ),
         "p_esports_social_demo" to listOf(
             PostComment("c_e1", "p_esports_social_demo", "u22", "赛程党", "同好！这周末 KPL 一起连麦看不？", "2025-03-18 14:22")
+        ),
+        "p_city_kpl_event" to listOf(
+            PostComment("c_ck1", "p_city_kpl_event", "u30", "主场见", "求拉同城群，赛后想随便吃点聊聊 BP。", "2025-03-20 10:00")
+        ),
+        "p_trend_social" to listOf(
+            PostComment("c_tr1", "p_trend_social", "u31", "梗图选手", "求原图，想改个对抗路表情包。", "2025-03-19 16:40")
+        ),
+        "p_culture_chengdu" to listOf(
+            PostComment("c_cc1", "p_culture_chengdu", "u32", "复盘萌新", "餐巾纸画阵容曲线学到了，求推荐不辣的茶馆。", "2025-03-21 11:20")
         )
     )
 
@@ -244,6 +253,46 @@ object ForumRepository {
                 likeCount = 56
             ),
             Post(
+                postId = "p_city_recruit_demo",
+                categoryId = ForumCategories.RECRUIT,
+                authorId = "usr_city",
+                authorName = "本城上分酱",
+                title = "【同城】晚间峡谷五排缺辅助，可面基语音",
+                content = "坐标同城商圈附近，一般晚八点后开；希望会占视野、沟通集火。赛后若方便可线下喝杯奶茶复盘，不强求。",
+                tags = listOf("同城开黑", "五排", "语音", "王者荣耀"),
+                createdAt = "2025-03-20",
+                replyCount = 0,
+                likeCount = 48,
+                mediaAttachments = listOf(ForumSeedMedia.demoRecruit)
+            ),
+            Post(
+                postId = "p_city_kpl_event",
+                categoryId = ForumCategories.EVENT,
+                authorId = "usr_arena",
+                authorName = "主场集合号",
+                title = "KPL 主场周 · 同城观赛搭子与赛后打卡",
+                content = "这周末有主场场次，想组小队一起进场加油，赛后可在场馆周边地标打卡合影；禁止拉踩选手，纯看比赛聊阵容。详情评论区碰时间。",
+                tags = listOf("王者电竞", "KPL", "城市打卡", "线下观赛", "文旅联动"),
+                createdAt = "2025-03-20",
+                replyCount = 1,
+                likeCount = 203,
+                pinned = true,
+                mediaAttachments = listOf(ForumSeedMedia.demoRecruit)
+            ),
+            Post(
+                postId = "p_trend_social",
+                categoryId = ForumCategories.SOCIAL,
+                authorId = "usr_meme",
+                authorName = "峡谷梗图仓",
+                title = "把「逆风别慌」做成潮牌 Slogan 行不行",
+                content = "整了点峡谷梗二创文案，求同好一起改图；谷子/周边拍照也可发这楼，轻松交流别引战。",
+                tags = listOf("梗图二创", "潮流穿搭", "王者电竞"),
+                createdAt = "2025-03-19",
+                replyCount = 1,
+                likeCount = 91,
+                mediaAttachments = listOf(ForumSeedMedia.demoSocial)
+            ),
+            Post(
                 postId = "p5",
                 categoryId = ForumCategories.EVENT,
                 authorId = "usr_5",
@@ -256,6 +305,43 @@ object ForumRepository {
                 likeCount = 89,
                 pinned = true,
                 mediaAttachments = listOf(ForumSeedMedia.demoRecruit)
+            ),
+            Post(
+                postId = "p_culture_shanghai",
+                categoryId = ForumCategories.CULTURE,
+                authorId = "usr_travel",
+                authorName = "滨江散步党",
+                title = "上海主场周 · 赛前咖啡 + 滨江慢行动线分享",
+                content = "把观赛日前后嵌进城市散步：午后独立馆咖啡整理 BP 问题清单，赛前预留安检与周边领取时间，赛后约朋友火锅复盘只聊技战术。欢迎补充你的地标打卡点（勿泄露隐私）。",
+                tags = listOf("城市漫游", "王者电竞", "文旅打卡"),
+                createdAt = "2025-03-21",
+                replyCount = 0,
+                likeCount = 74,
+                mediaAttachments = listOf(ForumSeedMedia.demoSocial)
+            ),
+            Post(
+                postId = "p_culture_chengdu",
+                categoryId = ForumCategories.CULTURE,
+                authorId = "usr_tea",
+                authorName = "茶馆复盘局",
+                title = "成都 · 茶馆小声聊 BP：把阵容曲线画在餐巾纸上",
+                content = "赛前约茶馆局，用一张纸巾写双方强势期，比站队更重要；赛后串串复盘一人一句「我学到了」。拒绝阴阳选手。",
+                tags = listOf("赛后复盘局", "王者电竞", "同城观赛"),
+                createdAt = "2025-03-21",
+                replyCount = 1,
+                likeCount = 62
+            ),
+            Post(
+                postId = "p_culture_trend",
+                categoryId = ForumCategories.CULTURE,
+                authorId = "usr_style",
+                authorName = "低饱和应援",
+                title = "应援色穿搭：三色法则拍主场 OOTD（不印 ID）",
+                content = "把战队主色拆到上装/配饰/鞋，日常也能穿出赛场仪式感；评论区求互相种草，禁止拉踩与泄露他人正脸。",
+                tags = listOf("应援穿搭", "潮流二创", "观赛礼仪"),
+                createdAt = "2025-03-20",
+                replyCount = 0,
+                likeCount = 55
             ),
             // 审核中示例：不在广场公域列表出现（验证 [Post.isVisibleInPublicForum]）
             Post(
@@ -286,11 +372,12 @@ object ForumRepository {
             "王者娱乐匹配有没有人"
         )
         val extra = (6..14).mapIndexed { idx, i ->
-            val cat = when (idx % 4) {
+            val cat = when (idx % 5) {
                 0 -> ForumCategories.RECRUIT
                 1 -> ForumCategories.GUIDE
                 2 -> ForumCategories.SOCIAL
-                else -> ForumCategories.EVENT
+                3 -> ForumCategories.EVENT
+                else -> ForumCategories.CULTURE
             }
             val pool = ForumCategories.suggestedTagsForCategory(cat)
             val t1 = pool[idx % pool.size]

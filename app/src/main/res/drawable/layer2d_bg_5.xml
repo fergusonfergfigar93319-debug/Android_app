@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 赛事·霓虹：舞台聚光 + 灯带 -->
+    <path
+        android:fillColor="#FF12082A"
+        android:pathData="M0,0h200v200h-200z" />
+    <path
+        android:fillColor="#44E040FB"
+        android:pathData="M100,200 L40,40 L160,40z" />
+    <path
+        android:fillColor="#33FF00E5"
+        android:pathData="M100,200 L70,60 L130,60z" />
+    <path
+        android:fillColor="#FF7C4DFF"
+        android:pathData="M0,170h200v6h-200z M0,182h200v4h-200z" />
+    <path
+        android:fillColor="#66FFFFFF"
+        android:pathData="M92,48h16v16h-16z" />
+</vector>

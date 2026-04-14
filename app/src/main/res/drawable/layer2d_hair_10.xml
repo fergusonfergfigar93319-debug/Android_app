@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 纶巾·智冠 Q：鼓起的纶巾 + 露额发边 -->
+    <path
+        android:fillColor="#FF161C2A"
+        android:pathData="M48,102 Q46,44 100,36 Q154,44 152,102 Q146,74 100,66 Q54,74 48,102z" />
+    <path
+        android:fillColor="#FF2E3A54"
+        android:pathData="M68,36 Q100,14 132,36 L124,52 L76,52z" />
+    <path
+        android:fillColor="#FF4A5C82"
+        android:pathData="M76,36 Q100,24 124,36 Q100,30 76,36z" />
+    <path
+        android:fillColor="#FF354566"
+        android:pathData="M100,66 L108,84 L100,96 L92,84z" />
+</vector>

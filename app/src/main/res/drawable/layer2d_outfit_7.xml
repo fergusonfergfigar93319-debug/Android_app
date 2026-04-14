@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 暃·玉城：层叠前襟 -->
+    <path
+        android:fillColor="#FF3A4A6E"
+        android:pathData="M74,112 L66,196 L134,196 L126,112 Q100,102 74,112z" />
+    <path
+        android:fillColor="#FF2A3558"
+        android:pathData="M82,120 L100,108 L118,120 L116,150 L84,150z" />
+    <path
+        android:fillColor="#FF5A6AA8"
+        android:pathData="M88,155 L100,168 L112,155 L110,182 L90,182z" />
+</vector>

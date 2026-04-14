@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 舞姬·发髻 Q：心形刘海区 + 长侧穗 -->
+    <path
+        android:fillColor="#FF151222"
+        android:pathData="M46,98 Q44,38 100,30 Q156,38 154,98 Q148,66 100,58 Q52,66 46,98z" />
+    <path
+        android:fillColor="#FF231828"
+        android:pathData="M46,98 Q38,142 46,186 L62,132 Q72,100 88,96z" />
+    <path
+        android:fillColor="#FF231828"
+        android:pathData="M154,98 Q162,142 154,186 L138,132 Q128,100 112,96z" />
+    <path
+        android:fillColor="#FF352840"
+        android:pathData="M100,58 L108,78 L100,92 L92,78z" />
+    <path
+        android:fillColor="#33FFFFFF"
+        android:pathData="M72,88 Q100,78 128,88" />
+</vector>

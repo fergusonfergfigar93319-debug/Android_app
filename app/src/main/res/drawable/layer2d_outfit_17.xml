@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 圣殿·战袍 -->
+    <path
+        android:fillColor="#FF3A4A6E"
+        android:pathData="M64,112 L52,198 L148,198 L136,112 Q100,100 64,112z" />
+    <path
+        android:fillColor="#FF2A3558"
+        android:pathData="M72,118 L100,108 L128,118 L126,155 L74,155z" />
+    <path
+        android:fillColor="#FF4A5A8A"
+        android:pathData="M88,112 L100,132 L112,112z" />
+    <path
+        android:fillColor="#FF2A3558"
+        android:pathData="M98,155h4v33h-4z" />
+</vector>

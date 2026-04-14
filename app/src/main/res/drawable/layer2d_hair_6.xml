@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 剑仙·飘发 Q：柔顺披发 + 中分高光 -->
+    <path
+        android:fillColor="#FF151B2A"
+        android:pathData="M44,98 Q42,34 100,26 Q158,34 156,98 Q152,68 100,60 Q48,68 44,98z" />
+    <path
+        android:fillColor="#FF232E45"
+        android:pathData="M48,98 Q40,152 52,192 L66,142 Q74,100 100,92 Q126,100 134,142 L148,192 Q160,152 152,98z" />
+    <path
+        android:fillColor="#FF3D4D6E"
+        android:pathData="M100,62 L108,80 L100,94 L92,80z" />
+    <path
+        android:fillColor="#44FFFFFF"
+        android:pathData="M72,88 Q100,76 128,88 Q100,82 72,88z" />
+</vector>

@@ -100,6 +100,14 @@ fun LoginScreen(navController: NavController) {
                             title = "欢迎回来",
                             subtitle = "用注册邮箱登录，名片和搭子设定一起同步"
                         )
+                        if (DevQuickLogin.isEnabled()) {
+                            Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
+                            Text(
+                                text = "调试预留账号：${DevQuickLogin.DEMO_EMAIL}  /  ${DevQuickLogin.DEMO_PASSWORD}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = BuddyColors.PrimaryVariant.copy(alpha = 0.82f)
+                            )
+                        }
                         OutlinedTextField(
                             value = email,
                             onValueChange = { email = it; error = null },

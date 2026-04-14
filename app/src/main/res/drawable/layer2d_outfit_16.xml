@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 时翼·轻甲 -->
+    <path
+        android:fillColor="#FF3A4A6E"
+        android:pathData="M66,112 L54,196 L146,196 L134,112 Q100,98 66,112z" />
+    <path
+        android:fillColor="#FF2A3558"
+        android:pathData="M58,128 L72,118 L80,168 L62,176z M142,128 L128,118 L120,168 L138,176z" />
+    <path
+        android:fillColor="#FF4A5A8A"
+        android:pathData="M94,112 L100,124 L106,112z" />
+</vector>

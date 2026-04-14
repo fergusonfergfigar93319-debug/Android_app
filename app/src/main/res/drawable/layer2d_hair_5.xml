@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 浪客·披肩 Q：宽肩发帘 + 外扩长侧发 -->
+    <path
+        android:fillColor="#FF161C2A"
+        android:pathData="M46,100 Q50,30 100,22 Q150,30 154,100 Q144,60 100,52 Q56,60 46,100z" />
+    <path
+        android:fillColor="#FF242F48"
+        android:pathData="M28,90 Q20,148 26,192 L44,192 L52,128 Q58,104 72,112z" />
+    <path
+        android:fillColor="#FF242F48"
+        android:pathData="M172,90 Q180,148 174,192 L156,192 L148,128 Q142,104 128,112z" />
+    <path
+        android:fillColor="#FF354566"
+        android:pathData="M50,100 Q46,148 56,178 L66,130 Q76,92 100,86 Q124,92 134,130 L144,178 Q154,148 150,100z" />
+    <path
+        android:fillColor="#55FFFFFF"
+        android:pathData="M54,108 Q100,92 146,108" />
+</vector>

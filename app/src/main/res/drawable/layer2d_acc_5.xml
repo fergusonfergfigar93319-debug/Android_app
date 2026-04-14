@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 长城·肩铠 -->
+    <path
+        android:fillColor="#FF78909C"
+        android:pathData="M48,108 L56,96 L64,118 L52,124z M152,108 L144,96 L136,118 L148,124z" />
+    <path
+        android:fillColor="#FF546E7A"
+        android:pathData="M52,112 L58,104 L62,118z M148,112 L142,104 L138,118z" />
+</vector>

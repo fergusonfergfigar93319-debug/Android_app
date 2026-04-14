@@ -83,7 +83,7 @@ object AgentTaskRouter {
 
         if (recruitTabOnlyIntent(n)) {
             return AgentTaskInterpretation(
-                replyOverride = "已切到招募组队分区～",
+                replyOverride = "已切到峡谷组队的分区～",
                 nav = AgentNavCommand.OpenForumRecruitTab
             )
         }

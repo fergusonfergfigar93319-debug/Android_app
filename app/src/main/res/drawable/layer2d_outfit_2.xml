@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 刺客·夜行立领 -->
+    <path
+        android:fillColor="#FF3A4A6E"
+        android:pathData="M66,112 L58,192 L142,192 L134,112 Q100,98 66,112z" />
+    <path
+        android:fillColor="#FF2A3558"
+        android:pathData="M88,112 L100,128 L112,112z" />
+    <path
+        android:fillColor="#FF2A3558"
+        android:pathData="M78,118 L82,145 L118,145 L122,118z" />
+    <path
+        android:fillColor="#FF4A5A8A"
+        android:pathData="M92,155 L108,155 L106,175 L94,175z" />
+</vector>

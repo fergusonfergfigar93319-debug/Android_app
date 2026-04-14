@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="90"
+                android:endColor="#FF78909C"
+                android:startColor="#FF37474F"
+                android:type="linear" />
+        </shape>
+    </item>
+    <item>
+        <vector
+            android:width="360dp"
+            android:height="120dp"
+            android:viewportWidth="360"
+            android:viewportHeight="120">
+            <!-- 看台弧线 -->
+            <path
+                android:fillColor="#22000000"
+                android:pathData="M0,95 Q180,60 360,95 L360,120 L0,120 Z" />
+            <path
+                android:fillColor="#00000000"
+                android:pathData="M20,88 Q180,52 340,88"
+                android:strokeWidth="2"
+                android:strokeColor="#44FFFFFF" />
+            <path
+                android:fillColor="#00000000"
+                android:pathData="M60,72 L75,56 L90,72 L105,56 L120,72"
+                android:strokeWidth="3"
+                android:strokeColor="#66FFFFFF"
+                android:strokeLineCap="round" />
+        </vector>
+    </item>
+</layer-list>

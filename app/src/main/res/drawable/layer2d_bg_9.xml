@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 稷下·学府：拱门 + 书卷光 -->
+    <path
+        android:fillColor="#FFE8EAF6"
+        android:pathData="M0,0h200v200h-200z" />
+    <path
+        android:fillColor="#FF5C6BC0"
+        android:pathData="M40,180 L40,100 Q100,40 160,100 L160,180z" />
+    <path
+        android:fillColor="#FF7986CB"
+        android:pathData="M56,180 L56,108 Q100,60 144,108 L144,180z" />
+    <path
+        android:fillColor="#FF9FA8DA"
+        android:pathData="M72,180 L72,116 Q100,84 128,116 L128,180z" />
+    <path
+        android:fillColor="#33FFFFFF"
+        android:pathData="M88,96 L100,84 L112,96 L108,104 L92,104z" />
+</vector>

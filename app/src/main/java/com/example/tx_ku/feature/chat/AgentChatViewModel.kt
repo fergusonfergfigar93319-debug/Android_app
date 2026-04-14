@@ -7,9 +7,11 @@ import com.example.tx_ku.core.brand.BrandConfig
 import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.feature.chat.agent.AgentNavCommand
 import com.example.tx_ku.feature.chat.agent.AgentTaskRouter
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.yield
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,6 +31,8 @@ data class AgentChatUi(
     val focusedReminderId: String? = null,
     val inputDraft: String = "",
     val isAgentTyping: Boolean = false,
+    /** 流式输出每步自增，驱动列表在字数增长时自动滚到底 */
+    val streamRevision: Int = 0,
     val errorHint: String? = null
 ) {
     val displayMessages: List<AgentChatStreamItem>
@@ -52,6 +56,96 @@ class AgentChatViewModel : ViewModel() {
 
     private val seq = AtomicLong(0L)
     private var mockPushJob: Job? = null
+    private var streamReplyJob: Job? = null
+
+    private fun hasStreamingAgentBubble(): Boolean =
+        _ui.value.messages.any {
+            it is AgentChatStreamItem.TextBubble && !it.isFromUser && it.isStreaming
+        }
+
+    /**
+     * 按 Unicode 码点切分步进前缀；长文隔步输出以控制总时长。
+     */
+    private fun progressiveTextSteps(text: String): List<String> {
+        if (text.isEmpty()) return listOf("")
+        val raw = ArrayList<String>()
+        var i = 0
+        while (i < text.length) {
+            val cp = text.codePointAt(i)
+            i += Character.charCount(cp)
+            raw.add(text.substring(0, i))
+        }
+        if (raw.size <= 180) return raw
+        return raw.filterIndexed { idx, _ -> idx % 2 == 0 || idx == raw.lastIndex }
+    }
+
+    private fun streamStepDelayMs(totalSteps: Int): Long = when {
+        totalSteps > 320 -> 5L
+        totalSteps > 160 -> 8L
+        else -> 13L
+    }
+
+    /**
+     * 搭子气泡从零开始流式填充；结束时 [isStreaming]=false 并打上时间。
+     */
+    private suspend fun streamAgentText(fullText: String, onComplete: suspend () -> Unit = {}) {
+        val content = if (fullText.isBlank()) {
+            "等一下，我脑子卡了一下…你再说细点我更好接。"
+        } else {
+            fullText
+        }
+        val streamId = UUID.randomUUID().toString()
+        val sk = seq.incrementAndGet()
+        _ui.update {
+            it.copy(
+                messages = it.messages + AgentChatStreamItem.TextBubble(
+                    id = streamId,
+                    text = "",
+                    isFromUser = false,
+                    isStreaming = true,
+                    timeLabel = "",
+                    sortKey = sk
+                ),
+                isAgentTyping = false,
+                streamRevision = it.streamRevision + 1
+            )
+        }
+        val steps = progressiveTextSteps(content)
+        try {
+            for ((idx, partial) in steps.withIndex()) {
+                yield()
+                val done = idx == steps.lastIndex
+                _ui.update { state ->
+                    state.copy(
+                        messages = state.messages.map { m ->
+                            if (m is AgentChatStreamItem.TextBubble && m.id == streamId) {
+                                m.copy(
+                                    text = partial,
+                                    isStreaming = !done,
+                                    timeLabel = if (done) nowBubbleTimeLabel() else ""
+                                )
+                            } else {
+                                m
+                            }
+                        },
+                        streamRevision = state.streamRevision + 1
+                    )
+                }
+                if (!done) delay(streamStepDelayMs(steps.size))
+            }
+            onComplete()
+        } catch (e: CancellationException) {
+            _ui.update { state ->
+                state.copy(
+                    messages = state.messages.filterNot { m ->
+                        m is AgentChatStreamItem.TextBubble && m.id == streamId
+                    },
+                    streamRevision = state.streamRevision + 1
+                )
+            }
+            throw e
+        }
+    }
 
     init {
         seedWelcomeIfPossible()
@@ -100,7 +194,7 @@ class AgentChatViewModel : ViewModel() {
             return
         }
         if (draft.isEmpty()) return
-        if (_ui.value.isAgentTyping) return
+        if (_ui.value.isAgentTyping || hasStreamingAgentBubble()) return
 
         val userMsg = AgentChatStreamItem.TextBubble(
             id = UUID.randomUUID().toString(),
@@ -119,35 +213,25 @@ class AgentChatViewModel : ViewModel() {
         }
 
         val tuningSnapshot = CurrentUser.agentTuning
-        viewModelScope.launch {
+        streamReplyJob?.cancel()
+        streamReplyJob = viewModelScope.launch {
             delay(380)
             val task = AgentTaskRouter.interpret(draft, profile, tuningSnapshot)
             val replyText = task.replyOverride ?: runCatching {
                 AgentPersonaResolver.replyToChat(draft, profile, tuningSnapshot)
             }.getOrElse { "等一下，我脑子卡了一下…你再说细点我更好接。" }
-
-            val agentMsg = AgentChatStreamItem.TextBubble(
-                id = UUID.randomUUID().toString(),
-                text = replyText,
-                isFromUser = false,
-                timeLabel = nowBubbleTimeLabel(),
-                sortKey = seq.incrementAndGet()
-            )
-            _ui.update {
-                it.copy(
-                    messages = it.messages + agentMsg,
-                    isAgentTyping = false
-                )
-            }
-            val nav = task.nav
-            if (nav != null) {
-                delay(220)
-                navCommandChannel.send(nav)
+            streamAgentText(replyText) {
+                val nav = task.nav
+                if (nav != null) {
+                    delay(220)
+                    navCommandChannel.send(nav)
+                }
             }
         }
     }
 
     fun clearConversation() {
+        streamReplyJob?.cancel()
         _ui.update { it.copy(messages = emptyList(), isAgentTyping = false, focusedReminderId = null) }
         AgentChatReminderHub.clearSurfaceState()
         seedWelcomeIfPossible()
@@ -231,7 +315,8 @@ class AgentChatViewModel : ViewModel() {
         val tuning = CurrentUser.agentTuning
         val reminder = _ui.value.messages.filterIsInstance<AgentChatStreamItem.EventReminder>()
             .find { it.id == reminderId } ?: return
-        viewModelScope.launch {
+        streamReplyJob?.cancel()
+        streamReplyJob = viewModelScope.launch {
             _ui.update { it.copy(isAgentTyping = true) }
             delay(420)
             val detail = buildString {
@@ -243,19 +328,13 @@ class AgentChatViewModel : ViewModel() {
                 AgentPersonaResolver.replyToChat("详细说说「${reminder.title}」的规则和注意点", profile, tuning)
             }.getOrNull()
             val text = if (polished != null) "$detail\n\n$polished" else detail
-            val msg = AgentChatStreamItem.TextBubble(
-                id = UUID.randomUUID().toString(),
-                text = text,
-                isFromUser = false,
-                timeLabel = nowBubbleTimeLabel(),
-                sortKey = seq.incrementAndGet()
-            )
-            _ui.update { it.copy(messages = it.messages + msg, isAgentTyping = false) }
+            streamAgentText(text) {}
         }
     }
 
     override fun onCleared() {
         mockPushJob?.cancel()
+        streamReplyJob?.cancel()
         super.onCleared()
     }
 

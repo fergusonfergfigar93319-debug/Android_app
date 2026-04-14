@@ -41,9 +41,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tx_ku.R
@@ -55,6 +58,15 @@ import com.example.tx_ku.core.designsystem.theme.BuddyDimens
 
 // 光柱静态首帧用的中间亮度（介于 0.55～0.9 之间）
 private const val GlowAlphaIdle = 0.72f
+
+/** 深色渐变底上半透明芯片：文字向白混合，避免紫/绿与底融在一起。 */
+private fun authChipLabelColor(accent: Color): Color = lerp(accent, Color.White, 0.42f)
+
+private val authChipLabelShadow = Shadow(
+    color = Color.Black.copy(alpha = 0.55f),
+    offset = Offset(0f, 1f),
+    blurRadius = 3f
+)
 
 internal val AuthFormFieldLeadingIconTint get() = BuddyColors.CanyonTealMuted.copy(alpha = 0.85f)
 
@@ -249,16 +261,16 @@ private fun AuthWarmFeatureTag(text: String, isHighlight: Boolean, tagIndex: Int
     )
     val (bg, fg, borderColor) = if (isHighlight) {
         Triple(
-            BuddyColors.HonorCyanAccent.copy(alpha = 0.22f),
-            BuddyColors.PrimaryVariant,
-            BuddyColors.HonorCyanAccent.copy(alpha = 0.65f)
+            BuddyColors.HonorCyanAccent.copy(alpha = 0.26f),
+            lerp(BuddyColors.PrimaryVariant, Color.White, 0.18f),
+            BuddyColors.HonorCyanAccent.copy(alpha = 0.72f)
         )
     } else {
         val accent = palette[(tagIndex - 1).coerceAtLeast(0) % palette.size]
         Triple(
-            accent.copy(alpha = 0.16f),
-            accent.copy(alpha = 0.95f),
-            accent.copy(alpha = 0.72f)
+            accent.copy(alpha = 0.24f),
+            authChipLabelColor(accent),
+            accent.copy(alpha = 0.78f)
         )
     }
     Box(
@@ -270,7 +282,9 @@ private fun AuthWarmFeatureTag(text: String, isHighlight: Boolean, tagIndex: Int
         Text(
             text = text,
             modifier = Modifier.padding(horizontal = BuddyDimens.TagPaddingH, vertical = BuddyDimens.TagPaddingV),
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelMedium.merge(
+                TextStyle(fontWeight = FontWeight.SemiBold, shadow = authChipLabelShadow)
+            ),
             color = fg,
             maxLines = 2,
             softWrap = true
@@ -297,7 +311,7 @@ private fun HeroRoleBadgeRow() {
         roles.forEach { (label, emoji, accent) ->
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = accent.copy(alpha = 0.14f),
+                color = accent.copy(alpha = 0.22f),
                 modifier = Modifier
                     .border(
                         width = 1.dp,
@@ -315,9 +329,13 @@ private fun HeroRoleBadgeRow() {
                     Text(emoji, fontSize = 11.sp)
                     Text(
                         text = label,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = accent.copy(alpha = 0.96f),
-                        fontWeight = FontWeight.Medium
+                        style = MaterialTheme.typography.labelSmall.merge(
+                            TextStyle(
+                                fontWeight = FontWeight.SemiBold,
+                                shadow = authChipLabelShadow
+                            )
+                        ),
+                        color = authChipLabelColor(accent)
                     )
                 }
             }

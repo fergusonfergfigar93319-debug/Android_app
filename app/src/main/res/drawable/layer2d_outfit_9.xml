@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 杨玉环·霓裳：长流苏 -->
+    <path
+        android:fillColor="#FF3A4A6E"
+        android:pathData="M76,112 L58,198 L142,198 L124,112 Q100,100 76,112z" />
+    <path
+        android:fillColor="#FF2A3558"
+        android:pathData="M88,112 L100,128 L112,112z" />
+    <path
+        android:fillColor="#FF5A6AA8"
+        android:pathData="M92,145 L100,158 L108,145 L106,188 L94,188z" />
+</vector>

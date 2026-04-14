@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 星空·双丸 Q：左右大圆包 + 橙黄短刘海顶 + 像素块 + 天线 -->
+    <path
+        android:fillColor="#FFE09828"
+        android:pathData="M10,58 A24,26 0 1 0 58,58 A24,26 0 1 0 10,58" />
+    <path
+        android:fillColor="#FFE09828"
+        android:pathData="M142,58 A24,26 0 1 0 190,58 A24,26 0 1 0 142,58" />
+    <path
+        android:fillColor="#FFD07818"
+        android:pathData="M58,58 C78,28 122,28 142,58 C152,80 128,92 100,84 C72,92 48,80 58,58z" />
+    <path
+        android:fillColor="#44FFFFFF"
+        android:pathData="M68,48 Q100,36 132,48" />
+    <path
+        android:fillColor="#FF28B8D8"
+        android:pathData="M28,48 L36,40 L44,48 L36,56z M156,48 L164,40 L172,48 L164,56z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFB0B8C4"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M68,44 L56,12 M132,44 L144,12" />
+    <path
+        android:fillColor="#FF28B8D8"
+        android:pathData="M50,10 A8,8 0 1 1 50.01,10 M150,10 A8,8 0 1 1 150.01,10" />
+</vector>

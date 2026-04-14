@@ -109,7 +109,7 @@ fun AgentHubMiniStrip(
             }
             Column(horizontalAlignment = Alignment.End) {
                 TextButton(
-                    onClick = { navController.navigate(Routes.MY_AGENT) },
+                    onClick = { navController.navigate(Routes.AGENT_FACE_STUDIO) },
                     modifier = Modifier.padding(0.dp),
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = BuddyColors.HonorGoldDark

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 长直·柔顺 Q：大头占比 + 柔顺发束 + 高光带 -->
+    <path
+        android:fillColor="#FF161C2A"
+        android:pathData="M40,102 Q42,24 100,16 Q158,24 160,102 Q150,54 100,44 Q50,54 40,102z" />
+    <path
+        android:fillColor="#FF232E45"
+        android:pathData="M44,100 Q42,132 38,192 L56,192 L62,132 Q78,88 100,80 Q122,88 138,132 L144,192 L162,192 Q158,132 156,100 Q150,60 100,50 Q50,60 44,100z" />
+    <path
+        android:fillColor="#FF34405C"
+        android:pathData="M88,52 L100,42 L112,52 L108,64 L92,64z" />
+    <path
+        android:fillColor="#44FFFFFF"
+        android:pathData="M52,108 Q100,88 148,108 L146,118 Q100,98 54,118z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#5537475F"
+        android:strokeWidth="1"
+        android:pathData="M48,118 Q100,96 152,118" />
+</vector>

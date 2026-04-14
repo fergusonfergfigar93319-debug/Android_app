@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.example.tx_ku.core.domain.AgentPersonaResolver
 import com.example.tx_ku.core.model.AgentTuning
+import com.example.tx_ku.core.model.AvatarDisplayModes
 import com.example.tx_ku.core.model.CurrentUser
 
 /**
@@ -55,6 +56,16 @@ object UserAgentStore {
      * 旧存档迁移：咕咕嘎嘎→企鹅萌妹形象键；梗来运转→我的刀盾；
      * 曾用「我的刀盾」海豹皮 + 同名展示名 → 现为「咕咕嘎嘎」+ 企鹅萌妹头像。
      */
+    /** 未写入过 avatarDisplayMode 的旧存档：捏脸开 → SCULPT；否则保持英雄立绘 */
+    private fun migrateAvatarDisplayMode(def: AgentTuning): String {
+        if (prefs.contains(k("avatarDisplayMode"))) return def.avatarDisplayMode
+        return if (prefs.getBoolean(k("useSculptAvatarForDisplay"), false)) {
+            AvatarDisplayModes.SCULPT
+        } else {
+            AvatarDisplayModes.HERO_ILLUSTRATION
+        }
+    }
+
     private fun migrateLegacyTuning(t: AgentTuning): AgentTuning {
         var avatar = t.avatarStyle
         var name = t.agentDisplayNameOverride
@@ -107,7 +118,18 @@ object UserAgentStore {
             customPersonaScript = prefs.getString(k("customPersonaScript"), null) ?: "",
             customPhrase1 = prefs.getString(k("customPhrase1"), null) ?: "",
             customPhrase2 = prefs.getString(k("customPhrase2"), null) ?: "",
-            customPhrase3 = prefs.getString(k("customPhrase3"), null) ?: ""
+            customPhrase3 = prefs.getString(k("customPhrase3"), null) ?: "",
+            sculptFaceRoundness = prefs.getFloat(k("sculptFaceRoundness"), def.sculptFaceRoundness),
+            sculptEyeDistance = prefs.getFloat(k("sculptEyeDistance"), def.sculptEyeDistance),
+            sculptEyeOpen = prefs.getFloat(k("sculptEyeOpen"), def.sculptEyeOpen),
+            sculptMouthSmile = prefs.getFloat(k("sculptMouthSmile"), def.sculptMouthSmile),
+            sculptBlush = prefs.getFloat(k("sculptBlush"), def.sculptBlush),
+            sculptBrowTilt = prefs.getFloat(k("sculptBrowTilt"), def.sculptBrowTilt),
+            useSculptAvatarForDisplay = prefs.getBoolean(k("useSculptAvatarForDisplay"), def.useSculptAvatarForDisplay),
+            avatarDisplayMode = prefs.getString(k("avatarDisplayMode"), null)
+                ?: migrateAvatarDisplayMode(def),
+            layeredAvatarJson = prefs.getString(k("layeredAvatarJson"), null) ?: def.layeredAvatarJson,
+            customCreationNamingUnlocked = prefs.getBoolean(k("customCreationNamingUnlocked"), false)
         )
         if (loaded == legacyFactoryDefaultTuning) {
             CurrentUser.agentTuning = AgentTuning()
@@ -151,6 +173,16 @@ object UserAgentStore {
             .putString(k("customPhrase1"), t.customPhrase1)
             .putString(k("customPhrase2"), t.customPhrase2)
             .putString(k("customPhrase3"), t.customPhrase3)
+            .putFloat(k("sculptFaceRoundness"), t.sculptFaceRoundness)
+            .putFloat(k("sculptEyeDistance"), t.sculptEyeDistance)
+            .putFloat(k("sculptEyeOpen"), t.sculptEyeOpen)
+            .putFloat(k("sculptMouthSmile"), t.sculptMouthSmile)
+            .putFloat(k("sculptBlush"), t.sculptBlush)
+            .putFloat(k("sculptBrowTilt"), t.sculptBrowTilt)
+            .putBoolean(k("useSculptAvatarForDisplay"), t.useSculptAvatarForDisplay)
+            .putString(k("avatarDisplayMode"), t.avatarDisplayMode)
+            .putString(k("layeredAvatarJson"), t.layeredAvatarJson)
+            .putBoolean(k("customCreationNamingUnlocked"), t.customCreationNamingUnlocked)
             .putBoolean(k("agentChatUnlocked"), CurrentUser.agentChatUnlocked)
             .apply()
     }

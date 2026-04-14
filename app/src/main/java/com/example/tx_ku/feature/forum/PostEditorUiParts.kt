@@ -38,10 +38,13 @@ fun postEditorCategoryHint(categoryId: String): String {
         return "攻略建议分小节写步骤，新手更容易跟练。"
     }
     if (categoryId == ForumCategories.SOCIAL) {
-        return "闲聊交友语气轻松即可，注意保护隐私与边界。"
+        return "潮流水友区语气轻松即可，注意保护隐私与边界。"
     }
     if (categoryId == ForumCategories.EVENT) {
         return "活动帖尽量写明时间、报名方式与注意事项。"
+    }
+    if (categoryId == ForumCategories.CULTURE) {
+        return "电竞文旅帖可写城市、动线、观赛礼仪与潮流表达；避免泄露隐私与非官方赛程承诺。"
     }
     return "选对分区有助于其他人更快找到你的帖子。"
 }

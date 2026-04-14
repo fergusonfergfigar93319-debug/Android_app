@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 海潮·侧卷 Q：外翻波浪卷 + 厚刘海 -->
+    <path
+        android:fillColor="#FF161C2A"
+        android:pathData="M46,98 Q44,36 100,28 Q156,36 154,98 Q146,62 100,54 Q54,62 46,98z" />
+    <path
+        android:fillColor="#FF242F48"
+        android:pathData="M44,98 Q32,128 40,186 L56,130 Q66,88 86,86 Q70,124 74,176z" />
+    <path
+        android:fillColor="#FF242F48"
+        android:pathData="M156,98 Q168,128 160,186 L144,130 Q134,88 114,86 Q130,124 126,176z" />
+    <path
+        android:fillColor="#FF354566"
+        android:pathData="M100,54 L108,74 L100,88 L92,74z" />
+    <path
+        android:fillColor="#44FFFFFF"
+        android:pathData="M52,108 Q100,92 148,108" />
+</vector>

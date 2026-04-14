@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- 刺客·夜行：窄腰 + 束腿 -->
+    <path
+        android:fillColor="#FF2A3E6E"
+        android:pathData="M82,116 L74,196 L126,196 L118,116 Q100,108 82,116z" />
+    <path
+        android:fillColor="#FF1E2E58"
+        android:pathData="M86,116 L84,158 L100,150 L116,158 L114,116z" />
+    <path
+        android:fillColor="#FF243A66"
+        android:pathData="M96,116 L100,132 L104,116z" />
+</vector>
