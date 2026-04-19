@@ -3,32 +3,34 @@ package com.example.tx_ku.feature.auth
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.EaseInOutSine
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.EaseInOutSine
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -51,6 +53,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Fingerprint
+import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -63,9 +68,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.center
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
@@ -73,21 +87,22 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
 import com.example.tx_ku.R
 import com.example.tx_ku.core.designsystem.components.buddyRejection
 import com.example.tx_ku.core.designsystem.components.performQuantumTerminalLockHaptic
 import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.theme.BuddyDimens
+import com.example.tx_ku.core.designsystem.theme.AmbientBreathingGlow
+import com.example.tx_ku.core.designsystem.theme.JadeOrganicBackground
 import com.example.tx_ku.core.designsystem.theme.JadePrimaryButton
 import com.example.tx_ku.core.designsystem.theme.jadeSoftCard
 import com.example.tx_ku.core.prefs.LoginSessionStore
@@ -99,7 +114,6 @@ import com.example.tx_ku.core.prefs.UserAgentStore
 import android.widget.Toast
 import kotlinx.coroutines.delay
 
-private val JadeBrandRowHeight = 160.dp
 private val JadeAuthFormPadding = 32.dp
 private val BentoSpring = spring<Dp>(
     dampingRatio = Spring.DampingRatioNoBouncy,
@@ -114,6 +128,8 @@ fun LoginScreen(navController: NavController) {
     var devMenuExpanded by remember { mutableStateOf(false) }
     var entranceStep by remember { mutableIntStateOf(0) }
     var keepNeuralLink by remember { mutableStateOf(true) }
+    var emailFocused by remember { mutableStateOf(false) }
+    var passwordFocused by remember { mutableStateOf(false) }
 
     val haptics = LocalHapticFeedback.current
     val context = LocalContext.current
@@ -180,39 +196,26 @@ fun LoginScreen(navController: NavController) {
 
     val bentoShape = MaterialTheme.shapes.extraLarge
     val bentoGap = BuddyDimens.SpacingLg
+    val heroIdentityPillLabel =
+        LoginSessionStore.lastNicknameHint()?.trim()?.take(8)?.takeIf { it.isNotEmpty() } ?: "上次身份"
 
-    val quickEmail = LoginSessionStore.lastEmail()
-    val quickNickname = LoginSessionStore.lastNicknameHint()
-    val quickAvatar = LoginSessionStore.lastAvatarUrl()
-
-    val organicBreath = rememberInfiniteTransition(label = "organic_breath")
-    val floatOffset by organicBreath.animateFloat(
-        initialValue = -10f,
-        targetValue = 10f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(4000, easing = EaseInOutSine),
-            repeatMode = RepeatMode.Reverse
+    val devBannerExtra = if (DevQuickLogin.isEnabled()) 22.dp else 0.dp
+    val targetFormGlowY = when {
+        emailFocused -> 170.dp + devBannerExtra
+        passwordFocused -> 252.dp + devBannerExtra
+        else -> 115.dp + devBannerExtra / 2
+    }
+    val formGlowY by animateDpAsState(
+        targetValue = targetFormGlowY,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
         ),
-        label = "organic_float"
+        label = "login_form_focus_glow"
     )
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BuddyColors.Jade.Background)
-    ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val r = size.minDimension
-            drawCircle(
-                color = BuddyColors.Jade.AccentAmber.copy(alpha = 0.05f),
-                radius = r * 0.55f,
-                center = Offset(size.width * 0.8f, size.height * 0.2f + floatOffset * 3f)
-            )
-            drawCircle(
-                color = BuddyColors.Jade.AccentSlate.copy(alpha = 0.04f),
-                radius = r * 0.72f,
-                center = Offset(0f, size.height * 0.8f - floatOffset * 2f)
-            )
-        }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        JadeOrganicBackground(modifier = Modifier.fillMaxSize())
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
@@ -222,100 +225,166 @@ fun LoginScreen(navController: NavController) {
             ) {
                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingXl))
 
-                // —— Bento 顶区：品牌渐变 + 能量环预览 ——
-                Row(
+                // —— 顶区：全景英雄玻璃卡（Z 轴分层 / 冷光细丝 / 暗纹视差） ——
+                val heroParallax = rememberInfiniteTransition(label = "hero_parallax")
+                val heroDrift by heroParallax.animateFloat(
+                    initialValue = -1f,
+                    targetValue = 1f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(14_000, easing = EaseInOutSine),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "hero_drift"
+                )
+                val density = LocalDensity.current
+                val heroQuickInteraction = remember { MutableInteractionSource() }
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(JadeBrandRowHeight)
-                        .offset(y = offTop),
-                    horizontalArrangement = Arrangement.spacedBy(bentoGap)
+                        .offset(y = offTop)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .weight(0.55f)
-                            .fillMaxHeight()
-                            .jadeSoftCard(shape = bentoShape)
-                            .padding(24.dp),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
+                    Box(modifier = Modifier.matchParentSize()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .jadeSoftCard(shape = bentoShape)
+                        )
+                        HeroJadeColdFilamentRing(
+                            shapeCornerDp = 32.dp,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(bentoShape)
+                        )
+                    }
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Icon(
+                            imageVector = Icons.Rounded.Explore,
+                            contentDescription = null,
+                            tint = BuddyColors.HonorCyanAccent.copy(alpha = 0.05f),
+                            modifier = Modifier
+                                .size(220.dp)
+                                .align(Alignment.CenterEnd)
+                                .offset(x = 50.dp, y = 20.dp)
+                                .graphicsLayer {
+                                    val ax = with(density) { 10.dp.toPx() }
+                                    val ay = with(density) { 6.dp.toPx() }
+                                    translationX = heroDrift * ax
+                                    translationY = heroDrift * ay
+                                }
+                        )
                         Column(
-                            modifier = Modifier.fillMaxHeight(),
-                            verticalArrangement = Arrangement.SpaceBetween
+                            modifier = Modifier.padding(horizontal = 28.dp, vertical = 36.dp)
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(12.dp)
-                                        .background(
-                                            BuddyColors.Jade.AccentSlate,
-                                            RoundedCornerShape(4.dp)
-                                        )
-                                )
-                                LoginTerminalServerStatusPill(
-                                    label = "星耀枢纽 · 电信一区",
-                                    isOnline = true
-                                )
-                            }
-                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                HeroPulsingHubLinkIndicator()
                                 Text(
-                                    text = stringResource(R.string.app_name),
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    fontWeight = FontWeight.Black,
-                                    color = BuddyColors.Jade.TextPrimary
-                                )
-                                Text(
-                                    text = "TX_ku · 智能系统",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.Medium,
+                                    text = "星耀枢纽",
+                                    style = MaterialTheme.typography.labelSmall,
                                     color = BuddyColors.Jade.TextSecondary
                                 )
+                            }
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            AnimatedVisibility(
+                                visible = entranceStep >= 1,
+                                enter = fadeIn() + slideInVertically(initialOffsetY = { it / 3 })
+                            ) {
                                 Text(
-                                    text = stringResource(R.string.brand_login_tagline_compact),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = BuddyColors.Jade.TextSecondary.copy(alpha = 0.92f)
+                                    text = "欢迎重返",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Light,
+                                    color = BuddyColors.Jade.TextSecondary
                                 )
                             }
-                        }
-                    }
-                    Box(
-                        modifier = Modifier
-                            .weight(0.45f)
-                            .fillMaxHeight()
-                            .jadeSoftCard(shape = bentoShape)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(4.dp)
-                                .clip(bentoShape)
-                                .background(BuddyColors.Jade.IllustrationWell, bentoShape)
-                                .padding(BuddyDimens.SpacingSm)
-                        ) {
-                        LoginTerminalRecentAgentSlot(
-                            lastEmail = quickEmail,
-                            lastNickname = quickNickname,
-                            lastAvatarUrl = quickAvatar,
-                            onQuickFill = {
-                                val e = LoginSessionStore.lastEmail()
-                                if (!e.isNullOrBlank()) {
-                                    email = e
-                                    error = null
-                                    Toast.makeText(
-                                        context,
-                                        "已填入上次身份信标，请输入共振密钥",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+
+                            AnimatedVisibility(
+                                visible = entranceStep >= 2,
+                                enter = fadeIn() + slideInVertically(initialOffsetY = { it / 4 })
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.app_name),
+                                    style = MaterialTheme.typography.displaySmall,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = BuddyColors.HonorCyanAccent,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(28.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.Bottom
+                            ) {
+                                Text(
+                                    text = "TX_ku · 智能系统",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = BuddyColors.Jade.TextSecondary.copy(alpha = 0.8f),
+                                    modifier = Modifier.weight(1f),
+                                    textAlign = TextAlign.Start
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .offset(x = (-8).dp)
+                                        .shadow(
+                                            elevation = 3.dp,
+                                            shape = RoundedCornerShape(8.dp),
+                                            spotColor = BuddyColors.Jade.AccentAmber.copy(alpha = 0.18f)
+                                        )
+                                        .background(
+                                            BuddyColors.Jade.AccentAmber.copy(alpha = 0.12f),
+                                            RoundedCornerShape(8.dp)
+                                        )
+                                        .clickable(
+                                            interactionSource = heroQuickInteraction,
+                                            indication = ripple(
+                                                bounded = true,
+                                                color = BuddyColors.Jade.AccentAmber.copy(alpha = 0.2f)
+                                            )
+                                        ) {
+                                            val e = LoginSessionStore.lastEmail()
+                                            if (!e.isNullOrBlank()) {
+                                                email = e
+                                                error = null
+                                                Toast.makeText(
+                                                    context,
+                                                    "已填入上次身份信标，请输入共振密钥",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            } else {
+                                                Toast.makeText(
+                                                    context,
+                                                    "暂无已保存的身份信标",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
+                                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                                ) {
+                                    HeroCrystalSparkDot()
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = heroIdentityPillLabel,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = BuddyColors.Jade.AccentAmber,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
                                 }
                             }
-                        )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(bentoGap))
+                Spacer(modifier = Modifier.height(32.dp))
 
                 Column(
                     modifier = Modifier
@@ -340,6 +409,16 @@ fun LoginScreen(navController: NavController) {
                             .animateContentSize()
                             .jadeSoftCard(shape = MaterialTheme.shapes.extraLarge)
                     ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(148.dp)
+                                .align(Alignment.TopStart)
+                                .offset(y = formGlowY)
+                                .alpha(0.38f)
+                        ) {
+                            AmbientBreathingGlow(modifier = Modifier.fillMaxSize())
+                        }
                         Column(Modifier.padding(JadeAuthFormPadding)) {
                             AuthSunriseSectionHeader(
                                 title = "安全接入",
@@ -365,7 +444,8 @@ fun LoginScreen(navController: NavController) {
                                     contentDescription = null,
                                     tint = BuddyColors.Jade.TextSecondary
                                 )
-                            }
+                            },
+                                onFocusChange = { emailFocused = it }
                             )
                             Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
                             AuthSunriseFilledTextField(
@@ -380,7 +460,8 @@ fun LoginScreen(navController: NavController) {
                                         contentDescription = null,
                                         tint = BuddyColors.Jade.TextSecondary
                                     )
-                                }
+                                },
+                                onFocusChange = { passwordFocused = it }
                             )
                             Row(
                                 modifier = Modifier
@@ -502,6 +583,13 @@ fun LoginScreen(navController: NavController) {
                     },
                     onGameAccountProtocol = {
                         Toast.makeText(context, "游戏账号互联筹备中", Toast.LENGTH_SHORT).show()
+                    },
+                    onBiometricProtocol = {
+                        Toast.makeText(
+                            context,
+                            "面容 / 指纹无密码接入筹备中",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 )
 
@@ -612,100 +700,102 @@ fun LoginScreen(navController: NavController) {
     }
 }
 
+/** 星耀枢纽：同心扩散的“链接心跳”环 + 实芯锚点。 */
 @Composable
-private fun LoginTerminalServerStatusPill(
-    label: String,
-    isOnline: Boolean
-) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Canvas(modifier = Modifier.size(8.dp)) {
-            drawCircle(
-                color = if (isOnline) Color(0xFF2E7D32) else Color(0xFFC62828)
-            )
-        }
-        Spacer(modifier = Modifier.width(BuddyDimens.SpacingSm))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
-            color = BuddyColors.Jade.TextSecondary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+private fun HeroPulsingHubLinkIndicator() {
+    val tx = rememberInfiniteTransition(label = "hub_link")
+    val orbitAlpha by tx.animateFloat(
+        initialValue = 0.1f,
+        targetValue = 0.46f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = EaseInOutSine),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "orbit_a"
+    )
+    val orbitScale by tx.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.75f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "orbit_s"
+    )
+    Box(modifier = Modifier.size(20.dp), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier
+                .size((8f * orbitScale).dp)
+                .background(BuddyColors.HonorCyanAccent.copy(alpha = orbitAlpha), CircleShape)
+        )
+        Box(
+            Modifier
+                .size(8.dp)
+                .background(BuddyColors.HonorCyanAccent, CircleShape)
         )
     }
 }
 
+/** 素玉冷光细丝：沿圆角矩形巡行的极淡峡谷青 + 琥珀高光（慢旋）。 */
 @Composable
-private fun LoginTerminalRecentAgentSlot(
-    lastEmail: String?,
-    lastNickname: String?,
-    lastAvatarUrl: String?,
-    onQuickFill: () -> Unit
+private fun HeroJadeColdFilamentRing(
+    shapeCornerDp: Dp,
+    modifier: Modifier = Modifier
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val mainInk = BuddyColors.Jade.TextPrimary
-    val subInk = BuddyColors.Jade.TextSecondary
-    val avatarBg = Color.White.copy(alpha = 0.35f)
-    val avatarRing = BuddyColors.Jade.TextPrimary.copy(alpha = 0.12f)
-    val ripple = BuddyColors.Jade.AccentAmber.copy(alpha = 0.14f)
-    if (lastEmail.isNullOrBlank()) {
-        AuthBentoMiniEnergyOrb(Modifier.fillMaxSize())
-    } else {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = ripple(bounded = true, color = ripple),
-                    onClick = onQuickFill
-                )
-                .padding(horizontal = BuddyDimens.SpacingSm, vertical = BuddyDimens.SpacingXs),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingSm)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(52.dp)
-                        .clip(CircleShape)
-                        .background(avatarBg)
-                        .border(0.5.dp, avatarRing, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    val emoji = parseDefaultAvatarEmoji(lastAvatarUrl)
-                    when {
-                        emoji != null -> Text(text = emoji, fontSize = 26.sp)
-                        isLikelyCustomImageUri(lastAvatarUrl) && lastAvatarUrl != null -> AsyncImage(
-                            model = lastAvatarUrl,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                        else -> Icon(
-                            painter = painterResource(R.drawable.ic_person),
-                            contentDescription = null,
-                            tint = subInk
-                        )
-                    }
-                }
-                Text(
-                    text = lastNickname?.take(8)?.ifBlank { null } ?: lastEmail.take(12),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = mainInk,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = "快捷特工接入",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = subInk
-                )
-            }
+    val t = rememberInfiniteTransition(label = "filament_spin")
+    val sweep by t.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(22_000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "filament_sweep"
+    )
+    val density = LocalDensity.current
+    Canvas(modifier = modifier) {
+        val r = shapeCornerDp.toPx()
+        val sw = with(density) { 1.15.dp.toPx() }
+        rotate(sweep, pivot = size.center) {
+            drawRoundRect(
+                brush = Brush.sweepGradient(
+                    colors = listOf(
+                        Color.Transparent,
+                        BuddyColors.HonorCyanAccent.copy(alpha = 0.28f),
+                        BuddyColors.Jade.AccentAmber.copy(alpha = 0.18f),
+                        Color.Transparent,
+                        Color.Transparent
+                    ),
+                    center = size.center
+                ),
+                topLeft = Offset.Zero,
+                size = this.size,
+                cornerRadius = CornerRadius(r, r),
+                style = Stroke(width = sw)
+            )
         }
     }
+}
+
+/** 快捷身份牌：晶体高光微球，替代纯色圆点。 */
+@Composable
+private fun HeroCrystalSparkDot() {
+    Box(
+        Modifier
+            .size(12.dp)
+            .drawBehind {
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        0f to Color.White.copy(alpha = 0.55f),
+                        0.45f to BuddyColors.HonorCyanAccent.copy(alpha = 0.95f),
+                        1f to BuddyColors.HonorCyanAccent.copy(alpha = 0.52f),
+                        center = Offset(size.width * 0.34f, size.height * 0.32f),
+                        radius = size.minDimension * 0.72f
+                    ),
+                    radius = size.minDimension / 2f
+                )
+            }
+    )
 }
 
 @Composable
@@ -760,8 +850,10 @@ private fun LoginBentoSocialTicker(modifier: Modifier = Modifier) {
 private fun LoginTerminalExternalProtocolBridge(
     modifier: Modifier = Modifier,
     onWeChatProtocol: () -> Unit,
-    onGameAccountProtocol: () -> Unit
+    onGameAccountProtocol: () -> Unit,
+    onBiometricProtocol: () -> Unit
 ) {
+    val bentoShape = RoundedCornerShape(22.dp)
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -801,51 +893,160 @@ private fun LoginTerminalExternalProtocolBridge(
             )
         }
         Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
-        Row(horizontalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingLg)) {
-            LoginTerminalQuickLoginIcon(
-                iconRes = R.drawable.ic_account_box,
-                tint = BuddyColors.Jade.TextPrimary,
-                accessibilityLabel = "微信协议快捷接入",
-                onClick = onWeChatProtocol
-            )
-            LoginTerminalQuickLoginIcon(
-                iconRes = R.drawable.ic_agent,
-                tint = BuddyColors.Jade.TextSecondary,
-                accessibilityLabel = "游戏账号快捷接入",
-                onClick = onGameAccountProtocol
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingMd)
+        ) {
+            LoginBentoSquishyAuthTile(
+                modifier = Modifier.weight(2f),
+                minHeight = 80.dp,
+                shape = bentoShape,
+                onClick = onWeChatProtocol,
+                containerColor = BuddyColors.Jade.Surface,
+                borderColor = BuddyColors.Jade.OutlineLight,
+                semanticLabel = "社交账号一键互联"
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = BuddyDimens.SpacingMd),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingSm)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_account_box),
+                        contentDescription = null,
+                        tint = BuddyColors.Jade.TextPrimary,
+                        modifier = Modifier.size(26.dp)
+                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            text = "社交账号一键互联",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = BuddyColors.Jade.TextPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "微信 · 游戏账号（筹备中）",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = BuddyColors.Jade.TextSecondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+            LoginBentoSquishyAuthTile(
+                modifier = Modifier.weight(1f),
+                minHeight = 80.dp,
+                shape = bentoShape,
+                onClick = onBiometricProtocol,
+                containerColor = BuddyColors.Jade.AccentSlate.copy(alpha = 0.12f),
+                borderColor = BuddyColors.Jade.AccentSlate.copy(alpha = 0.35f),
+                semanticLabel = "生物识别快捷接入",
+                ambientGlowBase = BuddyColors.HonorCyanAccent,
+                ambientGlowHighlight = BuddyColors.Jade.AccentSlate.copy(alpha = 0.5f)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.padding(horizontal = BuddyDimens.SpacingSm)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Fingerprint,
+                        contentDescription = null,
+                        tint = BuddyColors.HonorCyanAccent,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Text(
+                        text = "无密码",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = BuddyColors.Jade.AccentAmber
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            TextButton(onClick = onGameAccountProtocol) {
+                Text(
+                    text = "仅游戏账号互联",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = BuddyColors.Jade.AccentSlate
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun LoginTerminalQuickLoginIcon(
-    iconRes: Int,
-    tint: Color,
-    accessibilityLabel: String,
-    onClick: () -> Unit
+private fun LoginBentoSquishyAuthTile(
+    onClick: () -> Unit,
+    shape: RoundedCornerShape,
+    containerColor: Color,
+    borderColor: Color,
+    semanticLabel: String,
+    modifier: Modifier = Modifier,
+    minHeight: Dp = 72.dp,
+    ambientGlowBase: Color = BuddyColors.HonorCyanAccent,
+    ambientGlowHighlight: Color = BuddyColors.Jade.AccentAmber,
+    content: @Composable () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.96f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "bento_auth_tile_scale"
+    )
     Box(
-        modifier = Modifier
-            .size(56.dp)
-            .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.88f))
-            .border(0.5.dp, BuddyColors.Jade.TextPrimary.copy(alpha = 0.1f), CircleShape)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = ripple(bounded = true, color = BuddyColors.Jade.TextPrimary.copy(alpha = 0.08f)),
-                onClick = onClick
-            )
-            .semantics { contentDescription = accessibilityLabel },
-        contentAlignment = Alignment.Center
+        modifier = modifier
+            .scale(scale)
+            .heightIn(min = minHeight)
     ) {
-        Icon(
-            painter = painterResource(iconRes),
-            contentDescription = null,
-            tint = tint,
-            modifier = Modifier.size(24.dp)
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    scaleX = 1.08f
+                    scaleY = 1.12f
+                    alpha = 0.88f
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            AmbientBreathingGlow(
+                modifier = Modifier.fillMaxSize(0.9f),
+                baseColor = ambientGlowBase,
+                glowColor = ambientGlowHighlight
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(shape)
+                .border(0.5.dp, borderColor, shape)
+                .background(containerColor, shape)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = ripple(
+                        bounded = true,
+                        color = BuddyColors.Jade.AccentAmber.copy(alpha = 0.12f)
+                    ),
+                    onClick = onClick
+                )
+                .semantics { contentDescription = semanticLabel },
+            contentAlignment = Alignment.Center
+        ) {
+            content()
+        }
     }
 }
 

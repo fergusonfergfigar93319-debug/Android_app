@@ -1,16 +1,9 @@
 package com.example.tx_ku.feature.auth
 
-import androidx.compose.animation.core.EaseInOutSine
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -43,7 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -61,6 +53,7 @@ import com.example.tx_ku.core.designsystem.components.buddyRejection
 import com.example.tx_ku.core.designsystem.components.performQuantumTerminalLockHaptic
 import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.theme.BuddyDimens
+import com.example.tx_ku.core.designsystem.theme.JadeOrganicBackground
 import com.example.tx_ku.core.designsystem.theme.JadePrimaryButton
 import com.example.tx_ku.core.designsystem.theme.jadeSoftCard
 import com.example.tx_ku.core.navigation.Routes
@@ -143,35 +136,8 @@ fun RegisterScreen(navController: NavController) {
     val airyShape = MaterialTheme.shapes.extraLarge
     val strength = assessPasswordStrength(password)
 
-    val organicBreath = rememberInfiniteTransition(label = "register_organic_breath")
-    val floatOffset by organicBreath.animateFloat(
-        initialValue = -10f,
-        targetValue = 10f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(4200, easing = EaseInOutSine),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "register_organic_float"
-    )
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BuddyColors.Jade.Background)
-    ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val r = size.minDimension
-            drawCircle(
-                color = BuddyColors.Jade.AccentAmber.copy(alpha = 0.05f),
-                radius = r * 0.55f,
-                center = Offset(size.width * 0.82f, size.height * 0.18f + floatOffset * 3f)
-            )
-            drawCircle(
-                color = BuddyColors.Jade.AccentSlate.copy(alpha = 0.04f),
-                radius = r * 0.7f,
-                center = Offset(-r * 0.05f, size.height * 0.78f - floatOffset * 2f)
-            )
-        }
+    Box(modifier = Modifier.fillMaxSize()) {
+        JadeOrganicBackground(modifier = Modifier.fillMaxSize())
         Column(
             modifier = Modifier
                 .fillMaxSize()

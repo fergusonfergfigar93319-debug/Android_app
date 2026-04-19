@@ -27,6 +27,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -473,11 +474,15 @@ internal fun AuthSunriseFilledTextField(
     enabled: Boolean = true,
     isError: Boolean = false,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    visualTransformation: VisualTransformation = VisualTransformation.None
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    onFocusChange: ((Boolean) -> Unit)? = null
 ) {
     val fieldShape = RoundedCornerShape(16.dp)
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
+    LaunchedEffect(isFocused) {
+        onFocusChange?.invoke(isFocused)
+    }
     Box(
         modifier = modifier
             .fillMaxWidth()
