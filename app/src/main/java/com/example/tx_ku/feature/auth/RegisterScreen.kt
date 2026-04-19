@@ -1,6 +1,18 @@
 package com.example.tx_ku.feature.auth
 
+import androidx.compose.animation.core.EaseInOutSine
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.SpringSpec
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,38 +21,81 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.tx_ku.R
-import com.example.tx_ku.core.designsystem.components.BuddyElevatedCard
-import com.example.tx_ku.core.designsystem.components.BuddyPageBrushes
-import com.example.tx_ku.core.designsystem.components.BuddyPrimaryButton
 import com.example.tx_ku.core.designsystem.components.BuddyTopBar
+import com.example.tx_ku.core.designsystem.components.buddyRejection
+import com.example.tx_ku.core.designsystem.components.performQuantumTerminalLockHaptic
 import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.theme.BuddyDimens
-import com.example.tx_ku.core.designsystem.theme.BuddyShapes
+import com.example.tx_ku.core.designsystem.theme.JadePrimaryButton
+import com.example.tx_ku.core.designsystem.theme.jadeSoftCard
 import com.example.tx_ku.core.navigation.Routes
 import com.example.tx_ku.core.navigation.dispatchAfterMainFrame
+import com.example.tx_ku.core.prefs.LoginSessionStore
 import com.example.tx_ku.core.prefs.UserAgentStore
+import kotlinx.coroutines.delay
+
+private val RegisterBentoGap = 20.dp
+private val RegisterOuterPadding = 24.dp
+private val RegisterCardPadding = 32.dp
+
+private val RegisterBentoSpring1: SpringSpec<Dp> =
+    spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMedium)
+private val RegisterBentoSpring2: SpringSpec<Dp> =
+    spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessLow)
+private val RegisterBentoSpring3: SpringSpec<Dp> =
+    spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessVeryLow)
+
+private data class PasswordStrength(val level: Int, val label: String)
+
+private fun assessPasswordStrength(p: String): PasswordStrength {
+    if (p.isEmpty()) return PasswordStrength(0, "等待输入")
+    var score = 0
+    if (p.length >= 6) score++
+    if (p.length >= 10) score++
+    if (p.any { it.isDigit() }) score++
+    if (p.any { it.isLetter() }) score++
+    if (p.any { !it.isLetterOrDigit() }) score++
+    return when {
+        score <= 2 -> PasswordStrength(1, "偏弱")
+        score <= 4 -> PasswordStrength(2, "良好")
+        else -> PasswordStrength(3, "稳健")
+    }
+}
 
 @Composable
 fun RegisterScreen(navController: NavController) {
@@ -52,182 +107,349 @@ fun RegisterScreen(navController: NavController) {
         mutableStateOf(defaultAvatarUrl(DEFAULT_AVATAR_EMOJIS.first()))
     }
     var error by remember { mutableStateOf<String?>(null) }
+    var termsAccepted by remember { mutableStateOf(false) }
+    var bentoReady by remember { mutableStateOf(false) }
 
-    val fieldColors = authFormOutlinedTextFieldColors()
+    val haptics = LocalHapticFeedback.current
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        delay(40)
+        bentoReady = true
+    }
+
+    LaunchedEffect(error) {
+        if (error != null) {
+            haptics.buddyRejection()
+        }
+    }
+
+    val offsetAvatar by animateDpAsState(
+        targetValue = if (bentoReady) 0.dp else 40.dp,
+        animationSpec = RegisterBentoSpring1,
+        label = "register_bento_avatar"
+    )
+    val offsetForm by animateDpAsState(
+        targetValue = if (bentoReady) 0.dp else 40.dp,
+        animationSpec = RegisterBentoSpring2,
+        label = "register_bento_form"
+    )
+    val offsetAction by animateDpAsState(
+        targetValue = if (bentoReady) 0.dp else 40.dp,
+        animationSpec = RegisterBentoSpring3,
+        label = "register_bento_action"
+    )
+
+    val airyShape = MaterialTheme.shapes.extraLarge
+    val strength = assessPasswordStrength(password)
+
+    val organicBreath = rememberInfiniteTransition(label = "register_organic_breath")
+    val floatOffset by organicBreath.animateFloat(
+        initialValue = -10f,
+        targetValue = 10f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(4200, easing = EaseInOutSine),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "register_organic_float"
+    )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BuddyPageBrushes.splashHonorCool())
+            .background(BuddyColors.Jade.Background)
     ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val r = size.minDimension
+            drawCircle(
+                color = BuddyColors.Jade.AccentAmber.copy(alpha = 0.05f),
+                radius = r * 0.55f,
+                center = Offset(size.width * 0.82f, size.height * 0.18f + floatOffset * 3f)
+            )
+            drawCircle(
+                color = BuddyColors.Jade.AccentSlate.copy(alpha = 0.04f),
+                radius = r * 0.7f,
+                center = Offset(-r * 0.05f, size.height * 0.78f - floatOffset * 2f)
+            )
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(BuddyDimens.ContentPadding)
+                .padding(RegisterOuterPadding),
+            verticalArrangement = Arrangement.spacedBy(RegisterBentoGap)
         ) {
             BuddyTopBar(
-                title = "注册",
-                subtitle = "创建账号 · 选择形象",
+                title = "特工档案录入",
+                subtitle = "INIT SEQUENCE",
                 onBack = { navController.popBackStack() },
                 modifier = Modifier.fillMaxWidth(),
-                titleColor = BuddyColors.HonorGoldBright,
-                subtitleColor = BuddyColors.PrimaryVariant.copy(alpha = 0.88f),
-                backIconTint = BuddyColors.HonorGoldBright
+                titleColor = BuddyColors.Jade.TextPrimary,
+                subtitleColor = BuddyColors.Jade.TextSecondary,
+                backIconTint = BuddyColors.Jade.AccentSlate
             )
-            Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
-            AuthHeroBranding(compact = true, modifier = Modifier.fillMaxWidth())
-            Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
-            BuddyElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
-                shape = BuddyShapes.CardLarge,
-                containerColorOverride = BuddyColors.SurfaceElevatedLight,
-                borderColorOverride = BuddyColors.HonorCyanAccent.copy(alpha = 0.28f)
+
+            // —— 模块 1：全息投影 ——
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset(y = offsetAvatar)
+                    .jadeSoftCard(shape = airyShape)
             ) {
                 Column(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(BuddyDimens.CardPadding)
+                    modifier = Modifier
+                        .padding(RegisterCardPadding)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingMd)
                 ) {
-                    AuthCardSectionTitle(
-                        title = "填写账号信息",
-                        subtitle = "注册后将进入游戏与偏好建档，可随时在「元流档案」里修改"
+                    Text(
+                        text = "选择全息投影",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = BuddyColors.Jade.TextPrimary
                     )
+                    Text(
+                        text = "这将是你在元流中的初始形象",
+                        fontSize = 13.sp,
+                        color = BuddyColors.Jade.TextSecondary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
                     AvatarPickerSection(
                         nickname = nickname,
                         selectedAvatarUrl = avatarUrl,
-                        onAvatarChange = { avatarUrl = it }
+                        onAvatarChange = { avatarUrl = it },
+                        aeroChrome = false,
+                        dawnStyle = true
                     )
-                    Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
-                    OutlinedTextField(
+                }
+            }
+
+            // —— 模块 2：基础参数 ——
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset(y = offsetForm)
+                    .jadeSoftCard(shape = airyShape)
+            ) {
+                Column(Modifier.padding(RegisterCardPadding)) {
+                    Text(
+                        text = "基础参数设定",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = BuddyColors.Jade.TextPrimary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "刻录完成后将进入偏好建档，可随时在「元流档案」中修订",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = BuddyColors.Jade.TextSecondary
+                    )
+                    Spacer(modifier = Modifier.height(28.dp))
+
+                    AuthSunriseFilledTextField(
                         value = nickname,
                         onValueChange = { nickname = it; error = null },
-                        label = { Text("昵称（将预填到建档）") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = BuddyShapes.CardSmall,
-                        colors = fieldColors,
+                        label = { Text("特工代号（昵称）") },
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(R.drawable.ic_person),
                                 contentDescription = null,
-                                tint = AuthFormFieldLeadingIconTint
+                                tint = BuddyColors.Jade.TextSecondary
                             )
                         }
                     )
-                    Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
-                    OutlinedTextField(
+                    Spacer(modifier = Modifier.height(16.dp))
+                    AuthSunriseFilledTextField(
                         value = email,
                         onValueChange = { email = it; error = null },
-                        label = { Text("邮箱") },
-                        singleLine = true,
+                        label = { Text("联络邮箱") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = BuddyShapes.CardSmall,
-                        colors = fieldColors,
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(R.drawable.ic_mail),
                                 contentDescription = null,
-                                tint = AuthFormFieldLeadingIconTint
+                                tint = BuddyColors.Jade.TextSecondary
                             )
                         }
                     )
-                    Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
-                    OutlinedTextField(
+                    Spacer(modifier = Modifier.height(16.dp))
+                    AuthSunriseFilledTextField(
                         value = password,
                         onValueChange = { password = it; error = null },
-                        label = { Text("密码（至少 6 位）") },
-                        singleLine = true,
+                        label = { Text("访问密钥（密码）· 至少 6 位") },
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = BuddyShapes.CardSmall,
-                        colors = fieldColors,
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(R.drawable.ic_lock),
                                 contentDescription = null,
-                                tint = AuthFormFieldLeadingIconTint
+                                tint = BuddyColors.Jade.TextSecondary
                             )
                         }
                     )
-                    Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
-                    OutlinedTextField(
+                    RegisterTerminalPasswordStrengthRow(
+                        strength = strength,
+                        modifier = Modifier.padding(top = BuddyDimens.SpacingSm)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    AuthSunriseFilledTextField(
                         value = confirm,
                         onValueChange = { confirm = it; error = null },
-                        label = { Text("确认密码") },
-                        singleLine = true,
+                        label = { Text("再次确认访问密钥") },
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = BuddyShapes.CardSmall,
-                        colors = fieldColors,
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(R.drawable.ic_lock),
                                 contentDescription = null,
-                                tint = AuthFormFieldLeadingIconTint
+                                tint = BuddyColors.Jade.TextSecondary
                             )
                         }
                     )
-                    error?.let { msg ->
-                        Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
-                        Text(
-                            text = msg,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
+                }
+            }
+
+            // —— 模块 3：协议与接入 ——
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset(y = offsetAction)
+                    .jadeSoftCard(shape = airyShape)
+                    .padding(RegisterCardPadding),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.Top,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Checkbox(
+                        checked = termsAccepted,
+                        onCheckedChange = { termsAccepted = it; error = null },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = BuddyColors.Jade.AccentAmber,
+                            uncheckedColor = BuddyColors.Jade.TextSecondary.copy(alpha = 0.45f),
+                            checkmarkColor = Color.White
                         )
-                    }
-                    Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
-                    BuddyPrimaryButton(
-                        text = "注册并去建档",
-                        onClick = {
-                            if (password != confirm) {
-                                error = "两次密码不一致"
-                                return@BuddyPrimaryButton
-                            }
-                            AuthRepository.register(email, password, nickname, avatarUrl).fold(
-                                onSuccess = {
-                                    UserAgentStore.loadIntoCurrentUser()
-                                    dispatchAfterMainFrame {
-                                        navController.navigate(Routes.ONBOARDING) {
-                                            popUpTo(Routes.LOGIN) { inclusive = true }
-                                        }
-                                    }
-                                },
-                                onFailure = { e ->
-                                    error = e.message ?: "注册失败"
-                                }
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = nickname.isNotBlank() && email.isNotBlank() && password.length >= 6
                     )
-                    Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
-                    TextButton(
-                        onClick = { navController.popBackStack() },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                "已有账号？",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                "返回登录",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = BuddyColors.PrimaryVariant
-                            )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "我已阅读并同意《元流同频星际准则》",
+                        fontSize = 13.sp,
+                        color = BuddyColors.Jade.TextSecondary,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+                                termsAccepted = !termsAccepted
+                                error = null
+                            }
+                    )
+                }
+                if (error != null) {
+                    Text(
+                        text = error.orEmpty(),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                val canSubmit = nickname.isNotBlank() &&
+                    email.isNotBlank() &&
+                    password.length >= 6 &&
+                    termsAccepted
+                JadePrimaryButton(
+                    text = "生成档案并唤醒",
+                    onBeforeClick = { context.performQuantumTerminalLockHaptic() },
+                    onClick = {
+                        if (!termsAccepted) {
+                            error = "请先确认《元流同频星际准则》"
+                            return@JadePrimaryButton
                         }
+                        if (password != confirm) {
+                            error = "两次访问密钥不一致"
+                            return@JadePrimaryButton
+                        }
+                        AuthRepository.register(email, password, nickname, avatarUrl).fold(
+                            onSuccess = {
+                                LoginSessionStore.rememberSuccessfulLogin(
+                                    email,
+                                    nickname,
+                                    avatarUrl
+                                )
+                                UserAgentStore.loadIntoCurrentUser()
+                                dispatchAfterMainFrame {
+                                    navController.navigate(Routes.ONBOARDING) {
+                                        popUpTo(Routes.LOGIN) { inclusive = true }
+                                    }
+                                }
+                            },
+                            onFailure = { e ->
+                                error = e.message ?: "注册失败"
+                            }
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = canSubmit
+                )
+                TextButton(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            "已有账号？",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = BuddyColors.Jade.TextSecondary
+                        )
+                        Text(
+                            "返回登录",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = BuddyColors.Jade.AccentAmber.copy(alpha = 0.95f)
+                        )
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(40.dp))
         }
+    }
+}
+
+@Composable
+private fun RegisterTerminalPasswordStrengthRow(
+    strength: PasswordStrength,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            for (i in 0 until 3) {
+                val filled = strength.level > 0 && i < strength.level
+                val segmentColor = when {
+                    !filled -> BuddyColors.Jade.TextSecondary.copy(alpha = 0.14f)
+                    strength.level == 1 -> MaterialTheme.colorScheme.error.copy(alpha = 0.75f)
+                    strength.level == 2 -> BuddyColors.Jade.AccentSlate.copy(alpha = 0.78f)
+                    else -> BuddyColors.Jade.AccentAmber.copy(alpha = 0.88f)
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(segmentColor)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
+        Text(
+            text = "密钥强度 · ${strength.label}",
+            style = MaterialTheme.typography.labelSmall,
+            color = BuddyColors.Jade.TextSecondary
+        )
     }
 }

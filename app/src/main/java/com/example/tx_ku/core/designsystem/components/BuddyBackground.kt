@@ -1,14 +1,22 @@
 package com.example.tx_ku.core.designsystem.components
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.theme.LocalBuddyDarkTheme
 
@@ -107,6 +115,49 @@ object BuddyPageBrushes {
     )
 }
 
+/** 赛博霓虹：色相微偏移，用于深色底上的呼吸叠加层 */
+private fun Color.shiftHue(deltaDegrees: Float): Color {
+    val hsv = FloatArray(3)
+    android.graphics.Color.colorToHSV(toArgb(), hsv)
+    hsv[0] = (hsv[0] + deltaDegrees + 360f) % 360f
+    val a = (alpha * 255f).toInt().coerceIn(0, 255)
+    return Color(android.graphics.Color.HSVToColor(a, hsv))
+}
+
+/**
+ * 深色主题下的微弱色相呼吸（霓虹灯感），叠在渐变之上、内容之下。
+ */
+@Composable
+private fun CyberpunkNeonBreathOverlay(modifier: Modifier = Modifier) {
+    val t = rememberInfiniteTransition(label = "cyberNeonHue")
+    val hueShift by t.animateFloat(
+        initialValue = -1f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(5200, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "hueShift"
+    )
+    val sweep = hueShift * 6f
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        BuddyColors.BattlePassPurple.shiftHue(sweep).copy(alpha = 0.06f),
+                        BuddyColors.PrimaryVariant.shiftHue(-sweep * 0.5f).copy(alpha = 0.045f),
+                        BuddyColors.HonorGold.shiftHue(sweep * 0.35f).copy(alpha = 0.035f),
+                        Color.Transparent
+                    ),
+                    start = Offset(0f, 0f),
+                    end = Offset(1400f, 2200f)
+                )
+            )
+    )
+}
+
 /**
  * 统一页面背景：
  * 深色 = 峡谷星空（深蓝近黑底 + 战令紫/峡谷金微光渐变，营造王者荣耀夜战氛围）；
@@ -125,10 +176,16 @@ fun BuddyBackground(
         BuddyPageBrushes.dark(base)
     }
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(gradient)
+        modifier = modifier.fillMaxSize()
     ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(gradient)
+        )
+        if (useDarkBg) {
+            CyberpunkNeonBreathOverlay()
+        }
         content()
     }
 }

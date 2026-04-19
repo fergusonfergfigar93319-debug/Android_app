@@ -1,12 +1,14 @@
 package com.example.tx_ku.feature.chat
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tx_ku.core.domain.AgentPersonaResolver
 import com.example.tx_ku.core.brand.BrandConfig
 import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.feature.chat.agent.AgentNavCommand
 import com.example.tx_ku.feature.chat.agent.AgentTaskRouter
+import com.example.tx_ku.feature.chat.reminder.ActivityReminderScheduler
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -42,7 +44,7 @@ data class AgentChatUi(
         }
 }
 
-class AgentChatViewModel : ViewModel() {
+class AgentChatViewModel(application: Application) : AndroidViewModel(application) {
 
     private val bubbleTimeFormat = SimpleDateFormat("HH:mm", Locale.CHINA)
 
@@ -225,6 +227,11 @@ class AgentChatViewModel : ViewModel() {
                 if (nav != null) {
                     delay(220)
                     navCommandChannel.send(nav)
+                }
+                val reminder = task.reminderSchedule
+                if (reminder != null) {
+                    delay(180)
+                    ActivityReminderScheduler.schedule(getApplication(), reminder)
                 }
             }
         }

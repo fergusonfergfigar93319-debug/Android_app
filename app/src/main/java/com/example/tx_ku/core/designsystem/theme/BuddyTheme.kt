@@ -72,6 +72,13 @@ private val LightColorScheme = lightColorScheme(
  */
 val LocalBuddyDarkTheme = staticCompositionLocalOf { false }
 
+/**
+ * 元流同频 · Material3 主题入口。
+ *
+ * **破晓之境 (The Dawn Realm)**：亮暖日间高光页（如登录注册）请配合 [BuddyColors.DawnRealm] 使用 —
+ * 象牙暖白底、赤橙→耀金强调、赛博青作极细点缀；玻璃卡片面 alpha 建议 **0.7～0.85**，
+ * 与 [BuddyDimens.DawnGlassBorderWidth]（**0.5dp**）描边叠加，留白为主、关键节点爆发暖色。
+ */
 @Composable
 fun BuddyCardTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),

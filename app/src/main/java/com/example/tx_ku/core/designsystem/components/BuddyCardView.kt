@@ -1,9 +1,18 @@
 package com.example.tx_ku.core.designsystem.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,80 +38,109 @@ fun BuddyCardView(
     /** 为 true 时不显示卡片内主标题（页面外层已有区块标题时使用） */
     hideHeaderTitle: Boolean = false
 ) {
+    val impactSpringFloat = spring<Float>(dampingRatio = 0.72f, stiffness = 420f)
+    val settleSpringFloat = spring<Float>(dampingRatio = 0.88f, stiffness = 520f)
+    val impactSpringOffset = spring<IntOffset>(
+        dampingRatio = 0.72f,
+        stiffness = 420f,
+        visibilityThreshold = IntOffset(1, 1)
+    )
+    val settleSpringOffset = spring<IntOffset>(
+        dampingRatio = 0.88f,
+        stiffness = 520f,
+        visibilityThreshold = IntOffset(1, 1)
+    )
+
     BuddyElevatedCard(
         modifier = modifier.fillMaxWidth(),
         shape = BuddyShapes.CardLarge
     ) {
         // 勿在此处再加 verticalScroll：「我的」页外层已滚动，嵌套会导致无限高度测量而闪退
-        Column(
-            modifier = Modifier.padding(BuddyDimens.CardPadding)
-        ) {
-            if (!hideHeaderTitle) {
-                Text(
-                    text = "对外组队名片",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
+        AnimatedContent(
+            targetState = card,
+            transitionSpec = {
+                (
+                    fadeIn(animationSpec = impactSpringFloat) +
+                        slideInHorizontally(animationSpec = impactSpringOffset) { w -> w / 5 } +
+                        scaleIn(initialScale = 0.92f, animationSpec = spring(dampingRatio = 0.65f, stiffness = 380f))
+                    ).togetherWith(
+                    fadeOut(animationSpec = settleSpringFloat) +
+                        slideOutHorizontally(animationSpec = settleSpringOffset) { w -> -w / 6 } +
+                        scaleOut(targetScale = 0.94f, animationSpec = settleSpringFloat)
                 )
-                Text(
-                    text = "招募标签 · 宣言 · 约定（匹配与发帖引用）",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
-            }
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingSm),
-                verticalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingSm)
+            },
+            label = "buddyCardSwitch"
+        ) { animatedCard ->
+            Column(
+                modifier = Modifier.padding(BuddyDimens.CardPadding)
             ) {
-                card.tags.forEach { tag ->
-                    BuddyTag(text = tag, isHighlight = true)
+                if (!hideHeaderTitle) {
+                    Text(
+                        text = "对外组队名片",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "招募标签 · 宣言 · 约定（匹配与发帖引用）",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
                 }
-            }
-            if (!card.proPersonaLabel.isNullOrBlank() || !card.favoriteEsportsHint.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
-                Text(
-                    text = "风格与观赛",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
                 FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingSm),
                     verticalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingSm)
                 ) {
-                    card.proPersonaLabel?.takeIf { it.isNotBlank() }?.let {
-                        BuddyTag(text = "人设 · $it", isHighlight = false)
-                    }
-                    card.favoriteEsportsHint?.takeIf { it.isNotBlank() }?.let {
-                        BuddyTag(text = "偏好 · ${it.take(24)}${if (it.length > 24) "…" else ""}", isHighlight = false)
+                    animatedCard.tags.forEach { tag ->
+                        BuddyTag(text = tag, isHighlight = true)
                     }
                 }
-            }
-            Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
-            Text(
-                text = "组队宣言",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = card.declaration,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
-            Text(
-                text = "组队规则",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            card.rules.forEach { rule ->
+                if (!animatedCard.proPersonaLabel.isNullOrBlank() || !animatedCard.favoriteEsportsHint.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
+                    Text(
+                        text = "风格与观赛",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingSm),
+                        verticalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingSm)
+                    ) {
+                        animatedCard.proPersonaLabel?.takeIf { it.isNotBlank() }?.let {
+                            BuddyTag(text = "人设 · $it", isHighlight = false)
+                        }
+                        animatedCard.favoriteEsportsHint?.takeIf { it.isNotBlank() }?.let {
+                            BuddyTag(text = "偏好 · ${it.take(24)}${if (it.length > 24) "…" else ""}", isHighlight = false)
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
                 Text(
-                    text = "• $rule",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(vertical = BuddyDimens.SpacingXs)
+                    text = "组队宣言",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                Text(
+                    text = animatedCard.declaration,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
+                Text(
+                    text = "组队规则",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                animatedCard.rules.forEach { rule ->
+                    Text(
+                        text = "• $rule",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(vertical = BuddyDimens.SpacingXs)
+                    )
+                }
             }
         }
     }

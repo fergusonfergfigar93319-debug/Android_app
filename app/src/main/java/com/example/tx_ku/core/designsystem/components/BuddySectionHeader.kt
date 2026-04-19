@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.tx_ku.core.designsystem.theme.BuddyDimens
 
@@ -27,8 +28,22 @@ fun BuddySectionHeader(
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
-    emoji: String? = null
+    emoji: String? = null,
+    titleColor: Color = Color.Unspecified,
+    subtitleColor: Color = Color.Unspecified,
+    barBrush: Brush? = null
 ) {
+    val resolvedTitleColor =
+        if (titleColor != Color.Unspecified) titleColor else MaterialTheme.colorScheme.onSurface
+    val resolvedSubtitleColor =
+        if (subtitleColor != Color.Unspecified) subtitleColor else MaterialTheme.colorScheme.onSurfaceVariant
+    val resolvedBar = barBrush ?: Brush.verticalGradient(
+        colors = listOf(
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.tertiary,
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.75f)
+        )
+    )
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -41,13 +56,7 @@ fun BuddySectionHeader(
                 .width(3.dp)
                 .height(24.dp)
                 .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.tertiary,
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.75f)
-                        )
-                    ),
+                    brush = resolvedBar,
                     shape = RoundedCornerShape(2.dp)
                 )
         )
@@ -61,13 +70,13 @@ fun BuddySectionHeader(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface
+                color = resolvedTitleColor
             )
             if (!subtitle.isNullOrBlank()) {
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = resolvedSubtitleColor
                 )
             }
         }

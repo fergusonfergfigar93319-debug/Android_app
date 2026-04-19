@@ -134,4 +134,56 @@ object BuddyColors {
     /** 顶栏/底栏与内容区分隔 */
     val ChromeDividerLight = Color(0xFF000000).copy(alpha = 0.06f)
     val ChromeDividerDark = Color(0xFFFFFFFF).copy(alpha = 0.08f)
+
+    /**
+     * **破晓之境 (The Dawn Realm)** — 亮暖底认证页 / 日间高光模块的统一语义色。
+     *
+     * - **基底**：象牙暖白 [IvoryBase]，晨曦感、不刺眼。
+     * - **核心**：赤橙 [EmberOrange] → 耀金 [RadiantGold] 渐变，电竞热血与荣耀。
+     * - **点缀**：赛博青 [CyberCyan]，仅用于细边、光标、焦点微光，点出数字/AI 属性。
+     * - **文字**：深可可 [TextCocoa]，比纯黑更温润。
+     *
+     * 玻璃材质建议：卡片面 alpha ∈ [GlassFaceAlphaLow]～[GlassFaceAlphaHigh]；背景弥散模糊见 [com.example.tx_ku.core.designsystem.theme.BuddyDimens.DawnAmbientBlur]。
+     */
+    object DawnRealm {
+        val IvoryBase = Color(0xFFF9F7F3)
+        val EmberOrange = Color(0xFFFF6B00)
+        val RadiantGold = Color(0xFFFFD700)
+        val CyberCyan = Color(0xFF00E5FF)
+        val TextCocoa = Color(0xFF2C2824)
+        const val GlassFaceAlphaLow = 0.7f
+        const val GlassFaceAlphaHigh = 0.85f
+    }
+
+    /**
+     * **柔砂白玻 (Frosted Ivory)** — VisionOS 式认证页：极低饱和环境光、半透明白玻、深空灰主 CTA。
+     */
+    object Frosted {
+        val Background = Color(0xFFF2F1ED)
+        val TextPrimary = Color(0xFF1D1D1F)
+        val TextSecondary = Color(0xFF86868B)
+        val AccentSubtle = Color(0xFFDCA86A)
+        val InputBackground = Color(0xFF000000).copy(alpha = 0.03f)
+        val HaloWarm = Color(0xFFE8DCC8)
+        val HaloCool = Color(0xFFE2E5E9)
+        val TrackMuted = Color(0xFF000000).copy(alpha = 0.06f)
+    }
+
+    /**
+     * **素玉微光 (Jade & Soft Glow)** — 燕麦米底、温润白玉卡、琥珀褐主强调与石板青点缀，拒绝高饱和与霓虹。
+     */
+    object Jade {
+        val Background = Color(0xFFF6F5F0)
+        val Surface = Color(0xFFFFFFFF)
+        val TextPrimary = Color(0xFF2C2A28)
+        val TextSecondary = Color(0xFF8E8B85)
+        val AccentAmber = Color(0xFFD69C67)
+        val AccentSlate = Color(0xFF7A8B8E)
+        val OutlineLight = Color(0xFFEFECE5)
+        /** 输入区极淡填充 */
+        val InputFill = Color(0xFFF9F8F6)
+        /** 右侧抽象图形区浅底 */
+        val IllustrationWell = Color(0xFFFAF9F5)
+        val TrackMuted = Color(0xFF000000).copy(alpha = 0.05f)
+    }
 }

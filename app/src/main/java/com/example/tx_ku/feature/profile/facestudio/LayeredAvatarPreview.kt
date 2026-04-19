@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -77,6 +78,20 @@ fun LayeredAvatarPreview(
         ),
         label = "floatY"
     )
+    // key：配置变更时才重建子树，便于 Layout Inspector 观察重组边界（动效层仍按帧刷新）
+    key(
+        config.bgId,
+        config.bodyId,
+        config.faceId,
+        config.eyesId,
+        config.hairId,
+        config.outfitId,
+        config.accId,
+        config.hairTintArgb,
+        config.outfitTintArgb,
+        config.skinTintArgb,
+        config.linkHairAndOutfitTint
+    ) {
     Box(
         modifier = modifier.size(boxSize),
         contentAlignment = Alignment.Center
@@ -190,6 +205,7 @@ fun LayeredAvatarPreview(
                 size = size
             )
         }
+    }
     }
 }
 

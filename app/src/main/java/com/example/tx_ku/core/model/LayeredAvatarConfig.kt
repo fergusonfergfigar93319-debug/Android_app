@@ -1,11 +1,13 @@
 package com.example.tx_ku.core.model
 
+import androidx.compose.runtime.Immutable
 import org.json.JSONObject
 
 /**
  * 峡谷 Q 版贴纸形象：按槽位叠加 PNG/Vector，支持肤色/发色/战衣色与「发色↔战衣」联动染色。
  * 与程序化 [HonorQCharacterRenderer] 捏脸并行，由 [AgentTuning.avatarDisplayMode] 选择展示路径。
  */
+@Immutable
 data class LayeredAvatarConfig(
     val bgId: Int = 0,
     val bodyId: Int = 0,

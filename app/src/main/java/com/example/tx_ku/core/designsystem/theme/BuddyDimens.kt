@@ -35,6 +35,11 @@ object BuddyDimens {
     val SpacingLg = 16.dp
     val SpacingXl = 24.dp
 
+    /** 破晓之境：玻璃卡片极细描边、输入框微光边（精密仪器感） */
+    val DawnGlassBorderWidth = 0.5.dp
+    /** 破晓之境：背景流体光斑 / 氛围层参考模糊半径（Compose 中由大尺寸半透明圆模拟） */
+    val DawnAmbientBlur = 48.dp
+
     // 标签
     val TagRadius = 16.dp
     val TagPaddingH = 12.dp

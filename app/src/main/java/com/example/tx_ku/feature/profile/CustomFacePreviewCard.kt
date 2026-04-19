@@ -48,8 +48,9 @@ fun CustomFacePreviewCard(
     val renderStyle = CustomFaceRenderer.renderStyleForAvatarStyle(tuning.avatarStyle)
     val avatarRes = avatarDrawableResForStyle(tuning.avatarStyle)
     val pad = if (compact) 16.dp else 24.dp
-    val ring = if (compact) 148.dp else 200.dp
-    val portrait = if (compact) 138.dp else 190.dp
+    val ring = if (compact) 156.dp else 208.dp
+    val portrait = if (compact) 146.dp else 198.dp
+    val stageH = if (compact) 232.dp else 292.dp
 
     Surface(
         modifier = modifier.border(
@@ -82,29 +83,34 @@ fun CustomFacePreviewCard(
                 modifier = Modifier.padding(pad),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(ring)
-                        .background(
-                            Brush.radialGradient(
-                                listOf(
-                                    accent.copy(alpha = 0.3f),
-                                    Color.Transparent
-                                )
-                            ),
-                            shape = CircleShape
+                CoordinatedPortraitStage(
+                    modifier = Modifier.fillMaxWidth(),
+                    previewHeight = stageH
+                ) { _ ->
+                    Box(
+                        modifier = Modifier
+                            .size(ring)
+                            .background(
+                                Brush.radialGradient(
+                                    listOf(
+                                        accent.copy(alpha = 0.3f),
+                                        Color.Transparent
+                                    )
+                                ),
+                                shape = CircleShape
+                            )
+                            .border(3.dp, accent.copy(alpha = 0.6f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        AgentFusionAvatarPortrait(
+                            tuning = tuning,
+                            avatarRes = avatarRes,
+                            avatarFrame = tuning.avatarFrame,
+                            accent = accent,
+                            size = portrait,
+                            contentDescription = "搭子头像预览"
                         )
-                        .border(3.dp, accent.copy(alpha = 0.6f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    AgentFusionAvatarPortrait(
-                        tuning = tuning,
-                        avatarRes = avatarRes,
-                        avatarFrame = tuning.avatarFrame,
-                        accent = accent,
-                        size = portrait,
-                        contentDescription = "搭子头像预览"
-                    )
+                    }
                 }
 
                 Spacer(Modifier.height(if (compact) 12.dp else 16.dp))

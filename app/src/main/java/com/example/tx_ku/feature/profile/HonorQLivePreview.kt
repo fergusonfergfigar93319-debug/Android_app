@@ -37,8 +37,6 @@ import com.example.tx_ku.core.designsystem.components.rememberRotatingAngle
 import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.model.AgentTuning
 import com.example.tx_ku.feature.chat.agentAvatarAccentForStyle
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -77,20 +75,22 @@ fun HonorQLivePreview(
         label = "imgAlpha"
     )
 
-    // 实时生成
-    LaunchedEffect(
-        tuning.sculptFaceRoundness,
-        tuning.sculptEyeDistance,
-        tuning.sculptEyeOpen,
-        tuning.sculptMouthSmile,
-        tuning.sculptBlush,
-        tuning.sculptBrowTilt,
-        currentTheme
-    ) {
-        isGenerating = true
-        bitmap = withContext(Dispatchers.Default) {
-            HonorQAvatarRenderer.generateQAvatar(tuning, 512, currentTheme)
+    // 实时生成：用 derivedState 聚合捏脸标量，避免父级用新 [AgentTuning] 实例无意义触发重算
+    val sculptRenderKey by remember {
+        derivedStateOf {
+            listOf(
+                tuning.sculptFaceRoundness,
+                tuning.sculptEyeDistance,
+                tuning.sculptEyeOpen,
+                tuning.sculptMouthSmile,
+                tuning.sculptBlush,
+                tuning.sculptBrowTilt
+            ).joinToString()
         }
+    }
+    LaunchedEffect(sculptRenderKey, currentTheme) {
+        isGenerating = true
+        bitmap = HonorQAvatarRenderer.getAvatarAsync(tuning, 512, currentTheme)
         isGenerating = false
         hasEverLoaded = true
     }
@@ -115,31 +115,35 @@ fun HonorQLivePreview(
         }
         Spacer(Modifier.height(16.dp))
 
-        // 主预览区 - 带旋转光效
-        Box(
-            modifier = Modifier.size(260.dp),
-            contentAlignment = Alignment.Center
-        ) {
+        // 主预览区：氛围光 + 地台 + 底部加权比例（压缩留白、消除漂浮感）
+        CoordinatedAvatarStage(
+            modifier = Modifier.fillMaxWidth(),
+            previewHeight = 340.dp,
+            applyBreathFloat = true
+        ) { stageSize, _ ->
+            val innerCard = stageSize * 0.923f
+            val corner = 32.dp
+            val innerClip = 26.dp
+
             // 外层旋转光晕（底层装饰）
             Box(
                 modifier = Modifier
-                    .size(260.dp)
+                    .size(stageSize)
                     .graphicsLayer { rotationZ = rotatingAngle }
                     .drawBehind {
                         val c = Offset(size.width / 2f, size.height / 2f)
                         val r = size.minDimension / 2f
-                        // 更卡通的粗光点
                         for (i in 0 until 6) {
                             val angle = Math.toRadians((i * 60.0))
                             val px = c.x + r * cos(angle).toFloat()
                             val py = c.y + r * sin(angle).toFloat()
                             drawCircle(
                                 color = when (i) {
-                                    0, 3 -> Color(0xFFFF69B4).copy(alpha = breathAlpha * 0.8f)
-                                    1, 4 -> BuddyColors.HonorCyanAccent.copy(alpha = breathAlpha * 0.8f)
-                                    else -> BuddyColors.HonorGoldBright.copy(alpha = breathAlpha * 0.8f)
+                                    0, 3 -> Color(0xFFFF69B4).copy(alpha = breathAlpha * 0.65f)
+                                    1, 4 -> BuddyColors.HonorCyanAccent.copy(alpha = breathAlpha * 0.65f)
+                                    else -> BuddyColors.HonorGoldBright.copy(alpha = breathAlpha * 0.65f)
                                 },
-                                radius = 12f,
+                                radius = 11f,
                                 center = Offset(px, py)
                             )
                         }
@@ -148,10 +152,10 @@ fun HonorQLivePreview(
 
             // 内层预览框 - 卡通气泡感
             Surface(
-                shape = RoundedCornerShape(32.dp),
+                shape = RoundedCornerShape(corner),
                 color = Color.White.copy(alpha = 0.1f),
                 modifier = Modifier
-                    .size(240.dp)
+                    .size(innerCard)
                     .graphicsLayer { scaleX = pulseScale; scaleY = pulseScale },
                 shadowElevation = 8.dp
             ) {
@@ -168,7 +172,7 @@ fun HonorQLivePreview(
                                     Color(0xFFFF69B4).copy(alpha = breathAlpha)
                                 )
                             ),
-                            shape = RoundedCornerShape(32.dp)
+                            shape = RoundedCornerShape(corner)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -179,7 +183,7 @@ fun HonorQLivePreview(
                             contentDescription = "Q版预览",
                             modifier = Modifier
                                 .fillMaxSize()
-                                .clip(RoundedCornerShape(26.dp))
+                                .clip(RoundedCornerShape(innerClip))
                                 .graphicsLayer {
                                     scaleX = imageScale
                                     scaleY = imageScale
@@ -188,7 +192,6 @@ fun HonorQLivePreview(
                         )
                     }
 
-                    // 加载中叠层
                     if (isGenerating) {
                         Box(
                             modifier = Modifier

@@ -1,9 +1,13 @@
 package com.example.tx_ku.feature.profile
 
 import android.graphics.*
+import android.os.Build
+import android.util.LruCache
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import com.example.tx_ku.core.model.AgentTuning
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -23,38 +27,96 @@ import kotlin.math.sin
  */
 object HonorQAvatarRenderer {
 
+    private const val CACHE_MAX_ENTRIES = 20
+
+    /** 与 [performHeavyRendering] 使用字段一致，避免无关 [AgentTuning] 字段导致缓存失效或错误命中 */
+    private fun avatarCacheKey(tuning: AgentTuning, theme: QTheme, size: Int): Int {
+        var h = size
+        h = 31 * h + theme.ordinal
+        h = 31 * h + tuning.sculptFaceRoundness.toBits()
+        h = 31 * h + tuning.sculptEyeDistance.toBits()
+        h = 31 * h + tuning.sculptEyeOpen.toBits()
+        h = 31 * h + tuning.sculptMouthSmile.toBits()
+        h = 31 * h + tuning.sculptBlush.toBits()
+        h = 31 * h + tuning.sculptBrowTilt.toBits()
+        return h
+    }
+
+    private val avatarCache = LruCache<Int, Bitmap>(CACHE_MAX_ENTRIES)
+
+    private val renderLock = Any()
+    private val sharedPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    private fun prepareSharedPaint(p: Paint) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            p.reset()
+        } else {
+            p.shader = null
+            p.colorFilter = null
+            p.xfermode = null
+            p.pathEffect = null
+            p.maskFilter = null
+            p.clearShadowLayer()
+            p.alpha = 255
+            p.style = Paint.Style.FILL
+            p.strokeWidth = 0f
+            p.strokeCap = Paint.Cap.BUTT
+            p.strokeJoin = Paint.Join.MITER
+        }
+        p.isAntiAlias = true
+    }
+
     // ═══════════════════════════════════════════════════════════════
     // 公共 API
     // ═══════════════════════════════════════════════════════════════
 
+    /**
+     * 异步生成（或命中内存缓存）。请在协程中调用；**勿**在 UI 线程直接 `runBlocking`。
+     */
+    suspend fun getAvatarAsync(
+        tuning: AgentTuning,
+        size: Int = 512,
+        theme: QTheme = QTheme.HERO
+    ): Bitmap = withContext(Dispatchers.Default) {
+        loadOrRenderAvatar(tuning, size, theme)
+    }
+
+    /**
+     * 同步生成（或命中缓存）。若在主线程调用且缓存未命中，仍会阻塞至绘制结束——Compose 请优先用 [getAvatarAsync]。
+     */
     fun generateQAvatar(
         tuning: AgentTuning,
         size: Int = 512,
         theme: QTheme = QTheme.HERO
+    ): Bitmap = loadOrRenderAvatar(tuning, size, theme)
+
+    private fun loadOrRenderAvatar(tuning: AgentTuning, size: Int, theme: QTheme): Bitmap {
+        val key = avatarCacheKey(tuning, theme, size)
+        avatarCache.get(key)?.let { return it }
+        val bitmap = performHeavyRendering(tuning, size, theme)
+        avatarCache.put(key, bitmap)
+        return bitmap
+    }
+
+    private fun performHeavyRendering(
+        tuning: AgentTuning,
+        size: Int,
+        theme: QTheme
     ): Bitmap {
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
-        val p = Paint(Paint.ANTI_ALIAS_FLAG)
-
-        val hero = theme  // theme 已改名为英雄选择
-
-        // 1. 英雄专属渐变背景
-        drawHeroBackground(canvas, size, hero, p)
-        // 2. 身体（Q版短身体 + 英雄服装）
-        drawHeroBody(canvas, size, tuning, hero, p)
-        // 3. 后层头发
-        drawHeroHairBack(canvas, size, tuning, hero, p)
-        // 4. 脸部
-        drawQFace(canvas, size, tuning, hero, p)
-        // 5. 五官
-        drawQFacialFeatures(canvas, size, tuning, hero, p)
-        // 6. 前层头发（刘海 + 英雄标志发型）
-        drawHeroHairFront(canvas, size, tuning, hero, p)
-        // 7. 英雄标志性配饰
-        drawHeroSignatureAccessory(canvas, size, tuning, hero, p)
-        // 8. 光效
-        drawHeroLightEffects(canvas, size, hero, p)
-
+        val hero = theme
+        synchronized(renderLock) {
+            prepareSharedPaint(sharedPaint)
+            drawHeroBackground(canvas, size, hero, sharedPaint)
+            drawHeroBody(canvas, size, tuning, hero, sharedPaint)
+            drawHeroHairBack(canvas, size, tuning, hero, sharedPaint)
+            drawQFace(canvas, size, tuning, hero, sharedPaint)
+            drawQFacialFeatures(canvas, size, tuning, hero, sharedPaint)
+            drawHeroHairFront(canvas, size, tuning, hero, sharedPaint)
+            drawHeroSignatureAccessory(canvas, size, tuning, hero, sharedPaint)
+            drawHeroLightEffects(canvas, size, hero, sharedPaint)
+        }
         return bitmap
     }
 

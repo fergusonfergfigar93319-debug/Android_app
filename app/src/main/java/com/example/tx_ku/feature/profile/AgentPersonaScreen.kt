@@ -102,6 +102,8 @@ import com.example.tx_ku.core.designsystem.components.showBuddySnackbar
 import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.theme.BuddyDimens
 import com.example.tx_ku.core.designsystem.theme.BuddyShapes
+import com.example.tx_ku.core.designsystem.theme.SunriseIvoryColors
+import com.example.tx_ku.core.designsystem.theme.SunriseGradientCtaButton
 import com.example.tx_ku.core.domain.AgentPersonaResolver
 import com.example.tx_ku.core.model.AgentTuning
 import com.example.tx_ku.core.model.BuddyAgentPersona
@@ -118,10 +120,12 @@ import com.example.tx_ku.feature.chat.avatarDrawableResForStyle
  * 智能体编辑页呈现方式。
  * - [AgentPersonaPresentation.Standard]：与全局 [BuddyBackground] 一致。
  * - [AgentPersonaPresentation.Studio]：**专属工坊界面** — 天青渐变底、专属顶栏与形象主卡。
+ * - [AgentPersonaPresentation.SunriseIvory]：**日出象牙白** — 亮暖底、柔影白卡、橙金强调与能力看板。
  */
 enum class AgentPersonaPresentation {
     Standard,
-    Studio
+    Studio,
+    SunriseIvory
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -129,7 +133,7 @@ enum class AgentPersonaPresentation {
 fun AgentPersonaScreen(
     navController: NavController,
     isTabRoot: Boolean = false,
-    presentation: AgentPersonaPresentation = AgentPersonaPresentation.Studio
+    presentation: AgentPersonaPresentation = AgentPersonaPresentation.SunriseIvory
 ) {
     val viewModel: AgentPersonaViewModel = viewModel()
     LaunchedEffect(Unit) { viewModel.refreshFromCache() }
@@ -151,6 +155,7 @@ fun AgentPersonaScreen(
     var showNameEditDialog by remember { mutableStateOf(false) }
     var nameEditDraft by remember { mutableStateOf("") }
 
+    val useSunrise = presentation == AgentPersonaPresentation.SunriseIvory
     val useStudio = presentation == AgentPersonaPresentation.Studio
     val studioBrush = remember {
         Brush.verticalGradient(
@@ -166,16 +171,28 @@ fun AgentPersonaScreen(
         Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             BuddyTopBar(
-                title = if (useStudio) "搭子创作台" else "我的游戏搭子",
-                subtitle = if (useStudio) {
-                    "默认官方立绘；可在捏脸页开启「纯捏脸头像」· 全端同步"
-                } else {
-                    "形象语气定好再开聊 · 三处界面一起更新"
+                title = when {
+                    useSunrise -> "智能体档案"
+                    useStudio -> "搭子创作台"
+                    else -> "我的游戏搭子"
+                },
+                subtitle = when {
+                    useSunrise -> "亮白看板 · 气质六维 · 一键唤醒开聊"
+                    useStudio -> "默认官方立绘；可在捏脸页开启「纯捏脸头像」· 全端同步"
+                    else -> "形象语气定好再开聊 · 三处界面一起更新"
                 },
                 onBack = if (isTabRoot) null else ({ navController.popBackStack() }),
                 modifier = Modifier.fillMaxWidth(),
-                titleColor = if (useStudio) BuddyColors.CommunityTextPrimary else Color.Unspecified,
-                subtitleColor = if (useStudio) BuddyColors.CommunityTextSecondary else Color.Unspecified
+                titleColor = when {
+                    useSunrise -> SunriseIvoryColors.TextMain
+                    useStudio -> BuddyColors.CommunityTextPrimary
+                    else -> Color.Unspecified
+                },
+                subtitleColor = when {
+                    useSunrise -> SunriseIvoryColors.TextSub
+                    useStudio -> BuddyColors.CommunityTextSecondary
+                    else -> Color.Unspecified
+                }
             )
             if (persona == null || profile == null) {
                 EmptyAgentState(isTabRoot = isTabRoot, navController = navController, modifier = Modifier
@@ -195,6 +212,10 @@ fun AgentPersonaScreen(
             val listScope = rememberCoroutineScope()
             val tuningBringIntoViewRequester = remember { BringIntoViewRequester() }
             val clipboard = LocalClipboardManager.current
+            val sectionTitleColor = if (useSunrise) SunriseIvoryColors.TextMain else Color.Unspecified
+            val sectionSubtitleColor = if (useSunrise) SunriseIvoryColors.TextSub else Color.Unspecified
+            val sectionBarBrush = if (useSunrise) SunriseIvoryColors.BarAccentBrush else null
+            val sectionHintColor = if (useSunrise) SunriseIvoryColors.TextSub else MaterialTheme.colorScheme.onSurfaceVariant
 
             Column(
                 modifier = Modifier
@@ -202,23 +223,47 @@ fun AgentPersonaScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(BuddyDimens.ContentPadding)
             ) {
-                PersonaHeroCard(
-                    persona = p,
-                    tuning = tuning,
-                    displayNameEditable = tuning.canEditDisplayName(),
-                    factoryPersonaLocked = factoryDefaultLocked,
-                    onAvatarClick = { showAvatarStyleSheet = true },
-                    onDisplayNameClick = {
-                        nameEditDraft = tuning.agentDisplayNameOverride.ifBlank { p.displayName }
-                        showNameEditDialog = true
-                    },
-                    onJumpToTuningSection = {
-                        tuningSectionExpanded = true
-                        listScope.launch { tuningBringIntoViewRequester.bringIntoView() }
-                    },
-                    onOpenChat = { navController.navigate(Routes.AGENT_CHAT) }
-                )
-                Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
+                if (useSunrise) {
+                    PersonaSunriseHeroCard(
+                        persona = p,
+                        tuning = tuning,
+                        displayNameEditable = tuning.canEditDisplayName(),
+                        factoryPersonaLocked = factoryDefaultLocked,
+                        onAvatarClick = { showAvatarStyleSheet = true },
+                        onDisplayNameClick = {
+                            nameEditDraft = tuning.agentDisplayNameOverride.ifBlank { p.displayName }
+                            showNameEditDialog = true
+                        },
+                        onJumpToTuningSection = {
+                            tuningSectionExpanded = true
+                            listScope.launch { tuningBringIntoViewRequester.bringIntoView() }
+                        },
+                        onOpenChat = { navController.navigate(Routes.AGENT_CHAT) }
+                    )
+                    Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
+                    PersonaSunriseAbilityBoard(tuning = tuning)
+                    Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
+                    PersonaSunriseTraitsCloud(persona = p, tuning = tuning)
+                    Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
+                } else {
+                    PersonaHeroCard(
+                        persona = p,
+                        tuning = tuning,
+                        displayNameEditable = tuning.canEditDisplayName(),
+                        factoryPersonaLocked = factoryDefaultLocked,
+                        onAvatarClick = { showAvatarStyleSheet = true },
+                        onDisplayNameClick = {
+                            nameEditDraft = tuning.agentDisplayNameOverride.ifBlank { p.displayName }
+                            showNameEditDialog = true
+                        },
+                        onJumpToTuningSection = {
+                            tuningSectionExpanded = true
+                            listScope.launch { tuningBringIntoViewRequester.bringIntoView() }
+                        },
+                        onOpenChat = { navController.navigate(Routes.AGENT_CHAT) }
+                    )
+                    Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
+                }
                 if (!chatUnlocked) {
                     Text(
                         text = if (factoryDefaultLocked) {
@@ -227,34 +272,59 @@ fun AgentPersonaScreen(
                             "点下面按钮解锁后就能聊天，随时回来改设定。"
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = sectionHintColor,
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(BuddyDimens.SpacingSm))
-                    BuddyPrimaryButton(
-                        text = "完成创作，解锁聊天",
-                        onClick = {
-                            CurrentUser.agentChatUnlocked = true
-                            UserAgentStore.saveFromCurrentUser()
-                            chatUnlocked = true
-                            navController.navigate(Routes.AGENT_CHAT)
-                            snackScope.showBuddySnackbar(snackbarHost, "解锁啦，去找搭子唠两句")
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    if (useSunrise) {
+                        SunriseGradientCtaButton(
+                            text = "完成创作，解锁聊天",
+                            onClick = {
+                                CurrentUser.agentChatUnlocked = true
+                                UserAgentStore.saveFromCurrentUser()
+                                chatUnlocked = true
+                                navController.navigate(Routes.AGENT_CHAT)
+                                snackScope.showBuddySnackbar(snackbarHost, "解锁啦，去找搭子唠两句")
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        BuddyPrimaryButton(
+                            text = "完成创作，解锁聊天",
+                            onClick = {
+                                CurrentUser.agentChatUnlocked = true
+                                UserAgentStore.saveFromCurrentUser()
+                                chatUnlocked = true
+                                navController.navigate(Routes.AGENT_CHAT)
+                                snackScope.showBuddySnackbar(snackbarHost, "解锁啦，去找搭子唠两句")
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 } else {
-                    BuddyPrimaryButton(
-                        text = "开聊",
-                        onClick = { navController.navigate(Routes.AGENT_CHAT) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    if (useSunrise) {
+                        SunriseGradientCtaButton(
+                            text = "唤醒智能体 · 开聊",
+                            onClick = { navController.navigate(Routes.AGENT_CHAT) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        BuddyPrimaryButton(
+                            text = "开聊",
+                            onClick = { navController.navigate(Routes.AGENT_CHAT) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
 
                 BuddySectionHeader(
                     title = "自定义创作",
                     subtitle = "捏脸、立绘主题、边框气泡与声线；可先起名再进工坊，与下方成品搭子可随时切换",
-                    emoji = "✨"
+                    emoji = "✨",
+                    titleColor = sectionTitleColor,
+                    subtitleColor = sectionSubtitleColor,
+                    barBrush = sectionBarBrush
                 )
                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
                 CustomAgentCreationEntryCard(
@@ -280,7 +350,10 @@ fun AgentPersonaScreen(
                     } else {
                         "澜瑶韩信貂蝉铠等热门英雄壳+分路逻辑，附 KPL 看台与复盘；点击卡片一键换肤，名称与细项仍可改"
                     },
-                    emoji = "🎁"
+                    emoji = "🎁",
+                    titleColor = sectionTitleColor,
+                    subtitleColor = sectionSubtitleColor,
+                    barBrush = sectionBarBrush
                 )
                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
                 LazyRow(
@@ -308,7 +381,10 @@ fun AgentPersonaScreen(
                 BuddySectionHeader(
                     title = "一键气质套组",
                     subtitle = "先套模板，再往下抠细节",
-                    emoji = "⚡"
+                    emoji = "⚡",
+                    titleColor = sectionTitleColor,
+                    subtitleColor = sectionSubtitleColor,
+                    barBrush = sectionBarBrush
                 )
                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
                 FlowRow(
@@ -342,7 +418,11 @@ fun AgentPersonaScreen(
                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
                 BuddyElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = BuddyShapes.CardLarge
+                    shape = BuddyShapes.CardLarge,
+                    containerColorOverride = if (useSunrise) SunriseIvoryColors.Surface else null,
+                    borderColorOverride = if (useSunrise) Color(0xFFE8E2D9).copy(alpha = 0.95f) else null,
+                    borderWidth = if (useSunrise) 0.5.dp else 1.dp,
+                    cardElevationDefault = if (useSunrise) 4.dp else null
                 ) {
                     Column(modifier = Modifier.padding(BuddyDimens.CardPadding)) {
                         BuddySectionHeader(
@@ -352,7 +432,10 @@ fun AgentPersonaScreen(
                             } else {
                                 "备忘、忌讳与手写总则都会进人设摘要，并影响回复语气"
                             },
-                            emoji = "✍"
+                            emoji = "✍",
+                            titleColor = sectionTitleColor,
+                            subtitleColor = sectionSubtitleColor,
+                            barBrush = sectionBarBrush
                         )
                         Spacer(modifier = Modifier.height(BuddyDimens.SpacingMd))
                         OutlinedTextField(
@@ -460,7 +543,11 @@ fun AgentPersonaScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .bringIntoViewRequester(tuningBringIntoViewRequester),
-                    shape = BuddyShapes.CardLarge
+                    shape = BuddyShapes.CardLarge,
+                    containerColorOverride = if (useSunrise) SunriseIvoryColors.Surface else null,
+                    borderColorOverride = if (useSunrise) Color(0xFFE8E2D9).copy(alpha = 0.95f) else null,
+                    borderWidth = if (useSunrise) 0.5.dp else 1.dp,
+                    cardElevationDefault = if (useSunrise) 4.dp else null
                 ) {
                     Column(modifier = Modifier.padding(BuddyDimens.CardPadding)) {
                         TuningCustomizationCollapsibleHeader(
@@ -528,15 +615,23 @@ fun AgentPersonaScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
-                BuddySectionHeader(title = "此刻人设一览", emoji = "📋")
-                p.traits.forEach { line ->
-                    Text(
-                        text = "· $line",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = BuddyDimens.SpacingXs)
+                if (!useSunrise) {
+                    Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
+                    BuddySectionHeader(
+                        title = "此刻人设一览",
+                        emoji = "📋",
+                        titleColor = sectionTitleColor,
+                        subtitleColor = sectionSubtitleColor,
+                        barBrush = sectionBarBrush
                     )
+                    p.traits.forEach { line ->
+                        Text(
+                            text = "· $line",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(vertical = BuddyDimens.SpacingXs)
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(BuddyDimens.SpacingXl))
             }
@@ -604,17 +699,29 @@ fun AgentPersonaScreen(
         }
     }
 
-    if (useStudio) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(studioBrush)
-        ) {
-            screenContent()
+    when (presentation) {
+        AgentPersonaPresentation.SunriseIvory -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(SunriseIvoryColors.Background)
+            ) {
+                screenContent()
+            }
         }
-    } else {
-        BuddyBackground(modifier = Modifier.fillMaxSize()) {
-            screenContent()
+        AgentPersonaPresentation.Studio -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(studioBrush)
+            ) {
+                screenContent()
+            }
+        }
+        AgentPersonaPresentation.Standard -> {
+            BuddyBackground(modifier = Modifier.fillMaxSize()) {
+                screenContent()
+            }
         }
     }
 }

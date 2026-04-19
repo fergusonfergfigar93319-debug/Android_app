@@ -4,6 +4,9 @@ import com.example.tx_ku.core.model.AgentTuning
 import com.example.tx_ku.core.brand.BrandConfig
 import com.example.tx_ku.core.model.Profile
 import com.example.tx_ku.feature.forum.ForumCategories
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * 智能体侧「轻量意图路由」：关键词命中则附带导航/剪贴板等副作用，否则交回 [com.example.tx_ku.core.domain.AgentPersonaResolver]。
@@ -20,7 +23,9 @@ sealed class AgentNavCommand {
 
 data class AgentTaskInterpretation(
     val replyOverride: String? = null,
-    val nav: AgentNavCommand? = null
+    val nav: AgentNavCommand? = null,
+    /** 本地系统闹钟 + 通知（见 feature.chat.reminder.ActivityReminderScheduler） */
+    val reminderSchedule: ReminderSchedulePayload? = null
 )
 
 object AgentTaskRouter {
@@ -49,6 +54,14 @@ object AgentTaskRouter {
             return AgentTaskInterpretation(
                 replyOverride = "带你去选关注的游戏品类～",
                 nav = AgentNavCommand.OpenGameInterest
+            )
+        }
+
+        AgentReminderTimeParser.tryParse(t)?.let { pl ->
+            val whenStr = formatReminderWhen(pl.triggerAtMillis)
+            return AgentTaskInterpretation(
+                replyOverride = "记好了，约 $whenStr 用系统闹钟+通知提醒你「${pl.title}」。若没弹通知，请到系统设置里打开本应用的通知权限～",
+                reminderSchedule = pl
             )
         }
 
@@ -90,6 +103,9 @@ object AgentTaskRouter {
 
         return AgentTaskInterpretation()
     }
+
+    private fun formatReminderWhen(millis: Long): String =
+        SimpleDateFormat("M月d日 HH:mm", Locale.CHINA).format(Date(millis))
 
     private fun normalize(s: String): String =
         s.lowercase().replace(" ", "").replace("　", "")
@@ -138,8 +154,30 @@ object AgentTaskRouter {
     }
 
     private fun extractSearchQuery(raw: String): String? {
+        Regex("""(?:关于|想找|有没有|推荐)(.{2,28}?)(?:的)?(?:帖子|内容|讨论)""").find(raw)?.groupValues?.getOrNull(1)?.trim()
+            ?.takeIf { it.length in 2..48 }?.let { return it }
+        Regex("""(?:峡谷)?(?:广场|论坛)(?:里)?搜\s*(.+)""").find(raw)?.groupValues?.getOrNull(1)?.trim()
+            ?.let { it.removePrefix("：").removePrefix(":").trim() }
+            ?.takeIf { it.length in 2..48 }?.let { return it }
+
         val triggers = listOf(
-            "广场搜", "广场搜索", "在广场搜", "搜一下", "帮我搜", "搜索", "查找", "找帖子", "搜：", "搜:", "搜 "
+            "峡谷广场搜",
+            "峡谷广场搜索",
+            "广场搜",
+            "广场搜索",
+            "论坛搜",
+            "论坛搜索",
+            "去广场搜",
+            "在广场搜",
+            "在峡谷搜",
+            "搜一下",
+            "帮我搜",
+            "搜索",
+            "查找",
+            "找帖子",
+            "搜：",
+            "搜:",
+            "搜 "
         )
         for (p in triggers) {
             val idx = raw.indexOf(p)
@@ -204,10 +242,11 @@ object AgentTaskRouter {
     private fun capabilityHint(): String = buildString {
         append("战术、心态、组队嘴炮都能唠，还能顺手办事：\n")
         append("· 写招募 / 发帖 → 直接打开发帖\n")
-        append("· 广场搜词 → 跳进搜索\n")
+        append("· 广场 / 论坛搜感兴趣的内容 → 说「广场搜」「峡谷广场搜」「关于XX的帖子」等，会跳进搜索\n")
         append("· 攻略区 / 招募区 → 切分区\n")
         append("· 关注游戏 → 开品类页\n")
         append("· 总结或复制档案 → 出文案或进剪贴板\n")
+        append("· 游戏活动时间提醒 → 例如「10分钟后提醒我」「今晚8点叫我打排位」「1小时后提醒我领奖励」\n")
         append("\n当微信聊就行～")
     }
 }

@@ -9,6 +9,10 @@
         android:maxSdkVersion="32" />
     <!-- AR试戴功能 -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- 搭子定时活动提醒（系统通知）；Android 13+ 需运行时授权 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- 峡谷终端主按钮「两短一长」波形振动 -->
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <application
         android:name=".TxKuApp"
@@ -20,6 +24,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TX_ku">
+        <receiver
+            android:name=".feature.chat.reminder.GameActivityReminderReceiver"
+            android:exported="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

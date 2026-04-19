@@ -1,5 +1,9 @@
 package com.example.tx_ku.core.navigation
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -58,7 +62,13 @@ fun BuddyCardNavHost(navController: NavHostController) {
         composable(Routes.AGENT_FACE_STUDIO) {
             FaceStudioScreen(navController = navController)
         }
-        composable(Routes.AGENT_CHAT) {
+        composable(
+            route = Routes.AGENT_CHAT,
+            enterTransition = { slideInHorizontally { it } + fadeIn() },
+            exitTransition = { slideOutHorizontally { -it } + fadeOut() },
+            popEnterTransition = { slideInHorizontally { -it } + fadeIn() },
+            popExitTransition = { slideOutHorizontally { it } + fadeOut() }
+        ) {
             AgentChatScreen(navController = navController)
         }
         composable(
