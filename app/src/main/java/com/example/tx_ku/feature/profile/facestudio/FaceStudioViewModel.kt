@@ -77,6 +77,18 @@ class FaceStudioViewModel : ViewModel() {
         UserAgentStore.saveFromCurrentUser()
     }
 
+    /**
+     * 其他页面（如「个性」Tab 中的 [com.example.tx_ku.feature.profile.AgentPersonaViewModel]）已写回 [CurrentUser] 后，
+     * 回到「潮流」时拉齐本页 [tuning] / [layeredConfig]，避免 UI 与内存不一致。
+     */
+    fun refreshFromCurrentUser() {
+        _tuning.value = CurrentUser.agentTuning
+        _layered.value = LayeredAvatarConfig.fromJsonString(CurrentUser.agentTuning.layeredAvatarJson)
+        val p = CurrentUser.profile?.let { AgentPersonaResolver.resolve(it, CurrentUser.agentTuning) }
+        _persona.value = p
+        if (p != null) CurrentUser.buddyAgent = p
+    }
+
     /** 峡谷 Q 版贴纸槽位与调色（写入 [AgentTuning.layeredAvatarJson]） */
     fun updateLayered(transform: (LayeredAvatarConfig) -> LayeredAvatarConfig) {
         val new = transform(_layered.value)

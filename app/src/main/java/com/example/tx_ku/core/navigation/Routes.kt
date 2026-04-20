@@ -30,6 +30,8 @@ object Routes {
     fun userDm(peerUserId: String): String = "$USER_DM/$peerUserId"
     /** 与专属智能体聊天（QQ 风格会话页） */
     const val AGENT_CHAT = "agent_chat"
+    /** 全息图文发动态（PhotoPicker 多图，无存储权限） */
+    const val MEDIA_PUBLISH = "media_publish"
     /** 峡谷速递资讯详情（正文 / 分享 / 跳转广场） */
     const val GAME_NEWS_DETAIL = "game_news_detail"
     /** 电竞文旅 / 潮流策展详情（城市动线、潮流卡片） */

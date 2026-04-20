@@ -18,7 +18,6 @@ import com.example.tx_ku.core.navigation.BuddyCardNavHost
 import com.example.tx_ku.core.prefs.AgentChatPrefsStore
 import com.example.tx_ku.core.prefs.GameInterestStore
 import com.example.tx_ku.core.prefs.HomeSearchHistoryStore
-import com.example.tx_ku.core.prefs.LoginSessionStore
 import com.example.tx_ku.core.prefs.UserAgentStore
 
 class MainActivity : ComponentActivity() {
@@ -46,7 +45,6 @@ class MainActivity : ComponentActivity() {
         HomeSearchHistoryStore.init(this)
         AgentChatPrefsStore.init(this)
         UserAgentStore.init(this)
-        LoginSessionStore.init(this)
         setContent {
             // 产品默认亮色系；若需跟随系统深浅色，改为 BuddyCardTheme { 不传参 }
             BuddyCardTheme(darkTheme = false) {

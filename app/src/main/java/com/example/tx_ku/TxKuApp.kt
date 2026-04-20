@@ -13,10 +13,16 @@ import coil.memory.MemoryCache
 
 /**
  * 全局 Coil：内存/磁盘缓存 + 淡入，减少列表与头像闪烁。
+ * [container]：手动 DI 枢纽（网络栈、会话存储）。
  */
 class TxKuApp : Application() {
+
+    lateinit var container: AppContainer
+        private set
+
     override fun onCreate() {
         super.onCreate()
+        container = AppContainer(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val ch = NotificationChannel(
                 ActivityReminderScheduler.CHANNEL_ID,

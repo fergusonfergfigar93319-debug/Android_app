@@ -40,8 +40,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -80,6 +78,7 @@ import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.core.model.canEditDisplayName
 import com.example.tx_ku.core.model.isFactoryDefault
 import com.example.tx_ku.feature.auth.authFormOutlinedTextFieldColors
+import com.example.tx_ku.feature.profile.facestudio.HolographicSlider
 import com.example.tx_ku.feature.chat.agentAvatarAccentForStyle
 import com.example.tx_ku.feature.chat.avatarDrawableResForStyle
 import kotlinx.coroutines.launch
@@ -617,8 +616,6 @@ private fun FaceStudioPageSculpt(
     tuning: AgentTuning,
     viewModel: AgentPersonaViewModel
 ) {
-    val thumb = BuddyColors.HonorCyanAccent
-    val active = BuddyColors.PrimaryVariant
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -640,22 +637,22 @@ private fun FaceStudioPageSculpt(
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
-        SculptSliderRow("脸型 圆润 ↔ 尖锐", tuning.sculptFaceRoundness, thumb, active) {
+        SculptSliderRow("脸型 圆润 ↔ 尖锐", tuning.sculptFaceRoundness, "圆润", "尖锐") {
             viewModel.setSculptFaceRoundness(it)
         }
-        SculptSliderRow("眼距 紧凑 ↔ 开阔", tuning.sculptEyeDistance, thumb, active) {
+        SculptSliderRow("眼距 紧凑 ↔ 开阔", tuning.sculptEyeDistance, "紧凑", "开阔") {
             viewModel.setSculptEyeDistance(it)
         }
-        SculptSliderRow("眼型 细长 ↔ 圆润", tuning.sculptEyeOpen, thumb, active) {
+        SculptSliderRow("眼型 细长 ↔ 圆润", tuning.sculptEyeOpen, "细长", "圆润") {
             viewModel.setSculptEyeOpen(it)
         }
-        SculptSliderRow("嘴角 平直 ↔ 上扬", tuning.sculptMouthSmile, thumb, active) {
+        SculptSliderRow("嘴角 平直 ↔ 上扬", tuning.sculptMouthSmile, "平直", "上扬") {
             viewModel.setSculptMouthSmile(it)
         }
-        SculptSliderRow("腮红 清淡 ↔ 浓郁", tuning.sculptBlush, thumb, active) {
+        SculptSliderRow("腮红 清淡 ↔ 浓郁", tuning.sculptBlush, "清淡", "浓郁") {
             viewModel.setSculptBlush(it)
         }
-        SculptSliderRow("眉势 平缓 ↔ 上挑", tuning.sculptBrowTilt, thumb, active) {
+        SculptSliderRow("眉势 平缓 ↔ 上挑", tuning.sculptBrowTilt, "平缓", "上挑") {
             viewModel.setSculptBrowTilt(it)
         }
         Spacer(modifier = Modifier.height(12.dp))
@@ -669,8 +666,8 @@ private fun FaceStudioPageSculpt(
 private fun SculptSliderRow(
     label: String,
     value: Float,
-    thumbColor: Color,
-    activeColor: Color,
+    leftHint: String,
+    rightHint: String,
     onValueChange: (Float) -> Unit
 ) {
     Surface(
@@ -678,43 +675,14 @@ private fun SculptSliderRow(
         color = Color.White.copy(alpha = 0.05f),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(Modifier.padding(16.dp)) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    label,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.9f),
-                    fontWeight = FontWeight.Medium
-                )
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = activeColor.copy(alpha = 0.2f)
-                ) {
-                    Text(
-                        "%.0f%%".format(value * 100f),
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = thumbColor,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-            Spacer(Modifier.height(8.dp))
-            Slider(
-                value = value,
-                onValueChange = onValueChange,
-                valueRange = 0f..1f,
-                colors = SliderDefaults.colors(
-                    thumbColor = thumbColor,
-                    activeTrackColor = activeColor.copy(alpha = 0.7f),
-                    inactiveTrackColor = Color.White.copy(alpha = 0.15f)
-                )
-            )
-        }
+        HolographicSlider(
+            label = label,
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.padding(16.dp),
+            leftHint = leftHint,
+            rightHint = rightHint
+        )
     }
     Spacer(Modifier.height(12.dp))
 }

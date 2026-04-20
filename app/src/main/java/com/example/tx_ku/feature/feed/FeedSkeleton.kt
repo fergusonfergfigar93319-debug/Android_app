@@ -34,7 +34,7 @@ enum class FeedListSkeletonTone {
     Canyon
 }
 
-/** 资讯列表区骨架（顶栏已由真实 [GameNewsTopHeader] 展示） */
+/** 资讯列表区骨架（与 [FeedScreen] 悬浮胶囊资讯流配套） */
 @Composable
 fun FeedNewsListSkeleton(
     modifier: Modifier = Modifier,

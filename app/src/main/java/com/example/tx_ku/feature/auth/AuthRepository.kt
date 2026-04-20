@@ -2,95 +2,74 @@ package com.example.tx_ku.feature.auth
 
 import com.example.tx_ku.core.model.AccountSummary
 import com.example.tx_ku.core.model.CurrentUser
-import com.example.tx_ku.feature.social.DirectMessageRepository
-import com.example.tx_ku.feature.social.FollowRepository
-
-private data class StoredAccount(
-    val password: String,
-    val nickname: String,
-    val avatarUrl: String?
-)
+import com.example.tx_ku.core.network.AuthApiService
+import com.example.tx_ku.core.network.LoginApiEnvelope
+import com.example.tx_ku.core.network.LoginRequest
+import com.example.tx_ku.core.prefs.LoginSessionStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 
 /**
- * 本地内存账号表（演示）。接后端后替换为 Retrofit + DataStore。
+ * 远程鉴权仓库：UDF 中「登录 API → DataStore → CurrentUser」的桥梁。
+ * 联调阶段默认走 [USE_MOCK_AUTH]；接后端后将开关改为 false。
  */
-object AuthRepository {
+class AuthRepository(
+    private val apiService: AuthApiService,
+    private val sessionStore: LoginSessionStore
+) {
 
-    private val accounts = mutableMapOf<String, StoredAccount>()
-
-    fun isEmailRegistered(email: String): Boolean =
-        accounts.containsKey(email.trim().lowercase())
-
-    fun register(
-        email: String,
-        password: String,
-        nickname: String,
-        avatarUrl: String?
-    ): Result<Unit> {
-        val key = email.trim().lowercase()
-        if (key.isBlank() || !key.contains("@")) {
-            return Result.failure(IllegalArgumentException("请输入有效邮箱"))
-        }
-        if (password.length < 6) {
-            return Result.failure(IllegalArgumentException("密码至少 6 位"))
-        }
-        if (nickname.isBlank()) {
-            return Result.failure(IllegalArgumentException("请填写昵称"))
-        }
-        if (accounts.containsKey(key)) {
-            return Result.failure(IllegalArgumentException("该邮箱已注册"))
-        }
-        accounts[key] = StoredAccount(password, nickname.trim(), avatarUrl)
-        CurrentUser.account = AccountSummary(
-            email = key,
-            regNickname = nickname.trim(),
-            avatarUrl = avatarUrl
-        )
-        return Result.success(Unit)
-    }
-
-    fun login(email: String, password: String): Boolean {
-        val key = email.trim().lowercase()
-
-        // Debug：预留开发者账号无需事先注册，冷启动也可直接登录
-        if (DeveloperAuthConfig.matchesLogin(email, password)) {
-            if (accounts[key] == null) {
-                accounts[key] = StoredAccount(
-                    DeveloperAuthConfig.PASSWORD,
-                    DeveloperAuthConfig.NICKNAME,
-                    null
+    suspend fun login(email: String, passKey: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            if (USE_MOCK_AUTH) {
+                delay(1500)
+                val key = email.trim().lowercase()
+                val nick = "联调占位"
+                sessionStore.saveSession(
+                    accessToken = "mock_access_${key.hashCode()}",
+                    refreshToken = "mock_refresh_${key.hashCode()}",
+                    userId = "mock_user_${key.hashCode()}",
+                    email = key
                 )
+                sessionStore.rememberSuccessfulLogin(key, nick, null)
+                CurrentUser.account = AccountSummary(
+                    email = key,
+                    regNickname = nick,
+                    avatarUrl = null
+                )
+                return@withContext Result.success(Unit)
             }
-            val stored = accounts[key]!!
-            CurrentUser.account = AccountSummary(
-                email = key,
-                regNickname = stored.nickname,
-                avatarUrl = stored.avatarUrl
-            )
-            return true
+
+            val response: LoginApiEnvelope = apiService.login(LoginRequest(email.trim(), passKey))
+            if (response.code == 200 && response.data != null) {
+                val data = response.data
+                sessionStore.saveSession(
+                    accessToken = data.accessToken,
+                    refreshToken = data.refreshToken,
+                    userId = data.userId,
+                    email = email.trim().lowercase()
+                )
+                sessionStore.rememberSuccessfulLogin(
+                    email.trim().lowercase(),
+                    data.nickname,
+                    data.avatarUrl
+                )
+                CurrentUser.account = AccountSummary(
+                    email = email.trim().lowercase(),
+                    regNickname = data.nickname,
+                    avatarUrl = data.avatarUrl
+                )
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception(response.message.ifBlank { "登录失败，请检查身份信标与密钥" }))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception("神经元网络链接异常，请稍后重试", e))
         }
-
-        val stored = accounts[key] ?: return false
-        if (stored.password != password) return false
-        CurrentUser.account = AccountSummary(
-            email = key,
-            regNickname = stored.nickname,
-            avatarUrl = stored.avatarUrl
-        )
-        return true
     }
 
-    fun logout() {
-        FollowRepository.clear()
-        DirectMessageRepository.clear()
-        CurrentUser.clearSession()
-    }
-
-    /** 更新已注册账号的头像/昵称缓存（与 Profile 保存时同步） */
-    fun updateStoredProfile(email: String, nickname: String, avatarUrl: String?) {
-        val key = email.trim().lowercase()
-        val s = accounts[key] ?: return
-        accounts[key] = s.copy(nickname = nickname, avatarUrl = avatarUrl)
-        CurrentUser.account = AccountSummary(key, nickname, avatarUrl)
+    companion object {
+        /** 无真实后端时置 true；联调真实网关时改为 false。 */
+        const val USE_MOCK_AUTH: Boolean = true
     }
 }

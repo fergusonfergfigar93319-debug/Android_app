@@ -1,8 +1,13 @@
-@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@file:OptIn(
+    androidx.compose.material3.ExperimentalMaterial3Api::class,
+    androidx.compose.animation.ExperimentalSharedTransitionApi::class
+)
 
 package com.example.tx_ku.feature.feed
 
 import android.content.Intent
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -84,7 +89,9 @@ import com.example.tx_ku.feature.forum.ForumSearchBridge
 @Composable
 fun GameNewsDetailScreen(
     newsId: String?,
-    navController: NavController
+    navController: NavController,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedContentScope: AnimatedContentScope? = null
 ) {
     val item: GameNewsItem? = remember(newsId) { newsId?.let { GameNewsRepository.getById(it) } }
     val context = LocalContext.current
@@ -249,7 +256,11 @@ fun GameNewsDetailScreen(
                 contentPadding = PaddingValues(bottom = 28.dp)
             ) {
                 item(key = "hero_header") {
-                    HeroArticleOverlap(item = item)
+                    HeroArticleOverlap(
+                        item = item,
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedContentScope = animatedContentScope
+                    )
                 }
                 itemsIndexed(
                     paragraphBlocks,
@@ -765,7 +776,19 @@ private fun CommentsBottomSheet(
 }
 
 @Composable
-private fun HeroArticleOverlap(item: GameNewsItem) {
+private fun HeroArticleOverlap(
+    item: GameNewsItem,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedContentScope: AnimatedContentScope? = null
+) {
+    val sharedImageState =
+        if (sharedTransitionScope != null && animatedContentScope != null) {
+            with(sharedTransitionScope) {
+                rememberSharedContentState(key = "game_news_image_${item.id}")
+            }
+        } else {
+            null
+        }
     val gradientBrush = remember(item.coverGradientStart, item.coverGradientEnd) {
         Brush.linearGradient(
             listOf(Color(item.coverGradientStart), Color(item.coverGradientEnd))
@@ -779,10 +802,27 @@ private fun HeroArticleOverlap(item: GameNewsItem) {
         )
     )
     Column(modifier = Modifier.fillMaxWidth()) {
+        val heroImageModifier = Modifier
+            .fillMaxWidth()
+            .height(232.dp)
+            .then(
+                if (
+                    sharedTransitionScope != null &&
+                    animatedContentScope != null &&
+                    sharedImageState != null
+                ) {
+                    with(sharedTransitionScope) {
+                        Modifier.sharedElement(
+                            sharedContentState = sharedImageState,
+                            animatedVisibilityScope = animatedContentScope
+                        )
+                    }
+                } else {
+                    Modifier
+                }
+            )
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(232.dp)
+            modifier = heroImageModifier
         ) {
             val coverRes = item.coverDrawableRes
             if (coverRes != null && coverRes != 0) {

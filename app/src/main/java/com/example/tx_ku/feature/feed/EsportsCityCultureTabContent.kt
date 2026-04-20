@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -71,7 +72,9 @@ fun EsportsCityCultureTabContent(
     navController: NavController,
     modifier: Modifier = Modifier,
     isRefreshing: Boolean = false,
-    onRefresh: () -> Unit = {}
+    onRefresh: () -> Unit = {},
+    /** 与首页悬浮胶囊对齐的额外顶距（状态栏下占位）。 */
+    listContentTopInsetExtra: Dp = 0.dp
 ) {
     val haptic = rememberBuddyHaptic()
     val trends = remember { EsportsCultureRepository.trendCards }
@@ -86,7 +89,7 @@ fun EsportsCityCultureTabContent(
     ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = 4.dp, bottom = 32.dp)
+        contentPadding = PaddingValues(top = 4.dp + listContentTopInsetExtra, bottom = 32.dp)
     ) {
         item(key = "culture_intro") {
             Card(

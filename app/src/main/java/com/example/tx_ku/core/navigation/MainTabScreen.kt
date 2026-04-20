@@ -1,30 +1,48 @@
 package com.example.tx_ku.core.navigation
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -49,6 +67,11 @@ import com.example.tx_ku.feature.forum.ForumScreen
 import com.example.tx_ku.feature.profile.AgentPersonaScreen
 import com.example.tx_ku.feature.profile.ProfileScreen
 
+private val FloatingDockCorner = RoundedCornerShape(34.dp)
+private val FloatingDockHeight = 68.dp
+/** 坞体垂直外边距（上下各一截）+ 槽高度，供主内容底部留白与悬浮球定位 */
+private val FloatingDockClearanceAboveNav = 108.dp
+
 enum class MainTab(
     val title: String,
     val iconResId: Int
@@ -64,8 +87,11 @@ enum class MainTab(
 }
 
 @Composable
-fun MainTabScreen(navController: NavController? = null) {
-    // 首 Tab 为峡谷速递（资讯流）；AI 搭子为独立 Tab
+fun MainTabScreen(
+    navController: NavController? = null,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedContentScope: AnimatedContentScope? = null
+) {
     var selectedIndex by rememberSaveable { mutableIntStateOf(MainTab.FEED.ordinal) }
     val tabs = MainTab.entries
     SideEffect {
@@ -77,155 +103,120 @@ fun MainTabScreen(navController: NavController? = null) {
     val bubblePreview by AgentChatReminderHub.bubblePreview.collectAsStateWithLifecycle()
     val unreadReminders by AgentChatReminderHub.unreadReminders.collectAsStateWithLifecycle()
     val darkChrome = LocalBuddyDarkTheme.current
-    val chromeDivider =
-        if (darkChrome) BuddyColors.GoldOutline.copy(alpha = 0.35f)
-        else BuddyColors.HonorGold.copy(alpha = 0.22f)
-    val navBarSurface = if (darkChrome) {
-        BuddyColors.CanyonSurface   // 峡谷星空底色，比纯黑更有质感
+    val dockSelectedTint = BuddyColors.HonorCyanAccent
+    val dockUnselectedTint = if (darkChrome) {
+        Color.White.copy(alpha = 0.38f)
     } else {
-        BuddyColors.NavBarSurfaceLight
+        BuddyColors.TextSecondaryLayered.copy(alpha = 0.85f)
     }
-    // 选中指示器：深色用金色微光，浅色用天蓝
-    val tabIndicatorColor = if (darkChrome) {
-        BuddyColors.HonorGold.copy(alpha = 0.22f)
-    } else {
-        BuddyColors.HonorGold.copy(alpha = 0.42f)
-    }
-    // 选中图标/文字：峡谷金系，浅色下也比纯 primary 更易辨认
-    val selectedItemColor = if (darkChrome) BuddyColors.HonorGold else BuddyColors.HonorGoldDark
 
     Box(modifier = Modifier.fillMaxSize()) {
         BuddyBackground(modifier = Modifier.fillMaxSize()) {}
         Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        containerColor = Color.Transparent,
-        floatingActionButton = {
-            if (navController != null && tabs[selectedIndex] == MainTab.FORUM) {
-                FloatingActionButton(
-                    onClick = {
-                        haptic.buddyPrimaryClick()
-                        navController.navigate(Routes.POST_EDITOR)
-                    },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    elevation = FloatingActionButtonDefaults.elevation(
-                        defaultElevation = 8.dp,
-                        pressedElevation = 12.dp
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Transparent,
+            floatingActionButton = {}
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .navigationBarsPadding()
+                    .padding(bottom = FloatingDockClearanceAboveNav)
+            ) {
+                when (tabs[selectedIndex]) {
+                    MainTab.FEED -> FeedScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        navController = navController,
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedContentScope = animatedContentScope,
+                        headerNavigation = FeedHeaderNavigation(
+                            openForumTab = { selectedIndex = MainTab.FORUM.ordinal },
+                            openForumWithSearch = { q ->
+                                ForumSearchBridge.handoffPrefill(q)
+                                selectedIndex = MainTab.FORUM.ordinal
+                            },
+                            openForumRecruitOnly = {
+                                ForumFeedBridge.prepareOpenForumRecruitOnly()
+                                selectedIndex = MainTab.FORUM.ordinal
+                            },
+                            openForumCategory = { categoryId ->
+                                ForumFeedBridge.prepareOpenForumCategory(categoryId)
+                                selectedIndex = MainTab.FORUM.ordinal
+                            },
+                            openAgentTab = { selectedIndex = MainTab.AGENT.ordinal },
+                            openProfileTab = { selectedIndex = MainTab.PROFILE.ordinal }
+                        )
                     )
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_add),
-                        contentDescription = "发帖"
-                    )
-                }
-            }
-        },
-        bottomBar = {
-            Column(Modifier.fillMaxWidth()) {
-                HorizontalDivider(
-                    thickness = 1.dp,
-                    color = chromeDivider
-                )
-                NavigationBar(
-                    containerColor = navBarSurface,
-                    tonalElevation = if (darkChrome) 0.dp else 3.dp
-                ) {
-                    tabs.forEachIndexed { index, tab ->
-                        NavigationBarItem(
-                            selected = selectedIndex == index,
-                            onClick = {
-                                if (selectedIndex != index) {
-                                    haptic.buddySelectionTick()
-                                    selectedIndex = index
-                                }
-                            },
-                            icon = {
-                                Icon(
-                                    painter = painterResource(tab.iconResId),
-                                    contentDescription = tab.title
-                                )
-                            },
-                            label = {
-                                Text(
-                                    text = tab.title,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = selectedItemColor,
-                                selectedTextColor = selectedItemColor,
-                                indicatorColor = tabIndicatorColor,
-                                unselectedIconColor = if (darkChrome) {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                } else {
-                                    BuddyColors.TextSecondaryLayered
-                                },
-                                unselectedTextColor = if (darkChrome) {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                } else {
-                                    BuddyColors.TextSecondaryLayered
-                                }
+                    MainTab.AGENT -> {
+                        val nc = navController
+                        if (nc != null) {
+                            AgentPersonaScreen(navController = nc, isTabRoot = true)
+                        } else {
+                            Text(
+                                text = "导航不可用",
+                                modifier = Modifier.align(Alignment.Center),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                        )
+                        }
                     }
+                    MainTab.FORUM -> ForumScreen(Modifier.fillMaxSize(), navController)
+                    MainTab.PROFILE -> ProfileScreen(Modifier.fillMaxSize(), navController)
                 }
             }
         }
-    ) { innerPadding ->
-        when (tabs[selectedIndex]) {
-            MainTab.FEED -> FeedScreen(
-                modifier = Modifier.padding(innerPadding),
-                navController = navController,
-                headerNavigation = FeedHeaderNavigation(
-                    openForumTab = { selectedIndex = MainTab.FORUM.ordinal },
-                    openForumWithSearch = { q ->
-                        ForumSearchBridge.handoffPrefill(q)
-                        selectedIndex = MainTab.FORUM.ordinal
-                    },
-                    openForumRecruitOnly = {
-                        ForumFeedBridge.prepareOpenForumRecruitOnly()
-                        selectedIndex = MainTab.FORUM.ordinal
-                    },
-                    openForumCategory = { categoryId ->
-                        ForumFeedBridge.prepareOpenForumCategory(categoryId)
-                        selectedIndex = MainTab.FORUM.ordinal
-                    },
-                    openAgentTab = { selectedIndex = MainTab.AGENT.ordinal },
-                    openProfileTab = { selectedIndex = MainTab.PROFILE.ordinal }
+
+        MainTabFloatingGlassDock(
+            darkChrome = darkChrome,
+            tabs = tabs,
+            selectedIndex = selectedIndex,
+            onSelect = { index ->
+                if (selectedIndex != index) {
+                    haptic.buddySelectionTick()
+                    selectedIndex = index
+                }
+            },
+            selectedTint = dockSelectedTint,
+            unselectedTint = dockUnselectedTint,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(horizontal = 24.dp, vertical = 20.dp)
+                .fillMaxWidth()
+        )
+
+        if (navController != null && tabs[selectedIndex] == MainTab.FORUM) {
+            FloatingActionButton(
+                onClick = {
+                    haptic.buddyPrimaryClick()
+                    navController.navigate(Routes.POST_EDITOR)
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .navigationBarsPadding()
+                    .padding(end = 20.dp, bottom = FloatingDockClearanceAboveNav + 12.dp),
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 8.dp,
+                    pressedElevation = 12.dp
                 )
-            )
-            MainTab.AGENT -> {
-                Box(
-                    Modifier
-                        .padding(innerPadding)
-                        .fillMaxSize()
-                ) {
-                    val nc = navController
-                    if (nc != null) {
-                        AgentPersonaScreen(navController = nc, isTabRoot = true)
-                    } else {
-                        Text(
-                            text = "导航不可用",
-                            modifier = Modifier.align(Alignment.Center),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_add),
+                    contentDescription = "发帖"
+                )
             }
-            MainTab.FORUM -> ForumScreen(Modifier.padding(innerPadding), navController)
-            MainTab.PROFILE -> ProfileScreen(Modifier.padding(innerPadding), navController)
         }
-    }
 
         val showAgentFab = navController != null &&
             CurrentUser.profile != null &&
             CurrentUser.agentChatUnlocked &&
             tabs[selectedIndex] != MainTab.AGENT
         if (showAgentFab) {
-            val bottomPad = if (tabs[selectedIndex] == MainTab.FORUM) 156.dp else 88.dp
+            val forumExtra = if (tabs[selectedIndex] == MainTab.FORUM) 56.dp else 0.dp
+            val bottomPad = FloatingDockClearanceAboveNav + 8.dp + forumExtra
             AgentChatFloatingEntry(
                 tuning = CurrentUser.agentTuning,
                 preview = bubblePreview,
@@ -241,6 +232,109 @@ fun MainTabScreen(navController: NavController? = null) {
                 contentColor = MaterialTheme.colorScheme.primary,
                 bottomPaddingDp = bottomPad
             )
+        }
+    }
+}
+
+@Composable
+private fun MainTabFloatingGlassDock(
+    darkChrome: Boolean,
+    tabs: List<MainTab>,
+    selectedIndex: Int,
+    onSelect: (Int) -> Unit,
+    selectedTint: Color,
+    unselectedTint: Color,
+    modifier: Modifier = Modifier
+) {
+    val glassFill = if (darkChrome) {
+        Color(0xFF0B1114).copy(alpha = 0.42f)
+    } else {
+        Color.White.copy(alpha = 0.78f)
+    }
+    val edgeBrush = if (darkChrome) {
+        Brush.linearGradient(
+            colors = listOf(
+                Color.White.copy(alpha = 0.22f),
+                Color.White.copy(alpha = 0.04f),
+                Color.Transparent
+            ),
+            start = Offset.Zero,
+            end = Offset(800f, 400f)
+        )
+    } else {
+        Brush.linearGradient(
+            colors = listOf(
+                Color.White.copy(alpha = 0.95f),
+                BuddyColors.HonorCyanAccent.copy(alpha = 0.12f),
+                Color.Transparent
+            ),
+            start = Offset.Zero,
+            end = Offset(600f, 320f)
+        )
+    }
+    val spot = if (darkChrome) Color.Black.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.12f)
+
+    Box(
+        modifier = modifier
+            .height(FloatingDockHeight)
+            .shadow(16.dp, FloatingDockCorner, spotColor = spot)
+            .clip(FloatingDockCorner)
+            .background(glassFill)
+            .border(width = 0.5.dp, brush = edgeBrush, shape = FloatingDockCorner)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 6.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            tabs.forEachIndexed { index, tab ->
+                val isSelected = selectedIndex == index
+                val interaction = remember(tab) { MutableInteractionSource() }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(20.dp))
+                        .clickable(
+                            interactionSource = interaction,
+                            indication = null,
+                            onClick = { onSelect(index) }
+                        )
+                        .padding(vertical = 6.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        painter = painterResource(tab.iconResId),
+                        contentDescription = tab.title,
+                        tint = if (isSelected) selectedTint else unselectedTint,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = tab.title,
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Center,
+                        color = if (isSelected) selectedTint else unselectedTint,
+                        modifier = Modifier.padding(horizontal = 2.dp)
+                    )
+                    AnimatedVisibility(
+                        visible = isSelected,
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(4.dp)
+                                .background(selectedTint, CircleShape)
+                        )
+                    }
+                }
+            }
         }
     }
 }

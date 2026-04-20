@@ -72,6 +72,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.graphics.Brush
@@ -462,7 +463,7 @@ private fun AgentChatContent(navController: NavController) {
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (immersiveSurface) {
-            BuddyBackground(modifier = Modifier.fillMaxSize()) {}
+            HolographicChatBackground(modifier = Modifier.fillMaxSize())
         }
         Scaffold(
             containerColor = if (immersiveSurface) Color.Transparent else palette.screenBg,
@@ -662,6 +663,7 @@ private fun AgentChatContent(navController: NavController) {
                                     profile = profile,
                                     palette = palette,
                                     bubbleStyle = tuning.bubbleStyle,
+                                    spatialChrome = immersiveSurface,
                                     onLongPressCopy = { copyBubbleText(item.text) }
                                 )
                             } else {
@@ -672,6 +674,7 @@ private fun AgentChatContent(navController: NavController) {
                                     tuning = tuning,
                                     palette = palette,
                                     bubbleStyle = tuning.bubbleStyle,
+                                    spatialChrome = immersiveSurface,
                                     onLongPressCopy = { copyBubbleText(item.text) }
                                 )
                             }
@@ -706,7 +709,8 @@ private fun AgentChatContent(navController: NavController) {
                         AgentTypingRow(
                             tuning = tuning,
                             palette = palette,
-                            bubbleStyle = tuning.bubbleStyle
+                            bubbleStyle = tuning.bubbleStyle,
+                            spatialChrome = immersiveSurface
                         )
                     }
                 }
@@ -899,9 +903,10 @@ private fun UserBubble(
     profile: com.example.tx_ku.core.model.Profile?,
     palette: AgentChatPalette,
     bubbleStyle: String,
+    spatialChrome: Boolean = false,
     onLongPressCopy: () -> Unit
 ) {
-    val shape = bubbleShapeUser(bubbleStyle)
+    val shape = if (spatialChrome) spatialUserBubbleShape() else bubbleShapeUser(bubbleStyle)
     val hud = isHudGlassBubbleStyle(bubbleStyle)
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -909,34 +914,60 @@ private fun UserBubble(
         verticalAlignment = Alignment.Top
     ) {
         Column(horizontalAlignment = Alignment.End) {
-            Surface(
-                shape = shape,
-                color = palette.userBubble,
-                shadowElevation = 1.dp,
-                modifier = Modifier
-                    .widthIn(max = 304.dp)
-                    .then(
-                        if (hud) Modifier.border(1.dp, palette.accent.copy(alpha = 0.4f), shape)
-                        else Modifier
+            if (spatialChrome) {
+                Box(
+                    modifier = Modifier
+                        .widthIn(max = 304.dp)
+                        .clip(shape)
+                        .background(Color.White.copy(alpha = 0.12f))
+                        .border(0.5.dp, spatialUserBubbleBorderBrush(), shape)
+                        .combinedClickable(
+                            onClick = { },
+                            onLongClick = onLongPressCopy
+                        )
+                ) {
+                    Text(
+                        text = text,
+                        color = Color.White.copy(alpha = 0.92f),
+                        style = MaterialTheme.typography.bodyLarge,
+                        lineHeight = 22.sp,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 11.dp)
                     )
-                    .combinedClickable(
-                        onClick = { },
-                        onLongClick = onLongPressCopy
+                }
+            } else {
+                Surface(
+                    shape = shape,
+                    color = palette.userBubble,
+                    shadowElevation = 1.dp,
+                    modifier = Modifier
+                        .widthIn(max = 304.dp)
+                        .then(
+                            if (hud) Modifier.border(1.dp, palette.accent.copy(alpha = 0.4f), shape)
+                            else Modifier
+                        )
+                        .combinedClickable(
+                            onClick = { },
+                            onLongClick = onLongPressCopy
+                        )
+                ) {
+                    Text(
+                        text = text,
+                        color = palette.userText,
+                        style = MaterialTheme.typography.bodyLarge,
+                        lineHeight = 22.sp,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 11.dp)
                     )
-            ) {
-                Text(
-                    text = text,
-                    color = palette.userText,
-                    style = MaterialTheme.typography.bodyLarge,
-                    lineHeight = 22.sp,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 11.dp)
-                )
+                }
             }
             if (timeLabel.isNotEmpty()) {
                 Text(
                     text = timeLabel,
                     style = MaterialTheme.typography.labelSmall,
-                    color = palette.hint.copy(alpha = 0.9f),
+                    color = if (spatialChrome) {
+                        Color.White.copy(alpha = 0.52f)
+                    } else {
+                        palette.hint.copy(alpha = 0.9f)
+                    },
                     modifier = Modifier.padding(top = 4.dp, end = 2.dp)
                 )
             }
@@ -1013,10 +1044,12 @@ private fun AgentBubble(
     tuning: AgentTuning,
     palette: AgentChatPalette,
     bubbleStyle: String,
+    spatialChrome: Boolean = false,
     onLongPressCopy: () -> Unit
 ) {
-    val shape = bubbleShapeAgent(bubbleStyle)
+    val shape = if (spatialChrome) spatialAgentBubbleShape() else bubbleShapeAgent(bubbleStyle)
     val hud = isHudGlassBubbleStyle(bubbleStyle)
+    val agentSpatialText = BuddyColors.HonorCyanAccent.copy(alpha = 0.96f)
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start,
@@ -1039,33 +1072,68 @@ private fun AgentBubble(
         }
         Spacer(modifier = Modifier.size(8.dp))
         Column(horizontalAlignment = Alignment.Start) {
-            Surface(
-                shape = shape,
-                color = palette.agentBubble,
-                shadowElevation = 1.dp,
-                modifier = Modifier
-                    .widthIn(max = 304.dp)
-                    .then(
-                        if (hud) Modifier.border(1.dp, palette.accent.copy(alpha = 0.28f), shape)
-                        else Modifier
-                    )
-                    .combinedClickable(
-                        onClick = { },
-                        onLongClick = onLongPressCopy
-                    )
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 11.dp),
-                    verticalAlignment = Alignment.Bottom
+            if (spatialChrome) {
+                Box(
+                    modifier = Modifier
+                        .shadow(
+                            elevation = 10.dp,
+                            shape = shape,
+                            spotColor = BuddyColors.HonorCyanAccent.copy(alpha = 0.22f),
+                            ambientColor = Color.Transparent
+                        )
+                        .widthIn(max = 304.dp)
+                        .clip(shape)
+                        .background(BuddyColors.HonorCyanAccent.copy(alpha = 0.08f))
+                        .border(0.5.dp, spatialAgentBubbleBorderBrush(), shape)
+                        .combinedClickable(
+                            onClick = { },
+                            onLongClick = onLongPressCopy
+                        )
                 ) {
-                    Text(
-                        text = text,
-                        color = palette.agentText,
-                        style = MaterialTheme.typography.bodyLarge,
-                        lineHeight = 22.sp
-                    )
-                    if (isStreaming) {
-                        StreamingCaret(color = palette.agentText)
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 11.dp),
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        Text(
+                            text = text,
+                            color = agentSpatialText,
+                            style = MaterialTheme.typography.bodyLarge,
+                            lineHeight = 22.sp
+                        )
+                        if (isStreaming) {
+                            StreamingCaret(color = BuddyColors.HonorGoldBright)
+                        }
+                    }
+                }
+            } else {
+                Surface(
+                    shape = shape,
+                    color = palette.agentBubble,
+                    shadowElevation = 1.dp,
+                    modifier = Modifier
+                        .widthIn(max = 304.dp)
+                        .then(
+                            if (hud) Modifier.border(1.dp, palette.accent.copy(alpha = 0.28f), shape)
+                            else Modifier
+                        )
+                        .combinedClickable(
+                            onClick = { },
+                            onLongClick = onLongPressCopy
+                        )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 11.dp),
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        Text(
+                            text = text,
+                            color = palette.agentText,
+                            style = MaterialTheme.typography.bodyLarge,
+                            lineHeight = 22.sp
+                        )
+                        if (isStreaming) {
+                            StreamingCaret(color = palette.agentText)
+                        }
                     }
                 }
             }
@@ -1073,7 +1141,11 @@ private fun AgentBubble(
                 Text(
                     text = timeLabel,
                     style = MaterialTheme.typography.labelSmall,
-                    color = palette.hint.copy(alpha = 0.9f),
+                    color = if (spatialChrome) {
+                        Color.White.copy(alpha = 0.48f)
+                    } else {
+                        palette.hint.copy(alpha = 0.9f)
+                    },
                     modifier = Modifier.padding(top = 4.dp, start = 2.dp)
                 )
             }
@@ -1112,9 +1184,10 @@ private fun TypingPulseDots(accent: Color = BuddyColors.HonorGold) {
 private fun AgentTypingRow(
     tuning: AgentTuning,
     palette: AgentChatPalette,
-    bubbleStyle: String
+    bubbleStyle: String,
+    spatialChrome: Boolean = false
 ) {
-    val shape = bubbleShapeAgent(bubbleStyle)
+    val shape = if (spatialChrome) spatialAgentBubbleShape() else bubbleShapeAgent(bubbleStyle)
     val hud = isHudGlassBubbleStyle(bubbleStyle)
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -1135,25 +1208,44 @@ private fun AgentTypingRow(
                 chatCompactFrame = true
             )
         }
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier
-                .clip(shape)
-                .background(palette.agentBubble)
-                .then(
-                    if (hud) {
-                        Modifier.border(1.dp, BuddyColors.GoldOutline, shape)
-                    } else Modifier
+        if (spatialChrome) {
+            Column(
+                modifier = Modifier
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = shape,
+                        spotColor = BuddyColors.HonorCyanAccent.copy(alpha = 0.18f),
+                        ambientColor = Color.Transparent
+                    )
+                    .widthIn(max = 280.dp)
+                    .clip(shape)
+                    .background(BuddyColors.HonorCyanAccent.copy(alpha = 0.08f))
+                    .border(0.5.dp, spatialAgentBubbleBorderBrush(), shape)
+                    .padding(horizontal = 14.dp, vertical = 12.dp)
+            ) {
+                AgentTypingKineticContent(palette = palette)
+            }
+        } else {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .clip(shape)
+                    .background(palette.agentBubble)
+                    .then(
+                        if (hud) {
+                            Modifier.border(1.dp, BuddyColors.GoldOutline, shape)
+                        } else Modifier
+                    )
+                    .padding(horizontal = 14.dp, vertical = 10.dp)
+            ) {
+                TypingPulseDots(accent = BuddyColors.HonorGold)
+                Text(
+                    "搭子在组织语言…",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = palette.hint
                 )
-                .padding(horizontal = 14.dp, vertical = 10.dp)
-        ) {
-            TypingPulseDots(accent = BuddyColors.HonorGold)
-            Text(
-                "搭子在组织语言…",
-                style = MaterialTheme.typography.bodySmall,
-                color = palette.hint
-            )
+            }
         }
     }
 }

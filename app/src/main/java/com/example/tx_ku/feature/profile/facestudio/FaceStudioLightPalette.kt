@@ -1,116 +1,110 @@
 package com.example.tx_ku.feature.profile.facestudio
 
 import androidx.compose.ui.graphics.Color
+import com.example.tx_ku.core.designsystem.theme.BuddyColors
 
 /**
- * 造型工坊 · 峡谷 Q 版贴纸 **亮色系** 色板：多层表面、冷暖对比、可读深色文字。
- * 偏「展柜 + 贴纸手册」质感：略提高对比与阴影色，避免发灰发飘。
+ * 造型工坊 · 峡谷 Q 版贴纸 **素玉 3.0 亮色底**：燕麦米玻璃底、峡谷青高光、琥珀点缀，避免幼态粉彩。
  */
 object FaceStudioLightPalette {
 
-    // ── 整页背景（上→下：暖白 → 樱花粉 → 梦幻蓝，层次更明显） ──
-    val pageTop = Color(0xFFFFF0F5)
-    val pageMid = Color(0xFFFFE4E1)
-    val pageBottom = Color(0xFFE0FFFF)
+    // ── 整页背景（暖米 → 浅灰玉，无明显色相渐变） ──
+    val pageTop: Color get() = BuddyColors.Jade.Background
+    val pageMid = Color(0xFFEFEDE6)
+    val pageBottom = Color(0xFFE6E2D9)
 
-    // ── 预览条带（软萌粉 → 奶黄，衬托中间高亮角色卡） ──
-    val previewStripTop = Color(0xFFFFF0F5)
-    val previewStripMid = Color(0xFFFFFACD)
-    val previewStripBottom = Color(0xFFFFE4E1)
+    // ── 预览条带（中性冷白 + 极弱青灰） ──
+    val previewStripTop = Color(0xFFF7F6F2)
+    val previewStripMid = Color(0xFFF0EFEA)
+    val previewStripBottom = Color(0xFFE8E6E0)
 
-    // ── 预览卡投影（可爱风） ──
-    val previewCardShadowAmbient = Color(0xFFFF69B4).copy(alpha = 0.22f)
-    val previewCardShadowSpot = Color(0xFF00BFFF).copy(alpha = 0.38f)
+    // ── 预览卡投影 ──
+    val previewCardShadowAmbient = Color(0xFF000000).copy(alpha = 0.07f)
+    val previewCardShadowSpot = BuddyColors.HonorCyanAccent.copy(alpha = 0.14f)
 
-    // ── 预览内框：中心高光 + 边缘略收（显立体） ──
+    // ── 预览内框径向 ──
     val previewCardInner = Color(0xFFFFFFFF)
-    val previewRadialA = Color(0xFFFFF5FB)
-    val previewRadialB = Color(0xFFFFE8F0)
-    val previewRadialC = Color(0xFFE0F2FE)
-    /** 径向外缘略压暗，衬角色更「浮」在卡面上 */
-    val previewRadialEdge = Color(0xFFFCE7F3).copy(alpha = 0.65f)
-    val previewBorderA = Color(0xFF0EA5E9)
-    val previewBorderB = Color(0xFFA855F7)
-    val previewBorderC = Color(0xFFF43F5E)
-    val previewBorderInnerGlow = Color(0xFFFFFFFF).copy(alpha = 0.92f)
+    val previewRadialA = Color(0xFFFBFBF8)
+    val previewRadialB = Color(0xFFF5F4EF)
+    val previewRadialC = Color(0xFFEEF6F7)
+    val previewRadialEdge = Color(0xFFE2E8EA).copy(alpha = 0.55f)
+    val previewBorderA = BuddyColors.HonorCyanAccent.copy(alpha = 0.55f)
+    val previewBorderB = BuddyColors.Jade.AccentAmber.copy(alpha = 0.45f)
+    val previewBorderC = BuddyColors.HonorGoldBright.copy(alpha = 0.35f)
+    val previewBorderInnerGlow = Color(0xFFFFFFFF).copy(alpha = 0.94f)
 
-    // ── 方格纸（内容区：更轻网格，减少廉价感） ──
-    val gridCanvasTop = Color(0xFFFFFEFE)
-    val gridCanvasBottom = Color(0xFFF0F4F8)
-    val gridLine = Color(0xFFE2E8F0)
-    val gridLineAccent = Color(0xFFBFDBFE).copy(alpha = 0.85f)
+    // ── 方格纸 ──
+    val gridCanvasTop = Color(0xFFFAFAF8)
+    val gridCanvasBottom = Color(0xFFF2F1EC)
+    val gridLine = Color(0xFFD4D0C8).copy(alpha = 0.45f)
+    val gridLineAccent = BuddyColors.HonorCyanAccent.copy(alpha = 0.12f)
 
     // ── 文字 ──
-    val textPrimary = Color(0xFF0F172A)
-    val textSecondary = Color(0xFF475569)
-    val textMuted = Color(0xFF94A3B8)
+    val textPrimary: Color get() = BuddyColors.Jade.TextPrimary
+    val textSecondary: Color get() = BuddyColors.Jade.TextSecondary
+    val textMuted: Color get() = BuddyColors.Jade.TextSecondary.copy(alpha = 0.72f)
 
-    /** 分区标题：玫红与靛蓝交替感由调用处切换 */
-    val titleRose = Color(0xFFBE185D)
-    val titleIndigo = Color(0xFF4F46E5)
+    /** 分区小标题：交替仅作层次，不再使用玫红 */
+    val titleRose: Color get() = BuddyColors.Jade.TextPrimary
+    val titleIndigo: Color get() = BuddyColors.HonorCyanAccent
 
-    // ── 顶部分类条：高饱和浅底，未选略淡形成对比 ──
-    val tabChips = listOf(
-        Color(0xFFFFB6C1), // 浅粉
-        Color(0xFFFFE4B5), // 莫卡辛
-        Color(0xFFB0E0E6), // 粉蓝
-        Color(0xFFE6E6FA), // 薰衣草
-        Color(0xFFFFDAB9), // 桃色
-        Color(0xFF98FB98), // 亮绿
-        Color(0xFFF0E68C), // 卡其
-        Color(0xFFFFC0CB)  // 粉色
-    )
-    val tabSelectedRing = Color(0xFFFF69B4)
-    val tabUnselectedRing = Color(0xFFFFE4E1)
+    // ── 顶部分类条（未使用粉彩；保留列表供旧调用兼容，新 UI 用玻璃 Chip） ──
+    val tabChips: List<Color> = List(8) { Color.White.copy(alpha = 0.5f) }
+    val tabSelectedRing: Color get() = BuddyColors.HonorCyanAccent
+    val tabUnselectedRing = Color(0xFFDDD9D2)
 
-    // ── 选件格（微投影 + 选中高亮） ──
-    val cellBg = Color(0xFFFFFEFE)
-    val cellBgSelected = Color(0xFFE0F2FE)
-    val cellBorder = Color(0xFFE2E8F0)
-    val cellBorderSelected = Color(0xFF0284C7)
-    val cellShadow = Color(0xFF64748B).copy(alpha = 0.12f)
-    val cellLabelSelected = Color(0xFF0369A1)
-    val cellLabelNormal = Color(0xFF334155)
+    // ── 选件格 ──
+    val cellBg = Color(0xFFFCFBF9)
+    val cellBgSelected = BuddyColors.HonorCyanAccent.copy(alpha = 0.08f)
+    val cellBorder = Color(0xFFDDD9D2)
+    val cellBorderSelected: Color get() = BuddyColors.HonorCyanAccent
+    val cellShadow = Color(0xFF000000).copy(alpha = 0.08f)
+    val cellLabelSelected: Color get() = BuddyColors.HonorCyanAccent
+    val cellLabelNormal: Color get() = BuddyColors.Jade.TextSecondary
 
-    // ── 英雄主题大卡：与 [FaceStudioCatalog.hero2DThemes] 顺序一致 ──
+    // ── 英雄主题大卡：低饱和峡谷青 / 琥珀 / 岩灰（仅作弱渐变底，卡片主体改玻璃态） ──
     val heroCardGradients: List<List<Color>> = listOf(
-        listOf(Color(0xFFDBEAFE), Color(0xFF38BDF8), Color(0xFF0369A1)),
-        listOf(Color(0xFFFCE7F3), Color(0xFFF472B6), Color(0xFFBE185D)),
-        listOf(Color(0xFFF8FAFC), Color(0xFFE2E8F0), Color(0xFF64748B)),
-        listOf(Color(0xFFF3E8FF), Color(0xFFC084FC), Color(0xFF7C3AED))
+        listOf(Color(0xFFE8F4F6), BuddyColors.HonorCyanAccent.copy(alpha = 0.35f), Color(0xFF5B7A82)),
+        listOf(Color(0xFFF3EEE8), BuddyColors.Jade.AccentAmber.copy(alpha = 0.28f), Color(0xFF6E6258)),
+        listOf(Color(0xFFF2F2F0), Color(0xFFB8B5AD), Color(0xFF4A4845)),
+        listOf(Color(0xFFE9EDF0), BuddyColors.HonorCyanAccent.copy(alpha = 0.22f), Color(0xFF45525C))
     )
-    val heroCardEmojiCircle = Color(0xFFFFFFFF).copy(alpha = 0.92f)
-    val heroCardEmojiRing = Color(0xFFFFFFFF).copy(alpha = 0.55f)
+    val heroCardEmojiCircle = Color(0xFFFFFFFF).copy(alpha = 0.88f)
+    val heroCardEmojiRing = BuddyColors.HonorCyanAccent.copy(alpha = 0.25f)
 
-    /** 卡通 Q 版套装卡：与 [CartoonQStylePresets.entries] 顺序一致（8 张） */
-    val cartoonCardGradients: List<List<Color>> = listOf(
-        listOf(Color(0xFFFCE7F3), Color(0xFFF9A8D4), Color(0xFFDB2777)),
-        listOf(Color(0xFFECFEFF), Color(0xFF22D3EE), Color(0xFF0E7490)),
-        listOf(Color(0xFFFFF7ED), Color(0xFFFB923C), Color(0xFFC2410C)),
-        listOf(Color(0xFFEFF6FF), Color(0xFF60A5FA), Color(0xFF1D4ED8)),
-        listOf(Color(0xFFF3E8FF), Color(0xFFC084FC), Color(0xFF6B21A8)),
-        listOf(Color(0xFFF0FDF4), Color(0xFF4ADE80), Color(0xFF15803D)),
-        listOf(Color(0xFFFFF1F2), Color(0xFFFB7185), Color(0xFFE11D48)),
-        listOf(Color(0xFFF5F3FF), Color(0xFFC4B5FD), Color(0xFF7C3AED))
-    )
+    /** 卡通一键套装卡渐变（弱；[Avatar2DStudioPanel] 以玻璃卡为主，此项备用） */
+    val cartoonCardGradients: List<List<Color>> = List(8) { i ->
+        if (i % 2 == 0) {
+            listOf(
+                Color(0xFFEFF6F7),
+                BuddyColors.HonorCyanAccent.copy(alpha = 0.2f),
+                Color(0xFF5C6F73)
+            )
+        } else {
+            listOf(
+                Color(0xFFF5EFE8),
+                BuddyColors.Jade.AccentAmber.copy(alpha = 0.22f),
+                Color(0xFF6B5E52)
+            )
+        }
+    }
 
-    // ── 底部操作条（浮在浅底上） ──
-    val bottomBarBg = Color(0xFAFFFFFF)
-    val bottomBarTopLine = Color(0xFFE2E8F0)
-    val bottomIconBg = Color(0xFFF1F5F9)
-    val bottomIcon = Color(0xFF475569)
-    val saveBgStart = Color(0xFFFFE082)
-    val saveBgEnd = Color(0xFFFFB300)
-    val saveFg = Color(0xFF422006)
-    /** @deprecated 单色的保存按钮，保留兼容 */
+    // ── 底部操作条 ──
+    val bottomBarBg = Color(0xF2FFFFFF)
+    val bottomBarTopLine = Color(0xFFEBE8E2)
+    val bottomIconBg = Color(0xFFF4F2ED)
+    val bottomIcon: Color get() = BuddyColors.Jade.TextSecondary
+    val saveBgStart: Color get() = BuddyColors.Jade.AccentAmber
+    val saveBgEnd: Color get() = BuddyColors.Jade.AccentAmber
+    val saveFg = Color(0xFF2C2A28)
     val saveBg: Color get() = saveBgEnd
 
     // ── 小提示角标 ──
-    val hintPillBg = Color(0xFFFFF7ED)
-    val hintPillBorder = Color(0xFFFDBA74)
-    val hintText = Color(0xFF9A3412)
+    val hintPillBg = Color(0xFFF5F3EE)
+    val hintPillBorder = BuddyColors.HonorCyanAccent.copy(alpha = 0.22f)
+    val hintText: Color get() = BuddyColors.Jade.TextSecondary
 
-    // ── 调色圈（未选中描边） ──
-    val swatchRing = Color(0xFFCBD5E1)
-    val swatchRingSelected = Color(0xFFF59E0B)
+    // ── 调色圈 ──
+    val swatchRing = Color(0xFFC9C4BC)
+    val swatchRingSelected: Color get() = BuddyColors.HonorCyanAccent
 }

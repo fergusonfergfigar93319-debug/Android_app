@@ -1,6 +1,5 @@
 package com.example.tx_ku.feature.profile.facestudio
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,7 +8,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,33 +16,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -55,6 +44,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -62,8 +52,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.tx_ku.core.designsystem.theme.BuddyColors
+import com.example.tx_ku.core.designsystem.theme.JadePrimaryButton
+import com.example.tx_ku.core.designsystem.theme.jadeSoftCard
+
 /**
- * 峡谷 Q 版贴纸编辑器：参考「主题 / 染色 / 发型…」顶部分类 + 方格纸选件区 + 底部保存条。
+ * 峡谷 Q 版贴纸编辑器：**素玉 3.0** 高透玻璃 + 峡谷青 / 琥珀点缀（全息装配语境）。
  */
 @Composable
 fun Avatar2DStudioPanel(
@@ -78,36 +72,43 @@ fun Avatar2DStudioPanel(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 6.dp)
+            .padding(horizontal = 10.dp)
     ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Outlined.AutoAwesome,
+                contentDescription = null,
+                tint = BuddyColors.HonorCyanAccent,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.size(8.dp))
+            Text(
+                text = "全息影像拟合舱",
+                style = MaterialTheme.typography.titleMedium,
+                color = BuddyColors.Jade.TextPrimary,
+                fontWeight = FontWeight.Black
+            )
+        }
+        Spacer(Modifier.height(4.dp))
         Text(
-            text = "✨ 梦幻软萌 · 捏脸工坊 ✨",
-            style = MaterialTheme.typography.titleMedium,
-            color = Color(0xFFFF69B4),
-            fontWeight = FontWeight.ExtraBold,
-            modifier = Modifier.padding(bottom = 4.dp)
+            text = "正在为你的专属电竞智能体构建物理表象…",
+            style = MaterialTheme.typography.bodySmall,
+            color = BuddyColors.Jade.TextSecondary.copy(alpha = 0.85f)
         )
-        Text(
-            text = "随心搭配可爱的造型，打造你的专属萌系搭子！🦄💖",
-            style = MaterialTheme.typography.labelMedium,
-            color = Color(0xFFF06292),
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
+
+        Spacer(Modifier.height(14.dp))
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Layered2DMainCategory.entries.forEachIndexed { i, cat ->
-                val sel = category == cat
-                val bg = lp.tabChips.getOrElse(i) { Color(0xFFE2E8F0) }
-                PastelTabChip(
+            Layered2DMainCategory.entries.forEach { cat ->
+                GlassCategoryChip(
                     label = cat.label,
-                    selected = sel,
-                    pastelBackground = bg,
+                    selected = category == cat,
                     onClick = { vm.setLayeredMainCategory(cat) }
                 )
             }
@@ -120,27 +121,46 @@ fun Avatar2DStudioPanel(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 6.dp),
-            style = MaterialTheme.typography.titleMedium,
-            color = if (category.ordinal % 2 == 0) lp.titleRose else lp.titleIndigo,
+            style = MaterialTheme.typography.titleSmall,
+            color = if (category.ordinal % 2 == 0) BuddyColors.Jade.TextPrimary else BuddyColors.HonorCyanAccent,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
-            letterSpacing = 0.6.sp
+            letterSpacing = 0.4.sp
         )
 
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .shadow(12.dp, RoundedCornerShape(28.dp), spotColor = Color(0x33FF69B4))
-                .clip(RoundedCornerShape(28.dp))
-                .background(
-                    Brush.verticalGradient(
-                        listOf(Color(0xFFFFF0F5), Color(0xFFE0FFFF))
-                    )
+                .shadow(10.dp, RoundedCornerShape(26.dp), spotColor = BuddyColors.HonorCyanAccent.copy(alpha = 0.12f))
+                .clip(RoundedCornerShape(26.dp))
+                .background(Color.White.copy(alpha = 0.72f))
+                .border(
+                    0.5.dp,
+                    Brush.linearGradient(
+                        colors = listOf(
+                            BuddyColors.HonorCyanAccent.copy(alpha = 0.42f),
+                            Color.Transparent,
+                            BuddyColors.Jade.AccentAmber.copy(alpha = 0.2f)
+                        ),
+                        start = Offset.Zero,
+                        end = Offset(800f, 800f)
+                    ),
+                    RoundedCornerShape(26.dp)
                 )
-                .border(2.dp, Color.White, RoundedCornerShape(28.dp))
         ) {
-            BubblyBackground(Modifier.fillMaxSize())
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                BuddyColors.HonorCyanAccent.copy(alpha = 0.06f),
+                                Color.Transparent
+                            )
+                        )
+                    )
+            )
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -162,7 +182,7 @@ fun Avatar2DStudioPanel(
                     Layered2DMainCategory.Color -> ColorCategoryPanel(vm, cfg, lp)
                     Layered2DMainCategory.Hair -> Column(Modifier.fillMaxSize()) {
                         Text(
-                            text = "上方预览区发型带轻动效，便于感受层次与发量。",
+                            text = "预览区发型带微动效，用于辨识层次与发量。",
                             style = MaterialTheme.typography.labelSmall,
                             color = lp.textMuted,
                             modifier = Modifier.padding(bottom = 6.dp)
@@ -176,7 +196,7 @@ fun Avatar2DStudioPanel(
                             modifier = gridExpand
                         )
                         Spacer(Modifier.height(10.dp))
-                        Text("峡谷发色", color = lp.titleIndigo, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text("发色通道", color = BuddyColors.HonorCyanAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         TintPaletteRow(
                             colors = Avatar2DCatalog.hairPalette,
                             selectedArgb = cfg.hairTintArgb,
@@ -215,7 +235,7 @@ fun Avatar2DStudioPanel(
                             modifier = gridExpand
                         )
                         Spacer(Modifier.height(10.dp))
-                        Text("战衣主色", color = lp.titleRose, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text("战衣主色", color = BuddyColors.Jade.AccentAmber, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         TintPaletteRow(
                             colors = Avatar2DCatalog.outfitPalette,
                             selectedArgb = cfg.outfitTintArgb,
@@ -235,122 +255,161 @@ fun Avatar2DStudioPanel(
             }
         }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(10.dp))
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .shadow(16.dp, RoundedCornerShape(24.dp), spotColor = Color(0x33FF69B4))
-                .clip(RoundedCornerShape(24.dp))
-                .background(Color.White.copy(alpha = 0.95f))
-                .border(2.dp, Color(0xFFFFF0F5), RoundedCornerShape(24.dp))
-                .padding(horizontal = 14.dp, vertical = 14.dp),
+                .jadeSoftCard(RoundedCornerShape(22.dp), elevation = 8.dp)
+                .padding(horizontal = 12.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                IconButton(
-                    onClick = { /* 预留：锁定/偏好 */ },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .shadow(4.dp, CircleShape, spotColor = Color(0x22000000))
-                        .clip(CircleShape)
-                        .background(Brush.linearGradient(listOf(Color(0xFFFFF0F5), Color(0xFFFFB6C1))))
-                ) {
-                    Icon(
-                        Icons.Outlined.Settings,
-                        contentDescription = "设置",
-                        tint = Color(0xFFD81B60)
-                    )
-                }
-                IconButton(
-                    onClick = { /* 预留：相册 */ },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .shadow(4.dp, CircleShape, spotColor = Color(0x22000000))
-                        .clip(CircleShape)
-                        .background(Brush.linearGradient(listOf(Color(0xFFE0FFFF), Color(0xFF81D4FA))))
-                ) {
-                    Icon(
-                        Icons.Outlined.PhotoLibrary,
-                        contentDescription = "相册",
-                        tint = Color(0xFF0277BD)
-                    )
-                }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                GlassIconDockButton(
+                    icon = Icons.Outlined.Settings,
+                    contentDescription = "设置",
+                    onClick = { }
+                )
+                GlassIconDockButton(
+                    icon = Icons.Outlined.PhotoLibrary,
+                    contentDescription = "相册",
+                    onClick = { }
+                )
             }
             Spacer(Modifier.weight(1f))
-            Button(
+            JadePrimaryButton(
+                text = "锁定机体并保存",
                 onClick = onSaveAndExit,
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                contentPadding = PaddingValues(0.dp),
-                modifier = Modifier
-                    .heightIn(min = 52.dp)
-                    .widthIn(min = 160.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .shadow(12.dp, RoundedCornerShape(30.dp), spotColor = Color(0x55FF69B4))
-                        .clip(RoundedCornerShape(30.dp))
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(Color(0xFFFF69B4), Color(0xFFFFB6C1))
-                            )
-                        )
-                        .padding(horizontal = 28.dp, vertical = 14.dp)
-                ) {
-                    Text(
-                        "🌸 冒泡保存 🌸",
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 16.sp,
-                        color = Color.White,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-            }
+                modifier = Modifier.weight(1.2f)
+            )
         }
     }
 }
 
 @Composable
-private fun PastelTabChip(
+private fun GlassCategoryChip(
     label: String,
     selected: Boolean,
-    pastelBackground: Color,
     onClick: () -> Unit
 ) {
-    val bBg by animateColorAsState(
-        targetValue = if (selected) pastelBackground else Color.White.copy(alpha = 0.5f),
-        label = "chipBg"
+    val shape = RoundedCornerShape(16.dp)
+    val borderBrush = Brush.linearGradient(
+        colors = listOf(
+            if (selected) BuddyColors.HonorCyanAccent.copy(alpha = 0.55f)
+            else BuddyColors.Jade.OutlineLight.copy(alpha = 0.9f),
+            Color.Transparent
+        ),
+        start = Offset.Zero,
+        end = Offset(180f, 180f)
     )
-    val textColor by animateColorAsState(
-        targetValue = if (selected) Color(0xFFD81B60) else Color(0xFF888888),
-        label = "chipTextColor"
-    )
-    val shape = RoundedCornerShape(50)
-
-    Text(
-        text = label,
+    Box(
         modifier = Modifier
-            .then(
-                if (selected) {
-                    Modifier.shadow(8.dp, shape, spotColor = pastelBackground)
-                } else {
-                    Modifier
-                }
-            )
             .clip(shape)
-            .background(bBg)
-            .border(
-                width = if (selected) 2.dp else 1.dp,
-                color = if (selected) Color.White else Color(0x33000000),
-                shape = shape
+            .background(
+                if (selected) BuddyColors.HonorCyanAccent
+                else Color.White.copy(alpha = 0.52f)
             )
+            .border(0.5.dp, borderBrush, shape)
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        fontSize = 12.sp,
-        fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.Bold,
-        color = textColor,
-        maxLines = 1
-    )
+            .padding(horizontal = 14.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            color = if (selected) Color.White else BuddyColors.Jade.TextSecondary,
+            maxLines = 1
+        )
+    }
+}
+
+@Composable
+private fun GlassIconDockButton(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier
+            .size(48.dp)
+            .shadow(4.dp, CircleShape, spotColor = Color.Black.copy(alpha = 0.06f))
+            .clip(CircleShape)
+            .background(Color.White.copy(alpha = 0.78f))
+            .border(0.5.dp, BuddyColors.HonorCyanAccent.copy(alpha = 0.28f), CircleShape)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = BuddyColors.Jade.TextSecondary,
+            modifier = Modifier.size(22.dp)
+        )
+    }
+}
+
+@Composable
+private fun PresetGlassCard(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    baseColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val shape = RoundedCornerShape(20.dp)
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(124.dp)
+            .shadow(8.dp, shape, spotColor = baseColor.copy(alpha = 0.18f))
+            .clip(shape)
+            .background(Color.White.copy(alpha = 0.82f))
+            .border(
+                0.5.dp,
+                Brush.linearGradient(
+                    colors = listOf(baseColor.copy(alpha = 0.45f), Color.Transparent),
+                    start = Offset.Zero,
+                    end = Offset(400f, 400f)
+                ),
+                shape
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(baseColor.copy(alpha = 0.12f), Color.Transparent)
+                    )
+                )
+        )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = baseColor,
+                modifier = Modifier.size(34.dp)
+            )
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = BuddyColors.Jade.TextPrimary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.labelSmall,
+                color = baseColor,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
 }
 
 @Composable
@@ -364,7 +423,7 @@ private fun ColorCategoryPanel(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        Text("峡谷肤色", color = lp.titleRose, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+        Text("肌体底色", color = BuddyColors.Jade.TextPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
         TintPaletteRow(
             colors = Avatar2DCatalog.skinPalette,
             selectedArgb = cfg.skinTintArgb,
@@ -372,7 +431,7 @@ private fun ColorCategoryPanel(
             lp = lp
         )
         Spacer(Modifier.height(12.dp))
-        Text("峡谷发色", color = lp.titleIndigo, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+        Text("发色通道", color = BuddyColors.HonorCyanAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
         TintPaletteRow(
             colors = Avatar2DCatalog.hairPalette,
             selectedArgb = cfg.hairTintArgb,
@@ -385,7 +444,7 @@ private fun ColorCategoryPanel(
             lp = lp
         )
         Spacer(Modifier.height(12.dp))
-        Text("战衣主色", color = lp.titleRose, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+        Text("战衣主色", color = BuddyColors.Jade.AccentAmber, fontWeight = FontWeight.Bold, fontSize = 12.sp)
         TintPaletteRow(
             colors = Avatar2DCatalog.outfitPalette,
             selectedArgb = cfg.outfitTintArgb,
@@ -415,53 +474,14 @@ private fun ColorCategoryPanel(
                     }
                 },
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color(0xFFFFFFFF),
-                    checkedTrackColor = Color(0xFF0284C7),
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = BuddyColors.HonorCyanAccent,
                     uncheckedThumbColor = Color(0xFFF1F5F9),
                     uncheckedTrackColor = Color(0xFFCBD5E1),
                     uncheckedBorderColor = Color(0xFF94A3B8)
                 )
             )
         }
-    }
-}
-
-@Composable
-private fun BubblyBackground(modifier: Modifier) {
-    val infiniteTransition = rememberInfiniteTransition(label = "bubbly")
-    val phase by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = kotlin.math.PI.toFloat() * 2f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(4000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "phase"
-    )
-
-    Canvas(modifier = modifier) {
-        val sHeight = size.height
-        val sWidth = size.width
-        val dy1 = kotlin.math.sin(phase) * 15.dp.toPx()
-        val dy2 = kotlin.math.cos(phase * 1.5f) * 20.dp.toPx()
-        val dy3 = kotlin.math.sin(phase * 0.8f) * 10.dp.toPx()
-
-        // Draw some magical soft dynamic circles
-        drawCircle(
-            color = Color(0x22FF69B4),
-            radius = sWidth * 0.4f,
-            center = Offset(sWidth * 0.1f, sHeight * 0.2f + dy1)
-        )
-        drawCircle(
-            color = Color(0x3381D4FA),
-            radius = sWidth * 0.3f,
-            center = Offset(sWidth * 0.9f, sHeight * 0.8f + dy2)
-        )
-        drawCircle(
-            color = Color(0x22FFF59D),
-            radius = sWidth * 0.25f,
-            center = Offset(sWidth * 0.7f, sHeight * 0.1f + dy3)
-        )
     }
 }
 
@@ -484,23 +504,31 @@ private fun LayerGrid(
     ) {
         items(drawables.size, key = { it }) { index ->
             val sel = selected == index
-            val cardShape = RoundedCornerShape(24.dp)
+            val cardShape = RoundedCornerShape(20.dp)
+            val borderBrush = Brush.linearGradient(
+                colors = if (sel) {
+                    listOf(BuddyColors.HonorCyanAccent.copy(alpha = 0.55f), Color.Transparent)
+                } else {
+                    listOf(Color(0x22000000), Color(0x11000000))
+                }
+            )
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(112.dp)
-                    .then(
-                        if (sel) {
-                            Modifier.shadow(12.dp, cardShape, spotColor = Color(0xFFFF69B4))
-                        } else {
-                            Modifier.shadow(4.dp, cardShape, spotColor = Color(0x22000000))
-                        }
+                    .shadow(
+                        if (sel) 10.dp else 3.dp,
+                        cardShape,
+                        spotColor = if (sel) BuddyColors.HonorCyanAccent.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.05f)
                     )
                     .clip(cardShape)
-                    .background(if (sel) Brush.linearGradient(listOf(Color(0xFFFFF0F5), Color(0xFFFFD1DC))) else Brush.linearGradient(listOf(Color.White, Color(0xFFFAFAFA))))
+                    .background(
+                        if (sel) lp.cellBgSelected
+                        else lp.cellBg
+                    )
                     .border(
-                        width = if (sel) 2.dp else 1.dp,
-                        color = if (sel) Color(0xFFFF69B4) else Color(0x11000000),
+                        width = 0.5.dp,
+                        brush = borderBrush,
                         shape = cardShape
                     )
                     .clickable { onSelect(index) }
@@ -568,6 +596,7 @@ private fun TintPaletteRow(
         }
     }
 }
+
 @Composable
 private fun HeroTabPanel(
     vm: FaceStudioViewModel,
@@ -584,101 +613,75 @@ private fun HeroTabPanel(
     ) {
         item(span = { GridItemSpan(2) }) {
             Text(
-                "卡通风格套装",
+                "协议套装 · 星耀模版",
                 style = MaterialTheme.typography.labelLarge,
-                color = lp.textSecondary,
+                color = BuddyColors.Jade.TextPrimary,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
         }
         items(cartoon.size) { index ->
             val item = cartoon[index]
-            val g = lp.cartoonCardGradients.getOrElse(index) { lp.cartoonCardGradients.last() }
-            val cardShape = RoundedCornerShape(18.dp)
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(118.dp)
-                    .shadow(10.dp, cardShape, spotColor = g.last().copy(alpha = 0.32f))
-                    .clip(cardShape)
-                    .background(Brush.linearGradient(g))
-                    .border(1.dp, Color.White.copy(alpha = 0.45f), cardShape)
-                    .clickable { vm.applyCartoonStylePreset(index) }
-                    .padding(horizontal = 10.dp, vertical = 10.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .shadow(4.dp, CircleShape)
-                        .clip(CircleShape)
-                        .background(lp.heroCardEmojiCircle)
-                        .border(2.dp, lp.heroCardEmojiRing, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(item.emoji, fontSize = 26.sp)
-                }
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    item.label,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = Color.White,
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    "一键套用",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.White.copy(alpha = 0.88f)
-                )
-            }
+            val accent = if (index % 2 == 0) BuddyColors.HonorCyanAccent else BuddyColors.Jade.AccentAmber
+            PresetGlassCard(
+                title = item.label,
+                subtitle = "一键覆写",
+                icon = item.icon,
+                baseColor = accent,
+                onClick = { vm.applyCartoonStylePreset(index) },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
         item(span = { GridItemSpan(2) }) {
             Text(
-                "英雄主题灵感",
+                "峡谷战备主题",
                 style = MaterialTheme.typography.labelLarge,
-                color = lp.textSecondary,
+                color = BuddyColors.Jade.TextPrimary,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
             )
         }
         items(heroItems.size) { index ->
             val item = heroItems[index]
-            val g = lp.heroCardGradients.getOrElse(index) { lp.heroCardGradients.last() }
-            val cardShape = RoundedCornerShape(24.dp)
+            val accent = if (index % 2 == 0) BuddyColors.HonorCyanAccent else BuddyColors.Jade.AccentAmber
+            val shape = RoundedCornerShape(22.dp)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(132.dp)
-                    .shadow(12.dp, cardShape, spotColor = g.last().copy(alpha = 0.5f))
-                    .clip(cardShape)
-                    .background(Brush.linearGradient(g))
-                    .border(2.dp, Color.White.copy(alpha = 0.7f), cardShape)
+                    .shadow(10.dp, shape, spotColor = accent.copy(alpha = 0.15f))
+                    .clip(shape)
+                    .background(Color.White.copy(alpha = 0.8f))
+                    .border(
+                        0.5.dp,
+                        Brush.linearGradient(
+                            listOf(accent.copy(alpha = 0.4f), Color.Transparent),
+                            start = Offset(0f, 0f),
+                            end = Offset(500f, 500f)
+                        ),
+                        shape
+                    )
                     .clickable { vm.applyHero2DTheme(index) }
-                    .padding(horizontal = 10.dp, vertical = 10.dp),
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
-                        .shadow(4.dp, CircleShape)
+                        .size(46.dp)
+                        .shadow(4.dp, CircleShape, spotColor = Color.Black.copy(alpha = 0.06f))
                         .clip(CircleShape)
                         .background(lp.heroCardEmojiCircle)
-                        .border(2.dp, lp.heroCardEmojiRing, CircleShape),
+                        .border(0.5.dp, lp.heroCardEmojiRing, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(item.emoji, fontSize = 28.sp)
+                    Text(item.emoji, fontSize = 26.sp)
                 }
                 Spacer(Modifier.height(8.dp))
                 Text(
                     item.label,
                     style = MaterialTheme.typography.labelLarge,
-                    color = Color.White,
+                    color = BuddyColors.Jade.TextPrimary,
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Bold,
                     maxLines = 2,
@@ -686,9 +689,9 @@ private fun HeroTabPanel(
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    "一键应用套装",
+                    "一键同步机体",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.White.copy(alpha = 0.88f)
+                    color = accent
                 )
             }
         }

@@ -1,6 +1,16 @@
 package com.example.tx_ku.feature.profile.facestudio
 
 import android.graphics.Bitmap
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.EaseInCubic
+import androidx.compose.animation.core.EaseOutExpo
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,7 +21,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -277,15 +290,37 @@ fun FaceStudioInteractivePreview(
                     }
                 }
         ) {
-            FaceStudioPreview(
-                tuning = tuning,
-                modifier = Modifier.fillMaxSize(),
-                size = wDp,
-                layeredConfig = layeredConfig,
-                useLayered2DPreview = useLayered2DPreview,
-                layeredHairMotionEnabled = layeredHairMotionEnabled,
-                layeredHairMotionEmphasis = layeredHairMotionEmphasis
-            )
+            AnimatedContent(
+                targetState = useLayered2DPreview,
+                transitionSpec = {
+                    val enter = fadeIn(tween(380, delayMillis = 100, easing = EaseOutExpo)) +
+                        scaleIn(
+                            initialScale = 0.92f,
+                            animationSpec = tween(380, delayMillis = 100, easing = EaseOutExpo)
+                        )
+                    val exit = fadeOut(tween(320, easing = EaseInCubic)) +
+                        scaleOut(
+                            targetScale = 0.92f,
+                            animationSpec = tween(320, easing = EaseInCubic)
+                        )
+                    ContentTransform(
+                        targetContentEnter = enter,
+                        initialContentExit = exit,
+                        sizeTransform = SizeTransform(clip = false)
+                    )
+                },
+                label = "face_studio_dim_shift"
+            ) { for2d ->
+                FaceStudioPreview(
+                    tuning = tuning,
+                    modifier = Modifier.fillMaxSize(),
+                    size = wDp,
+                    layeredConfig = layeredConfig,
+                    useLayered2DPreview = for2d,
+                    layeredHairMotionEnabled = layeredHairMotionEnabled,
+                    layeredHairMotionEmphasis = layeredHairMotionEmphasis
+                )
+            }
             if (showLayerHint) {
                 val lp = FaceStudioLightPalette
                 val light = useLightChrome && useLayered2DPreview
@@ -555,49 +590,14 @@ fun HonorSlider(
     leftHint: String = "",
     rightHint: String = ""
 ) {
-    Column(modifier.fillMaxWidth()) {
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                label,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.White.copy(alpha = 0.9f),
-                fontWeight = FontWeight.Medium
-            )
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = BuddyColors.PrimaryVariant.copy(alpha = 0.2f)
-            ) {
-                Text(
-                    "%.0f%%".format(value * 100f),
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = BuddyColors.HonorCyanAccent,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-        if (leftHint.isNotEmpty() || rightHint.isNotEmpty()) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(leftHint, style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.5f))
-                Text(rightHint, style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.5f))
-            }
-        }
-        Slider(
-            value = value,
-            onValueChange = onValueChange,
-            valueRange = 0f..1f,
-            colors = SliderDefaults.colors(
-                thumbColor = BuddyColors.HonorCyanAccent,
-                activeTrackColor = BuddyColors.PrimaryVariant.copy(alpha = 0.7f),
-                inactiveTrackColor = Color.White.copy(alpha = 0.15f)
-            )
-        )
-        Spacer(Modifier.height(4.dp))
-    }
+    HolographicSlider(
+        label = label,
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier,
+        leftHint = leftHint,
+        rightHint = rightHint
+    )
 }
 
 // ═══════════════════════════════════════════════════════════

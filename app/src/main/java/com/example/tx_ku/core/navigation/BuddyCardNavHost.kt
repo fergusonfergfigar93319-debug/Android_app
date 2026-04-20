@@ -1,5 +1,8 @@
+@file:OptIn(androidx.compose.animation.ExperimentalSharedTransitionApi::class)
+
 package com.example.tx_ku.core.navigation
 
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -8,8 +11,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -30,14 +37,43 @@ import com.example.tx_ku.feature.auth.RegisterScreen
 import com.example.tx_ku.feature.splash.SplashScreen
 import com.example.tx_ku.feature.feed.EsportsCultureDetailScreen
 import com.example.tx_ku.feature.feed.GameNewsDetailScreen
+import com.example.tx_ku.feature.publish.MediaPublishScreen
+import com.example.tx_ku.TxKuApp
+import com.example.tx_ku.core.model.CurrentUser
+import com.example.tx_ku.core.prefs.GameInterestStore
+import com.example.tx_ku.core.prefs.UserAgentStore
 
 @Composable
 fun BuddyCardNavHost(navController: NavHostController) {
-    NavHost(
-        navController = navController,
-        startDestination = Routes.SPLASH,
-        modifier = Modifier.fillMaxSize()
-    ) {
+    val context = LocalContext.current
+    val app = context.applicationContext as TxKuApp
+    val isLoggedIn by app.container.sessionStore.isLoggedInFlow.collectAsState(initial = false)
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    LaunchedEffect(isLoggedIn, currentRoute) {
+        if (!isLoggedIn) return@LaunchedEffect
+        if (currentRoute != Routes.LOGIN) return@LaunchedEffect
+        val sessionStore = app.container.sessionStore
+        sessionStore.restoreCurrentUserIfMemoryEmpty()
+        UserAgentStore.loadIntoCurrentUser()
+        val dest = when {
+            CurrentUser.profile == null -> Routes.ONBOARDING
+            !GameInterestStore.hasCompletedSelection() -> Routes.GAME_INTEREST
+            else -> Routes.MAIN_TABS
+        }
+        navController.navigate(dest) {
+            popUpTo(Routes.LOGIN) { inclusive = true }
+            launchSingleTop = true
+        }
+    }
+
+    SharedTransitionLayout {
+        NavHost(
+            navController = navController,
+            startDestination = Routes.SPLASH,
+            modifier = Modifier.fillMaxSize()
+        ) {
         composable(Routes.SPLASH) {
             SplashScreen(navController)
         }
@@ -54,7 +90,11 @@ fun BuddyCardNavHost(navController: NavHostController) {
             FollowGamesScreen(navController)
         }
         composable(Routes.MAIN_TABS) {
-            MainTabScreen(navController = navController)
+            MainTabScreen(
+                navController = navController,
+                sharedTransitionScope = this@SharedTransitionLayout,
+                animatedContentScope = this
+            )
         }
         composable(Routes.MY_AGENT) {
             AgentPersonaScreen(navController = navController)
@@ -76,7 +116,20 @@ fun BuddyCardNavHost(navController: NavHostController) {
             arguments = listOf(navArgument("newsId") { type = NavType.StringType })
         ) { backStackEntry ->
             val newsId = backStackEntry.arguments?.getString("newsId")
-            GameNewsDetailScreen(newsId = newsId, navController = navController)
+            GameNewsDetailScreen(
+                newsId = newsId,
+                navController = navController,
+                sharedTransitionScope = this@SharedTransitionLayout,
+                animatedContentScope = this
+            )
+        }
+        composable(Routes.MEDIA_PUBLISH) {
+            MediaPublishScreen(
+                onBackClick = { navController.popBackStack() },
+                onPublishClick = { _, _ ->
+                    navController.popBackStack()
+                }
+            )
         }
         composable(
             route = Routes.ESPORTS_CULTURE_DETAIL + "/{cultureId}",
@@ -122,6 +175,7 @@ fun BuddyCardNavHost(navController: NavHostController) {
         ) { backStackEntry ->
             val relationId = backStackEntry.arguments?.getString("relationId")
             BuddyRoomScreen(relationId = relationId, navController = navController)
+        }
         }
     }
 }

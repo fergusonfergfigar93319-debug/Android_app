@@ -5,7 +5,7 @@ import com.example.tx_ku.core.domain.AgentPersonaResolver
 import com.example.tx_ku.core.prefs.UserAgentStore
 import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.core.model.Profile
-import com.example.tx_ku.feature.auth.AuthRepository
+import com.example.tx_ku.feature.auth.LocalAuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -99,7 +99,7 @@ class ProfileEditViewModel : ViewModel() {
         CurrentUser.buddyAgent = AgentPersonaResolver.resolve(p, CurrentUser.agentTuning)
         CurrentUser.buddyCard = refreshBuddyCardFromProfile(p, CurrentUser.buddyCard)
         CurrentUser.account?.email?.let { email ->
-            AuthRepository.updateStoredProfile(email, p.nickname, p.avatarUrl)
+            LocalAuthRepository.updateStoredProfile(email, p.nickname, p.avatarUrl)
         }
         UserAgentStore.saveFromCurrentUser()
         return true

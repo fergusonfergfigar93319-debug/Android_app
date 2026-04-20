@@ -4,6 +4,7 @@ import com.example.tx_ku.core.domain.AgentPersonaResolver
 import com.example.tx_ku.core.model.AgentTuning
 import com.example.tx_ku.core.model.BuddyCard
 import com.example.tx_ku.core.model.CurrentUser
+import com.example.tx_ku.core.prefs.LoginSessionStore
 import com.example.tx_ku.core.prefs.UserAgentStore
 import com.example.tx_ku.feature.onboarding.parseAnswersToProfile
 
@@ -28,15 +29,30 @@ object DevQuickLogin {
     fun ensureAccountAndLogin(): Boolean {
         if (!DeveloperAuthConfig.isDebugBuild()) return false
         val email = DEMO_EMAIL.trim().lowercase()
-        if (!AuthRepository.isEmailRegistered(email)) {
-            val r = AuthRepository.register(DEMO_EMAIL, DEMO_PASSWORD, DEMO_NICKNAME, null)
-            if (r.isFailure && !AuthRepository.login(DEMO_EMAIL, DEMO_PASSWORD)) {
+        if (!LocalAuthRepository.isEmailRegistered(email)) {
+            val r = LocalAuthRepository.register(DEMO_EMAIL, DEMO_PASSWORD, DEMO_NICKNAME, null)
+            if (r.isFailure && !LocalAuthRepository.login(DEMO_EMAIL, DEMO_PASSWORD)) {
                 return false
             }
-        } else if (!AuthRepository.login(DEMO_EMAIL, DEMO_PASSWORD)) {
+        } else if (!LocalAuthRepository.login(DEMO_EMAIL, DEMO_PASSWORD)) {
             return false
         }
         return true
+    }
+
+    /**
+     * 在内存登录成功后写入 DataStore token，供 [LoginSessionStore.isLoggedInFlow] 与全局路由感知。
+     * 请在 [injectMockProfile] / [clearProfileOnly] 之后再调用，避免与导航竞态。
+     */
+    suspend fun persistSessionTokens(sessionStore: LoginSessionStore) {
+        val acc = CurrentUser.account ?: return
+        sessionStore.saveSession(
+            accessToken = "dev_access_${acc.email.hashCode()}",
+            refreshToken = "dev_refresh_${acc.email.hashCode()}",
+            userId = CurrentUser.profile?.userId ?: "local_dev_user",
+            email = acc.email
+        )
+        sessionStore.rememberSuccessfulLogin(acc.email, acc.regNickname, acc.avatarUrl)
     }
 
     /** 登录后清空画像，进入建档流。 */
@@ -88,7 +104,7 @@ object DevQuickLogin {
         CurrentUser.buddyCard = card
         CurrentUser.buddyAgent = AgentPersonaResolver.resolve(profile, CurrentUser.agentTuning)
         CurrentUser.account?.email?.let { email ->
-            AuthRepository.updateStoredProfile(email, profile.nickname, profile.avatarUrl)
+            LocalAuthRepository.updateStoredProfile(email, profile.nickname, profile.avatarUrl)
         }
         UserAgentStore.saveFromCurrentUser()
     }

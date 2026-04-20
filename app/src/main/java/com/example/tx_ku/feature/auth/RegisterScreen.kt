@@ -32,6 +32,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,9 +59,11 @@ import com.example.tx_ku.core.designsystem.theme.JadePrimaryButton
 import com.example.tx_ku.core.designsystem.theme.jadeSoftCard
 import com.example.tx_ku.core.navigation.Routes
 import com.example.tx_ku.core.navigation.dispatchAfterMainFrame
-import com.example.tx_ku.core.prefs.LoginSessionStore
+import com.example.tx_ku.TxKuApp
 import com.example.tx_ku.core.prefs.UserAgentStore
+import com.example.tx_ku.feature.auth.LocalAuthRepository
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private val RegisterBentoGap = 20.dp
 private val RegisterOuterPadding = 24.dp
@@ -105,6 +108,8 @@ fun RegisterScreen(navController: NavController) {
 
     val haptics = LocalHapticFeedback.current
     val context = LocalContext.current
+    val sessionStore = (context.applicationContext as TxKuApp).container.sessionStore
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         delay(40)
@@ -211,7 +216,7 @@ fun RegisterScreen(navController: NavController) {
                         style = MaterialTheme.typography.bodySmall,
                         color = BuddyColors.Jade.TextSecondary
                     )
-                    Spacer(modifier = Modifier.height(28.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     AuthSunriseFilledTextField(
                         value = nickname,
@@ -334,17 +339,19 @@ fun RegisterScreen(navController: NavController) {
                             error = "两次访问密钥不一致"
                             return@JadePrimaryButton
                         }
-                        AuthRepository.register(email, password, nickname, avatarUrl).fold(
+                        LocalAuthRepository.register(email, password, nickname, avatarUrl).fold(
                             onSuccess = {
-                                LoginSessionStore.rememberSuccessfulLogin(
-                                    email,
-                                    nickname,
-                                    avatarUrl
-                                )
-                                UserAgentStore.loadIntoCurrentUser()
-                                dispatchAfterMainFrame {
-                                    navController.navigate(Routes.ONBOARDING) {
-                                        popUpTo(Routes.LOGIN) { inclusive = true }
+                                scope.launch {
+                                    sessionStore.rememberSuccessfulLogin(
+                                        email,
+                                        nickname,
+                                        avatarUrl
+                                    )
+                                    UserAgentStore.loadIntoCurrentUser()
+                                    dispatchAfterMainFrame {
+                                        navController.navigate(Routes.ONBOARDING) {
+                                            popUpTo(Routes.LOGIN) { inclusive = true }
+                                        }
                                     }
                                 }
                             },

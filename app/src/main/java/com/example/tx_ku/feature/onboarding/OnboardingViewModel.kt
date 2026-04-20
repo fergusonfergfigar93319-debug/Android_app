@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.core.model.Profile
 import com.example.tx_ku.core.prefs.UserAgentStore
-import com.example.tx_ku.feature.auth.AuthRepository
+import com.example.tx_ku.feature.auth.LocalAuthRepository
 import com.example.tx_ku.feature.profile.refreshBuddyCardFromProfile
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -67,7 +67,7 @@ class OnboardingViewModel : ViewModel() {
             UserAgentStore.loadIntoCurrentUser()
             UserAgentStore.saveFromCurrentUser()
             CurrentUser.account?.email?.let { email ->
-                AuthRepository.updateStoredProfile(email, profile.nickname, profile.avatarUrl)
+                LocalAuthRepository.updateStoredProfile(email, profile.nickname, profile.avatarUrl)
             }
             // TODO: 调用 POST /profiles，再 POST /ai/buddy-card
             _state.value = _state.value.copy(

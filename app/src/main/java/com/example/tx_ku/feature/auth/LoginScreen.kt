@@ -59,10 +59,12 @@ import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -95,6 +97,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.tx_ku.R
 import com.example.tx_ku.core.designsystem.components.buddyRejection
@@ -105,14 +108,17 @@ import com.example.tx_ku.core.designsystem.theme.AmbientBreathingGlow
 import com.example.tx_ku.core.designsystem.theme.JadeOrganicBackground
 import com.example.tx_ku.core.designsystem.theme.JadePrimaryButton
 import com.example.tx_ku.core.designsystem.theme.jadeSoftCard
-import com.example.tx_ku.core.prefs.LoginSessionStore
+import com.example.tx_ku.TxKuApp
 import com.example.tx_ku.core.model.CurrentUser
+import com.example.tx_ku.feature.auth.AuthUiState
+import com.example.tx_ku.feature.auth.AuthViewModel
 import com.example.tx_ku.core.navigation.Routes
 import com.example.tx_ku.core.navigation.dispatchAfterMainFrame
 import com.example.tx_ku.core.prefs.GameInterestStore
 import com.example.tx_ku.core.prefs.UserAgentStore
 import android.widget.Toast
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private val JadeAuthFormPadding = 32.dp
 private val BentoSpring = spring<Dp>(
@@ -133,6 +139,15 @@ fun LoginScreen(navController: NavController) {
 
     val haptics = LocalHapticFeedback.current
     val context = LocalContext.current
+    val appContainer = (context.applicationContext as TxKuApp).container
+    val sessionStore = appContainer.sessionStore
+    val scope = rememberCoroutineScope()
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModel.provideFactory(appContainer.authRepository)
+    )
+    val authUiState by authViewModel.uiState.collectAsState()
+    val lastSavedEmail by sessionStore.lastLoginEmailFlow.collectAsState(initial = null)
+    val lastNicknameHint by sessionStore.lastNicknameHintFlow.collectAsState(initial = null)
 
     LaunchedEffect(Unit) {
         delay(20)
@@ -150,6 +165,16 @@ fun LoginScreen(navController: NavController) {
     LaunchedEffect(error) {
         if (error != null) {
             haptics.buddyRejection()
+        }
+    }
+
+    LaunchedEffect(authUiState) {
+        when (val s = authUiState) {
+            is AuthUiState.Error -> {
+                error = s.message
+                authViewModel.resetState()
+            }
+            else -> Unit
         }
     }
 
@@ -197,7 +222,7 @@ fun LoginScreen(navController: NavController) {
     val bentoShape = MaterialTheme.shapes.extraLarge
     val bentoGap = BuddyDimens.SpacingLg
     val heroIdentityPillLabel =
-        LoginSessionStore.lastNicknameHint()?.trim()?.take(8)?.takeIf { it.isNotEmpty() } ?: "上次身份"
+        lastNicknameHint?.trim()?.take(8)?.takeIf { it.isNotEmpty() } ?: "上次身份"
 
     val devBannerExtra = if (DevQuickLogin.isEnabled()) 22.dp else 0.dp
     val targetFormGlowY = when {
@@ -349,7 +374,7 @@ fun LoginScreen(navController: NavController) {
                                                 color = BuddyColors.Jade.AccentAmber.copy(alpha = 0.2f)
                                             )
                                         ) {
-                                            val e = LoginSessionStore.lastEmail()
+                                            val e = lastSavedEmail
                                             if (!e.isNullOrBlank()) {
                                                 email = e
                                                 error = null
@@ -517,25 +542,15 @@ fun LoginScreen(navController: NavController) {
                             Spacer(modifier = Modifier.height(BuddyDimens.SpacingLg))
                             JadePrimaryButton(
                                 text = "唤醒并接入",
+                                enabled = authUiState !is AuthUiState.Loading,
                                 onBeforeClick = { context.performQuantumTerminalLockHaptic() },
                                 onClick = {
                                     if (email.isBlank() || password.isBlank()) {
                                         error = "请填写身份信标与共振密钥"
                                         return@JadePrimaryButton
                                     }
-                                    if (AuthRepository.login(email, password)) {
-                                        val acc = CurrentUser.account
-                                        if (acc != null) {
-                                            LoginSessionStore.rememberSuccessfulLogin(
-                                                acc.email,
-                                                acc.regNickname,
-                                                acc.avatarUrl
-                                            )
-                                        }
-                                        navigateAfterSuccessfulAuth()
-                                    } else {
-                                        error = "身份信标或共振密钥不正确，或尚未刻录"
-                                    }
+                                    error = null
+                                    authViewModel.login(email, password)
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -657,11 +672,13 @@ fun LoginScreen(navController: NavController) {
                             onClick = {
                                 devMenuExpanded = false
                                 error = null
-                                if (DevQuickLogin.ensureAccountAndLogin()) {
+                                scope.launch {
+                                    if (!DevQuickLogin.ensureAccountAndLogin()) {
+                                        error = "开发者通道：登录失败"
+                                        return@launch
+                                    }
                                     DevQuickLogin.injectMockProfile()
-                                    navigateAfterSuccessfulAuth()
-                                } else {
-                                    error = "开发者通道：登录失败"
+                                    DevQuickLogin.persistSessionTokens(sessionStore)
                                 }
                             }
                         )
@@ -670,11 +687,13 @@ fun LoginScreen(navController: NavController) {
                             onClick = {
                                 devMenuExpanded = false
                                 error = null
-                                if (DevQuickLogin.ensureAccountAndLogin()) {
+                                scope.launch {
+                                    if (!DevQuickLogin.ensureAccountAndLogin()) {
+                                        error = "开发者通道：登录失败"
+                                        return@launch
+                                    }
                                     DevQuickLogin.clearProfileOnly()
-                                    navigateAfterSuccessfulAuth()
-                                } else {
-                                    error = "开发者通道：登录失败"
+                                    DevQuickLogin.persistSessionTokens(sessionStore)
                                 }
                             }
                         )

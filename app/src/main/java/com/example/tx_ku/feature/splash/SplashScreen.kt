@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -36,6 +37,7 @@ import com.example.tx_ku.core.designsystem.components.BuddyPageBrushes
 import com.example.tx_ku.core.designsystem.components.HonorBrandLightPillars
 import com.example.tx_ku.core.designsystem.components.HonorBrandLogoRing
 import com.example.tx_ku.core.designsystem.theme.BuddyColors
+import com.example.tx_ku.TxKuApp
 import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.core.navigation.Routes
 import com.example.tx_ku.core.navigation.dispatchAfterMainFrame
@@ -49,8 +51,11 @@ private const val GlowAlphaIdle = 0.72f
 fun SplashScreen(
     navController: NavController
 ) {
+    val context = LocalContext.current
     LaunchedEffect(Unit) {
         delay(900)
+        val sessionStore = (context.applicationContext as TxKuApp).container.sessionStore
+        sessionStore.restoreCurrentUserIfMemoryEmpty()
         if (CurrentUser.isLoggedIn()) {
             UserAgentStore.loadIntoCurrentUser()
         }

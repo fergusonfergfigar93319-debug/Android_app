@@ -71,6 +71,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -95,7 +96,8 @@ import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.core.model.Post
 import com.example.tx_ku.core.model.Profile
 import com.example.tx_ku.core.navigation.Routes
-import com.example.tx_ku.feature.auth.AuthRepository
+import com.example.tx_ku.TxKuApp
+import com.example.tx_ku.feature.auth.LocalAuthRepository
 import com.example.tx_ku.feature.chat.AgentFusionAvatarPortrait
 import com.example.tx_ku.feature.chat.agentAvatarAccentForStyle
 import com.example.tx_ku.feature.chat.avatarDrawableResForStyle
@@ -116,6 +118,7 @@ fun ProfileScreen(
     val following by FollowRepository.following.collectAsState()
     val allPosts by ForumRepository.posts.collectAsState()
     val bookmarkIds by ForumRepository.bookmarkedPostIds.collectAsState()
+    val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
     val snackbarHost = LocalBuddySnackbarHostState.current
     val snackScope = LocalBuddySnackbarScope.current
@@ -224,8 +227,11 @@ fun ProfileScreen(
                     Spacer(Modifier.height(BuddyDimens.SpacingXl))
                     if (navController != null) {
                         LogoutButton {
-                            AuthRepository.logout()
-                            navController.navigate(Routes.LOGIN) { popUpTo(Routes.MAIN_TABS) { inclusive = true } }
+                            scope.launch {
+                                (context.applicationContext as TxKuApp).container.sessionStore.clearSession()
+                                LocalAuthRepository.logout()
+                                navController.navigate(Routes.LOGIN) { popUpTo(Routes.MAIN_TABS) { inclusive = true } }
+                            }
                         }
                     }
                 }

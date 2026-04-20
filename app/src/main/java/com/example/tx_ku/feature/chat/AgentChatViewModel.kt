@@ -3,12 +3,16 @@ package com.example.tx_ku.feature.chat
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.tx_ku.TxKuApp
+import com.example.tx_ku.core.domain.AgentPersonaConfigMapper
 import com.example.tx_ku.core.domain.AgentPersonaResolver
 import com.example.tx_ku.core.brand.BrandConfig
 import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.feature.chat.agent.AgentNavCommand
+import com.example.tx_ku.feature.chat.agent.AgentTaskInterpretation
 import com.example.tx_ku.feature.chat.agent.AgentTaskRouter
 import com.example.tx_ku.feature.chat.reminder.ActivityReminderScheduler
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -45,6 +49,10 @@ data class AgentChatUi(
 }
 
 class AgentChatViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val agentChatRepository: AgentChatRepository by lazy {
+        (getApplication() as TxKuApp).container.agentChatRepository
+    }
 
     private val bubbleTimeFormat = SimpleDateFormat("HH:mm", Locale.CHINA)
 
@@ -179,6 +187,101 @@ class AgentChatViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    private suspend fun postReplySideEffects(task: AgentTaskInterpretation) {
+        val nav = task.nav
+        if (nav != null) {
+            delay(220)
+            navCommandChannel.send(nav)
+        }
+        val reminder = task.reminderSchedule
+        if (reminder != null) {
+            delay(180)
+            ActivityReminderScheduler.schedule(getApplication(), reminder)
+        }
+    }
+
+    /**
+     * 承接 [AgentChatRepository] 的流式分块：首包到达前保持 [AgentChatUi.isAgentTyping]，
+     * 以展示 [AgentTypingRow]（TTFB）；随后在同一搭子气泡内拼接文本。
+     */
+    private suspend fun streamAgentTextFromFlow(
+        flow: Flow<String>,
+        onComplete: suspend () -> Unit = {}
+    ) {
+        val streamId = UUID.randomUUID().toString()
+        val sk = seq.incrementAndGet()
+        var bubbleAdded = false
+        try {
+            flow.collect { chunk ->
+                if (!bubbleAdded) {
+                    bubbleAdded = true
+                    _ui.update {
+                        it.copy(
+                            messages = it.messages + AgentChatStreamItem.TextBubble(
+                                id = streamId,
+                                text = chunk,
+                                isFromUser = false,
+                                isStreaming = true,
+                                timeLabel = "",
+                                sortKey = sk
+                            ),
+                            isAgentTyping = false,
+                            streamRevision = it.streamRevision + 1
+                        )
+                    }
+                } else {
+                    _ui.update { state ->
+                        state.copy(
+                            messages = state.messages.map { m ->
+                                if (m is AgentChatStreamItem.TextBubble && m.id == streamId) {
+                                    m.copy(text = m.text + chunk)
+                                } else {
+                                    m
+                                }
+                            },
+                            streamRevision = state.streamRevision + 1
+                        )
+                    }
+                }
+            }
+            if (!bubbleAdded) {
+                _ui.update { it.copy(isAgentTyping = false) }
+            } else {
+                _ui.update { state ->
+                    state.copy(
+                        messages = state.messages.map { m ->
+                            if (m is AgentChatStreamItem.TextBubble && m.id == streamId) {
+                                m.copy(
+                                    isStreaming = false,
+                                    timeLabel = nowBubbleTimeLabel()
+                                )
+                            } else {
+                                m
+                            }
+                        },
+                        streamRevision = state.streamRevision + 1
+                    )
+                }
+            }
+            onComplete()
+        } catch (e: CancellationException) {
+            _ui.update { state ->
+                state.copy(
+                    isAgentTyping = false,
+                    messages = if (bubbleAdded) {
+                        state.messages.filterNot { m ->
+                            m is AgentChatStreamItem.TextBubble && m.id == streamId
+                        }
+                    } else {
+                        state.messages
+                    },
+                    streamRevision = state.streamRevision + 1
+                )
+            }
+            throw e
+        }
+    }
+
     fun send() {
         sendMessageContent(_ui.value.inputDraft.trim())
     }
@@ -215,23 +318,24 @@ class AgentChatViewModel(application: Application) : AndroidViewModel(applicatio
         }
 
         val tuningSnapshot = CurrentUser.agentTuning
+        val personaConfig = AgentPersonaConfigMapper.from(profile, tuningSnapshot)
+        val memorySnippet = AgentPersonaConfigMapper.memorySnippet(profile)
         streamReplyJob?.cancel()
         streamReplyJob = viewModelScope.launch {
-            delay(380)
             val task = AgentTaskRouter.interpret(draft, profile, tuningSnapshot)
-            val replyText = task.replyOverride ?: runCatching {
-                AgentPersonaResolver.replyToChat(draft, profile, tuningSnapshot)
-            }.getOrElse { "等一下，我脑子卡了一下…你再说细点我更好接。" }
-            streamAgentText(replyText) {
-                val nav = task.nav
-                if (nav != null) {
-                    delay(220)
-                    navCommandChannel.send(nav)
-                }
-                val reminder = task.reminderSchedule
-                if (reminder != null) {
-                    delay(180)
-                    ActivityReminderScheduler.schedule(getApplication(), reminder)
+            val replyOverride = task.replyOverride
+            if (replyOverride != null) {
+                delay(380)
+                streamAgentText(replyOverride) { postReplySideEffects(task) }
+            } else {
+                streamAgentTextFromFlow(
+                    agentChatRepository.streamAgentResponse(
+                        userMessage = draft,
+                        personaConfig = personaConfig,
+                        dynamicMemoryContext = memorySnippet
+                    )
+                ) {
+                    postReplySideEffects(task)
                 }
             }
         }

@@ -1,39 +1,108 @@
 package com.example.tx_ku.core.prefs
 
 import android.content.Context
-import android.content.SharedPreferences
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import com.example.tx_ku.core.model.AccountSummary
+import com.example.tx_ku.core.model.CurrentUser
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import java.io.IOException
+
+private val Context.txKuSessionDataStore: DataStore<Preferences> by preferencesDataStore(name = "tx_ku_session")
 
 /**
- * 登录页「快捷特工接入」：记录最近一次成功登录的联络通道摘要（演示用，可换 DataStore）。
+ * 登录会话：UDF 状态源（DataStore），供鉴权、拦截器与 UI 订阅。
+ * 快捷字段（上次邮箱/昵称/头像）与正式 token 共存，便于渐进接入后端。
  */
-object LoginSessionStore {
+class LoginSessionStore(context: Context) {
 
-    private const val PREFS = "tx_ku_login_session"
-    private lateinit var prefs: SharedPreferences
+    private val dataStore = context.applicationContext.txKuSessionDataStore
 
-    fun init(context: Context) {
-        if (!::prefs.isInitialized) {
-            prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+    private object Keys {
+        val ACCESS_TOKEN = stringPreferencesKey("access_token")
+        val REFRESH_TOKEN = stringPreferencesKey("refresh_token")
+        val USER_ID = stringPreferencesKey("user_id")
+        val LAST_LOGIN_EMAIL = stringPreferencesKey("last_login_email")
+        val LAST_NICKNAME = stringPreferencesKey("last_nickname")
+        val LAST_AVATAR = stringPreferencesKey("last_avatar")
+    }
+
+    private fun preferencesFlow(): Flow<Preferences> = dataStore.data
+        .catch { e ->
+            if (e is IOException) emit(emptyPreferences()) else throw e
+        }
+
+    val accessTokenFlow: Flow<String?> = preferencesFlow().map { it[Keys.ACCESS_TOKEN] }
+
+    val refreshTokenFlow: Flow<String?> = preferencesFlow().map { it[Keys.REFRESH_TOKEN] }
+
+    val lastLoginEmailFlow: Flow<String?> = preferencesFlow().map { it[Keys.LAST_LOGIN_EMAIL] }
+
+    val lastNicknameHintFlow: Flow<String?> = preferencesFlow().map { it[Keys.LAST_NICKNAME] }
+
+    val lastAvatarUrlFlow: Flow<String?> = preferencesFlow().map { it[Keys.LAST_AVATAR] }
+
+    val isLoggedInFlow: Flow<Boolean> = accessTokenFlow.map { !it.isNullOrBlank() }
+
+    suspend fun saveSession(
+        accessToken: String,
+        refreshToken: String,
+        userId: String,
+        email: String? = null
+    ) {
+        dataStore.edit {
+            it[Keys.ACCESS_TOKEN] = accessToken
+            it[Keys.REFRESH_TOKEN] = refreshToken
+            it[Keys.USER_ID] = userId
+            if (email != null) it[Keys.LAST_LOGIN_EMAIL] = email.trim().lowercase()
         }
     }
 
-    fun rememberSuccessfulLogin(email: String, nicknameHint: String?, avatarUrl: String?) {
-        val e = email.trim().lowercase()
-        if (e.isBlank()) return
-        prefs.edit()
-            .putString("last_email", e)
-            .putString("last_nickname", nicknameHint?.trim().orEmpty())
-            .putString("last_avatar", avatarUrl)
-            .apply()
+    suspend fun updateTokens(accessToken: String, refreshToken: String) {
+        dataStore.edit {
+            it[Keys.ACCESS_TOKEN] = accessToken
+            it[Keys.REFRESH_TOKEN] = refreshToken
+        }
     }
 
-    fun lastEmail(): String? = prefs.getString("last_email", null)?.takeIf { it.isNotBlank() }
+    suspend fun clearSession() {
+        dataStore.edit {
+            it.remove(Keys.ACCESS_TOKEN)
+            it.remove(Keys.REFRESH_TOKEN)
+            it.remove(Keys.USER_ID)
+        }
+    }
 
-    fun lastNicknameHint(): String? =
-        prefs.getString("last_nickname", null)?.takeIf { it.isNotBlank() }
+    /** 登录/注册成功后写入快捷身份摘要（与 token 独立，便于当前演示流）。 */
+    suspend fun rememberSuccessfulLogin(email: String, nicknameHint: String?, avatarUrl: String?) {
+        val e = email.trim().lowercase()
+        if (e.isBlank()) return
+        dataStore.edit {
+            it[Keys.LAST_LOGIN_EMAIL] = e
+            it[Keys.LAST_NICKNAME] = nicknameHint?.trim().orEmpty()
+            if (avatarUrl != null) it[Keys.LAST_AVATAR] = avatarUrl else it.remove(Keys.LAST_AVATAR)
+        }
+    }
 
-    fun lastAvatarUrl(): String? =
-        prefs.getString("last_avatar", null)?.takeIf { it.isNotBlank() }
-
-    fun hasQuickAccess(): Boolean = !lastEmail().isNullOrBlank()
+    /**
+     * 冷启动时若内存中无 [CurrentUser.account] 但 DataStore 仍有 token，
+     * 用上次快捷字段恢复演示会话（避免仅依赖内存态）。
+     */
+    suspend fun restoreCurrentUserIfMemoryEmpty() {
+        if (CurrentUser.account != null) return
+        val prefs = dataStore.data.first()
+        val token = prefs[Keys.ACCESS_TOKEN]
+        if (token.isNullOrBlank()) return
+        val email = prefs[Keys.LAST_LOGIN_EMAIL] ?: return
+        val nick = prefs[Keys.LAST_NICKNAME].orEmpty()
+        val av = prefs[Keys.LAST_AVATAR]
+        CurrentUser.account = AccountSummary(email = email, regNickname = nick, avatarUrl = av)
+    }
 }

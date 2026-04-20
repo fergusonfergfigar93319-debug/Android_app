@@ -24,28 +24,20 @@ import androidx.compose.runtime.*
 import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.BrushPainter
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import coil.size.Size
 import com.example.tx_ku.R
 import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.model.FeedAnnouncement
 import com.example.tx_ku.core.model.FeedHomeSubTab
-import com.example.tx_ku.core.model.GameNewsItem
 
 /** 峡谷速递页资讯色板 - 2026 深色沉浸风 */
 object GameNewsTheme {
@@ -66,6 +58,47 @@ object GameNewsTheme {
     val PanelGlass = Color(0xFF1A2035)
     val NeonAccent = Color(0xFF00D4FF)
     val GoldAccent = Color(0xFFFFD700)
+}
+
+/** 游戏频道筛选（原 [GameNewsTopHeader] 第二行），嵌入资讯流列表顶部。 */
+@Composable
+fun FeedGameChannelRow(
+    gameChannels: List<String>,
+    selectedChannel: String?,
+    onChannelSelect: (String?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+    ) {
+        Text(
+            text = "速递频道",
+            color = GameNewsTheme.TextTertiary,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.padding(bottom = 6.dp)
+        )
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            item {
+                HeaderCapsuleChip(
+                    "全部",
+                    emphasize = selectedChannel == null,
+                    onClick = { onChannelSelect(null) },
+                    onHero = false
+                )
+            }
+            items(gameChannels, key = { it }) { name ->
+                HeaderCapsuleChip(
+                    name,
+                    emphasize = selectedChannel == name,
+                    onClick = { onChannelSelect(name) },
+                    onHero = false
+                )
+            }
+        }
+    }
 }
 
 /** 场景快捷条 - 2026 Glassmorphism 风格 */
@@ -483,152 +516,6 @@ fun FeedAnnouncementListSheet(
                 }
             }
             Spacer(modifier = Modifier.height(24.dp))
-        }
-    }
-}
-
-/**
- * Bento Grid 新闻卡片 - 2026 核心设计
- * 特征：大封面图 + 玻璃态信息层 + 渐变边框 + 悬浮标签
- */
-@Composable
-fun GameNewsCard(
-    item: GameNewsItem,
-    modifier: Modifier = Modifier,
-    onOpen: () -> Unit = {}
-) {
-    val interaction = remember(item.id) { MutableInteractionSource() }
-    val cardShape = RoundedCornerShape(20.dp)
-    val gradientBrush = remember(item.coverGradientStart, item.coverGradientEnd) {
-        Brush.linearGradient(listOf(Color(item.coverGradientStart), Color(item.coverGradientEnd)))
-    }
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
-            .shadow(elevation = 12.dp, shape = cardShape, spotColor = BuddyColors.HonorGold.copy(alpha = 0.2f), ambientColor = BuddyColors.BattlePassPurple.copy(alpha = 0.12f))
-            .clip(cardShape)
-            .border(
-                BorderStroke(1.dp, Brush.linearGradient(listOf(BuddyColors.HonorGold.copy(alpha = 0.5f), BuddyColors.HonorCyanAccent.copy(alpha = 0.3f), BuddyColors.HonorGold.copy(alpha = 0.5f)))),
-                cardShape
-            )
-            .clickable(interactionSource = interaction, indication = ripple(bounded = true, color = BuddyColors.HonorGold.copy(alpha = 0.15f)), onClick = onOpen)
-    ) {
-        // 封面图层（占满卡片）
-        val coverRes = item.coverDrawableRes
-        if (coverRes != null && coverRes != 0) {
-            val ctx = LocalContext.current
-            AsyncImage(
-                model = ImageRequest.Builder(ctx).data(coverRes).size(Size(900, 560)).crossfade(false).build(),
-                contentDescription = null,
-                modifier = Modifier.fillMaxWidth().height(200.dp),
-                contentScale = ContentScale.Crop,
-                placeholder = BrushPainter(gradientBrush),
-                error = BrushPainter(gradientBrush)
-            )
-        } else {
-            Box(modifier = Modifier.fillMaxWidth().height(200.dp).background(gradientBrush))
-        }
-
-        // 底部玻璃态信息层
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-        ) {
-            // 渐变遮罩
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(160.dp)
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                Color.Transparent,
-                                Color(0xCC0A0E1A),
-                                Color(0xF00A0E1A)
-                            )
-                        )
-                    )
-            )
-            // 内容
-            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                // 标签行
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (item.isOfficial) {
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = BuddyColors.HonorCyanAccent.copy(alpha = 0.25f),
-                            border = BorderStroke(0.5.dp, BuddyColors.HonorCyanAccent.copy(alpha = 0.6f))
-                        ) {
-                            Text("官方", modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = BuddyColors.HonorCyanAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = BuddyColors.HonorGold.copy(alpha = 0.2f),
-                        border = BorderStroke(0.5.dp, BuddyColors.HonorGold.copy(alpha = 0.5f))
-                    ) {
-                        Text(item.gameName, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), color = BuddyColors.HonorGoldBright, fontSize = 10.sp, fontWeight = FontWeight.Medium)
-                    }
-                    if (!item.topicTag.isNullOrBlank()) {
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = BuddyColors.BattlePassPurpleLight.copy(alpha = 0.22f),
-                            border = BorderStroke(0.5.dp, BuddyColors.HonorCyanAccent.copy(alpha = 0.45f))
-                        ) {
-                            Text(
-                                item.topicTag,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                color = BuddyColors.HonorCyanAccent,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-                Spacer(Modifier.height(8.dp))
-                // 标题
-                Text(text = item.title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                if (item.summary.isNotBlank()) {
-                    Spacer(Modifier.height(4.dp))
-                    Text(text = item.summary, color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-                Spacer(Modifier.height(10.dp))
-                // 底部元信息行
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Box(
-                            modifier = Modifier.size(24.dp).clip(CircleShape)
-                                .background(Brush.linearGradient(listOf(Color(item.coverGradientStart), Color(item.coverGradientEnd)))),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(item.authorName.take(1).ifEmpty { "?" }, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 11.sp)
-                        }
-                        Text(item.authorName, color = Color.White.copy(0.85f), fontSize = 12.sp, fontWeight = FontWeight.Medium)
-                        Text("·", color = Color.White.copy(0.4f), fontSize = 12.sp)
-                        Text(item.timeLabel, color = Color.White.copy(0.5f), fontSize = 11.sp)
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                            Icon(painterResource(R.drawable.ic_forum_chat), null, tint = Color.White.copy(0.6f), modifier = Modifier.size(14.dp))
-                            Text("${item.commentCount}", color = Color.White.copy(0.6f), fontSize = 11.sp)
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                            Icon(painterResource(R.drawable.ic_favorite), null, tint = Color(0xFFFF6B9D).copy(0.8f), modifier = Modifier.size(14.dp))
-                            Text("${item.likeCount}", color = Color.White.copy(0.6f), fontSize = 11.sp)
-                        }
-                    }
-                }
-            }
         }
     }
 }
