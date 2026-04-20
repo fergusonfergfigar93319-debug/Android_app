@@ -95,7 +95,15 @@ class FaceStudioViewModel : ViewModel() {
         if (new == _layered.value) return
         pushUndoBeforeChange()
         _layered.value = new
-        CurrentUser.agentTuning = CurrentUser.agentTuning.copy(layeredAvatarJson = new.toJsonString())
+        val t = CurrentUser.agentTuning
+        // 官方搭子后为立绘展示态 HERO_ILLUSTRATION；一旦在工坊编辑贴纸，切到 LAYERED_2D 与全端头像链路一致
+        val mode = t.avatarDisplayMode
+        val nextMode =
+            if (mode == AvatarDisplayModes.HERO_ILLUSTRATION) AvatarDisplayModes.LAYERED_2D else mode
+        CurrentUser.agentTuning = t.copy(
+            layeredAvatarJson = new.toJsonString(),
+            avatarDisplayMode = nextMode
+        )
         recompute()
     }
 

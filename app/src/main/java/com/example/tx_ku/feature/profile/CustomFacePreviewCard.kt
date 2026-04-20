@@ -49,7 +49,7 @@ fun CustomFacePreviewCard(
     val avatarRes = avatarDrawableResForStyle(tuning.avatarStyle)
     val pad = if (compact) 16.dp else 24.dp
     val ring = if (compact) 156.dp else 208.dp
-    val portrait = if (compact) 146.dp else 198.dp
+    val portrait = ring
     val stageH = if (compact) 232.dp else 292.dp
 
     Surface(

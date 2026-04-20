@@ -51,6 +51,16 @@ class LoginSessionStore(context: Context) {
 
     val isLoggedInFlow: Flow<Boolean> = accessTokenFlow.map { !it.isNullOrBlank() }
 
+    /** 供拦截器 / 同步链路一次性读取（避免长期 collect Flow）。 */
+    suspend fun getAccessToken(): String? = dataStore.data.first()[Keys.ACCESS_TOKEN]
+
+    suspend fun getRefreshToken(): String? = dataStore.data.first()[Keys.REFRESH_TOKEN]
+
+    /** 与 [updateTokens] 同义，便于与鉴权文档命名对齐。 */
+    suspend fun saveTokens(accessToken: String, refreshToken: String) {
+        updateTokens(accessToken, refreshToken)
+    }
+
     suspend fun saveSession(
         accessToken: String,
         refreshToken: String,

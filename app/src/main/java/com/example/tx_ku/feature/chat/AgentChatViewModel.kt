@@ -282,6 +282,31 @@ class AgentChatViewModel(application: Application) : AndroidViewModel(applicatio
                 )
             }
             throw e
+        } catch (e: Exception) {
+            val hint = e.message?.take(120)?.trim().orEmpty().ifEmpty { "流式输出失败" }
+            _ui.update { state ->
+                state.copy(
+                    isAgentTyping = false,
+                    errorHint = hint,
+                    messages = if (bubbleAdded) {
+                        state.messages.map { m ->
+                            if (m is AgentChatStreamItem.TextBubble && m.id == streamId) {
+                                val tail = if (m.text.isBlank()) hint else "${m.text}\n\n（$hint）"
+                                m.copy(
+                                    text = tail,
+                                    isStreaming = false,
+                                    timeLabel = nowBubbleTimeLabel()
+                                )
+                            } else {
+                                m
+                            }
+                        }
+                    } else {
+                        state.messages
+                    },
+                    streamRevision = state.streamRevision + 1
+                )
+            }
         }
     }
 

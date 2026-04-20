@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.example.tx_ku.core.domain.AgentPersonaResolver
 import com.example.tx_ku.core.model.AgentTuning
+import com.example.tx_ku.core.model.AgentTuningRefresh
 import com.example.tx_ku.core.model.AvatarDisplayModes
 import com.example.tx_ku.core.model.CurrentUser
 
@@ -149,6 +150,7 @@ object UserAgentStore {
         CurrentUser.profile?.let { p ->
             CurrentUser.buddyAgent = AgentPersonaResolver.resolve(p, CurrentUser.agentTuning)
         }
+        AgentTuningRefresh.bump()
     }
 
     fun saveFromCurrentUser() {
@@ -193,5 +195,6 @@ object UserAgentStore {
             .putString(k("gamingBondMemory"), t.gamingBondMemory)
             .putBoolean(k("agentChatUnlocked"), CurrentUser.agentChatUnlocked)
             .apply()
+        AgentTuningRefresh.bump()
     }
 }

@@ -2,6 +2,7 @@ package com.example.tx_ku.feature.chat
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -13,6 +14,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -27,6 +29,11 @@ import com.example.tx_ku.feature.profile.facestudio.LayeredAvatarPreview
 import com.example.tx_ku.feature.profile.CustomFaceRenderer
 import com.example.tx_ku.feature.profile.FullCustomAvatar
 import com.example.tx_ku.R
+
+/**
+ * 立绘/位图四周常见透明边，轻微放大后再圆裁，可消除圆内「方角留白」感（对 [ContentScale.Crop] 的补充）。
+ */
+private const val AvatarPortraitFillOverscan = 1.1f
 
 /**
  * 与 [com.example.tx_ku.feature.profile.AgentTuningOptions.avatarStyles] 对应的 drawable 资源（创作台、捏脸页、聊天共用）。
@@ -155,7 +162,9 @@ fun AgentChatAvatarPortrait(
     size: Dp,
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
-    chatCompactFrame: Boolean = false
+    chatCompactFrame: Boolean = false,
+    /** 略大于 1 可吃掉立绘透明边，减轻圆内留白（档案大卡等可提高）。 */
+    fillOverscan: Float = AvatarPortraitFillOverscan
 ) {
     Box(
         modifier = modifier.size(size),
@@ -168,19 +177,36 @@ fun AgentChatAvatarPortrait(
                     contentDescription = contentDescription,
                     modifier = Modifier
                         .fillMaxSize()
+                        .graphicsLayer {
+                            scaleX = fillOverscan
+                            scaleY = fillOverscan
+                        }
                         .clip(CircleShape),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    alignment = Alignment.Center
                 )
             }
             ChatCompactFrameRing(accent = accent, modifier = Modifier.fillMaxSize())
         } else {
+            // 底色避免立绘透明边与浅色卡底之间出现「白环」
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .clip(CircleShape)
+                    .background(Color(0xFF1E1529))
+            )
             Image(
                 painter = painterResource(avatarRes),
                 contentDescription = contentDescription,
                 modifier = Modifier
                     .fillMaxSize()
+                    .graphicsLayer {
+                        scaleX = fillOverscan
+                        scaleY = fillOverscan
+                    }
                     .clip(CircleShape),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
+                alignment = Alignment.Center
             )
             AgentAvatarFrameOverlay(
                 avatarFrame = avatarFrame,
@@ -205,7 +231,9 @@ fun AgentFusionAvatarPortrait(
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
     /** 消息列表等场景用细环，减轻与气泡并列时的视觉噪音 */
-    chatCompactFrame: Boolean = false
+    chatCompactFrame: Boolean = false,
+    /** 位图立绘路径有效；大图展示可提高以消除圆内留白（见 [AvatarPortraitFillOverscan]）。 */
+    portraitFillOverscan: Float = AvatarPortraitFillOverscan
 ) {
     val style = remember(tuning) {
         CustomFaceRenderer.renderStyleForAvatarStyle(tuning.avatarStyle)
@@ -278,7 +306,8 @@ fun AgentFusionAvatarPortrait(
             size = size,
             modifier = modifier,
             contentDescription = contentDescription,
-            chatCompactFrame = chatCompactFrame
+            chatCompactFrame = chatCompactFrame,
+            fillOverscan = portraitFillOverscan
         )
     }
 }

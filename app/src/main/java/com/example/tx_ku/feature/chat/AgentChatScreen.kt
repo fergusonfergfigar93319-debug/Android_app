@@ -62,7 +62,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,7 +73,6 @@ import androidx.compose.ui.zIndex
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -86,8 +84,6 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -104,6 +100,7 @@ import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.designsystem.theme.BuddyDimens
 import com.example.tx_ku.core.domain.AgentPersonaResolver
 import com.example.tx_ku.core.model.AgentTuning
+import com.example.tx_ku.core.model.AgentTuningRefresh
 import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.core.navigation.Routes
 import com.example.tx_ku.core.navigation.dispatchAfterMainFrame
@@ -340,16 +337,8 @@ private fun AgentChatContent(navController: NavController) {
         it is AgentChatStreamItem.TextBubble && !it.isFromUser && it.isStreaming
     }
     val profile = CurrentUser.profile
-    var tuningRefresh by remember { mutableStateOf(0) }
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) tuningRefresh++
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-    }
-    val tuning = remember(tuningRefresh) { CurrentUser.agentTuning }
+    val agentTuningGeneration by AgentTuningRefresh.generation.collectAsStateWithLifecycle()
+    val tuning = remember(agentTuningGeneration) { CurrentUser.agentTuning }
     val listState = rememberLazyListState()
     val haptic = rememberBuddyHaptic()
     val keyboard = LocalSoftwareKeyboardController.current

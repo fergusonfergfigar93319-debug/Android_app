@@ -168,10 +168,29 @@ fun LoginScreen(navController: NavController) {
         }
     }
 
+    fun navigateAfterSuccessfulAuth() {
+        UserAgentStore.loadIntoCurrentUser()
+        val dest = when {
+            CurrentUser.profile == null -> Routes.ONBOARDING
+            !GameInterestStore.hasCompletedSelection() -> Routes.GAME_INTEREST
+            else -> Routes.MAIN_TABS
+        }
+        dispatchAfterMainFrame {
+            navController.navigate(dest) {
+                popUpTo(Routes.LOGIN) { inclusive = true }
+            }
+        }
+    }
+
     LaunchedEffect(authUiState) {
         when (val s = authUiState) {
             is AuthUiState.Error -> {
                 error = s.message
+                authViewModel.resetState()
+            }
+            is AuthUiState.Success -> {
+                // 评审期注释掉 NavHost 的「已登录自动离站」后，须在此显式跳转，否则仅 Success 无界面反馈
+                navigateAfterSuccessfulAuth()
                 authViewModel.resetState()
             }
             else -> Unit
@@ -204,20 +223,6 @@ fun LoginScreen(navController: NavController) {
         animationSpec = BentoSpring,
         label = "bentoOffTicker"
     )
-
-    fun navigateAfterSuccessfulAuth() {
-        UserAgentStore.loadIntoCurrentUser()
-        val dest = when {
-            CurrentUser.profile == null -> Routes.ONBOARDING
-            !GameInterestStore.hasCompletedSelection() -> Routes.GAME_INTEREST
-            else -> Routes.MAIN_TABS
-        }
-        dispatchAfterMainFrame {
-            navController.navigate(dest) {
-                popUpTo(Routes.LOGIN) { inclusive = true }
-            }
-        }
-    }
 
     val bentoShape = MaterialTheme.shapes.extraLarge
     val bentoGap = BuddyDimens.SpacingLg
@@ -679,6 +684,7 @@ fun LoginScreen(navController: NavController) {
                                     }
                                     DevQuickLogin.injectMockProfile()
                                     DevQuickLogin.persistSessionTokens(sessionStore)
+                                    navigateAfterSuccessfulAuth()
                                 }
                             }
                         )
@@ -694,6 +700,7 @@ fun LoginScreen(navController: NavController) {
                                     }
                                     DevQuickLogin.clearProfileOnly()
                                     DevQuickLogin.persistSessionTokens(sessionStore)
+                                    navigateAfterSuccessfulAuth()
                                 }
                             }
                         )

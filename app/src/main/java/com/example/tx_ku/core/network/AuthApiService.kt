@@ -39,11 +39,12 @@ data class RefreshTokenApiEnvelope(
 )
 
 interface AuthApiService {
-    @POST("/auth/login")
+    /** 与 [com.example.tx_ku.core.network.ApiConstants] 的 `…/api/v1/` 基址拼接，勿再使用根路径 `/auth/…`。 */
+    @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): LoginApiEnvelope
 
     /** 同步 [Call]，供 [TokenAuthenticator] 在拦截链中执行。 */
     @FormUrlEncoded
-    @POST("/auth/refresh")
+    @POST("auth/refresh")
     fun refreshToken(@Field("refresh_token") refreshToken: String): Call<RefreshTokenApiEnvelope>
 }

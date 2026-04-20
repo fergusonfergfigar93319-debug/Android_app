@@ -115,6 +115,7 @@ import com.example.tx_ku.core.prefs.UserAgentStore
 import com.example.tx_ku.feature.chat.AgentFusionAvatarPortrait
 import com.example.tx_ku.feature.chat.agentAvatarAccentForStyle
 import com.example.tx_ku.feature.chat.avatarDrawableResForStyle
+import com.example.tx_ku.feature.chat.isHeroIllustrationStyle
 
 /**
  * 智能体编辑页呈现方式。
@@ -982,6 +983,12 @@ private fun PersonaHeroCard(
     val avatarRes = avatarDrawableResForStyle(tuning.avatarStyle)
     val haptic = rememberBuddyHaptic()
     val cardClickInteraction = remember { MutableInteractionSource() }
+    val portraitFillOverscan = remember(tuning.avatarStyle) {
+        when {
+            isHeroIllustrationStyle(tuning.avatarStyle) -> 1.64f
+            else -> 1.32f
+        }
+    }
     val avatarTapModifier = Modifier.clickable(
         role = Role.Button,
         onClick = {
@@ -1096,7 +1103,8 @@ private fun PersonaHeroCard(
                                 avatarFrame = tuning.avatarFrame,
                                 accent = agentAvatarAccentForStyle(tuning.avatarStyle),
                                 size = heroAvatarDiameter,
-                                contentDescription = "搭子头像，点按可换画风"
+                                contentDescription = "搭子头像，点按可换画风",
+                                portraitFillOverscan = portraitFillOverscan
                             )
                         }
                     }

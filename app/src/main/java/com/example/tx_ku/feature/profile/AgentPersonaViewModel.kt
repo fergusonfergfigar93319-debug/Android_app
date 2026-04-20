@@ -3,6 +3,7 @@ package com.example.tx_ku.feature.profile
 import androidx.lifecycle.ViewModel
 import com.example.tx_ku.core.domain.AgentPersonaResolver
 import com.example.tx_ku.core.model.AgentTuning
+import com.example.tx_ku.core.model.AvatarDisplayModes
 import com.example.tx_ku.core.model.BuddyAgentPersona
 import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.core.model.GamingPreferences
@@ -230,6 +231,8 @@ class AgentPersonaViewModel : ViewModel() {
     /** 官方成品搭子：整包写入 [AgentTuning]（展示名、备忘、快捷句等一并替换） */
     fun applyDesignedAgentPreset(preset: DesignedAgentPreset) {
         val s = CurrentUser.agentTuning
+        // 必须切回「立绘 / 官方位图」链路与英雄主题 [avatarStyle] 一致；若保留用户的
+        // useSculptAvatarForDisplay / LAYERED_2D，则仍显示捏脸或贴纸，名称已换但头像不变。
         CurrentUser.agentTuning = preset.tuning.copy(
             sculptFaceRoundness = s.sculptFaceRoundness,
             sculptEyeDistance = s.sculptEyeDistance,
@@ -237,9 +240,9 @@ class AgentPersonaViewModel : ViewModel() {
             sculptMouthSmile = s.sculptMouthSmile,
             sculptBlush = s.sculptBlush,
             sculptBrowTilt = s.sculptBrowTilt,
-            useSculptAvatarForDisplay = s.useSculptAvatarForDisplay,
-            avatarDisplayMode = s.avatarDisplayMode,
-            layeredAvatarJson = s.layeredAvatarJson,
+            useSculptAvatarForDisplay = false,
+            avatarDisplayMode = AvatarDisplayModes.HERO_ILLUSTRATION,
+            layeredAvatarJson = "",
             customCreationNamingUnlocked = s.customCreationNamingUnlocked,
             gamingMainRole = s.gamingMainRole,
             gamingSlangDensity = s.gamingSlangDensity,

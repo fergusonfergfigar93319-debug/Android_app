@@ -19,6 +19,11 @@ android {
         versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // OpenAI 兼容网关（绝对 URL，非空则走 /v1/chat/completions 式 SSE；空则走联调手册原生 /ai/agent/chat/stream）
+        buildConfigField("String", "OPENAI_COMPAT_CHAT_URL", "\"\"")
+        buildConfigField("String", "OPENAI_COMPAT_MODEL", "\"hunyuan-pro\"")
+        buildConfigField("String", "OPENAI_COMPAT_API_KEY", "\"\"")
     }
 
     buildTypes {
@@ -82,6 +87,7 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:okhttp-sse:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     testImplementation(libs.junit)

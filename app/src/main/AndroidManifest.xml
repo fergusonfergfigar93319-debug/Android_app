@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Retrofit / OkHttp / SSE 等网络请求必需；未声明会导致 DNS 解析报 SecurityException -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <!-- 从相册选头像等场景；需在运行时申请（后续可在选图前 requestPermissions） -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission

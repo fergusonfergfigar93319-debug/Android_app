@@ -7,6 +7,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -56,12 +58,17 @@ fun AsyncHonorQAvatar(
         label = "honorQAvatarCrossfade"
     ) { bmp ->
         if (bmp != null) {
-            Image(
-                bitmap = bmp.asImageBitmap(),
-                contentDescription = contentDescription,
-                modifier = modifier.size(sizeDp),
-                contentScale = ContentScale.Fit
-            )
+            Box(modifier = modifier.size(sizeDp)) {
+                Image(
+                    bitmap = bmp.asImageBitmap(),
+                    contentDescription = contentDescription,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop,
+                    alignment = Alignment.Center
+                )
+            }
         } else {
             Box(
                 modifier = modifier.size(sizeDp),

@@ -42,5 +42,6 @@ object CurrentUser {
         buddyAgent = null
         agentTuning = AgentTuning()
         agentChatUnlocked = false
+        AgentTuningRefresh.bump()
     }
 }

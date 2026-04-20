@@ -108,6 +108,8 @@ object BuddyColors {
     val CommunityPageBackground = Color(0xFFF2F0E9)
     /** 底栏：压一层浅夜幕感，与内容区 parchment 区分 */
     val NavBarSurfaceLight = Color(0xFFEAE3D8)
+    /** 主 Tab 底栏中心「发帖」捷径：高识别粉，与两侧线性 Tab 区分 */
+    val NavPostShortcutPink = Color(0xFFFF5A8C)
     /** Tab 选中浅金底，与底栏峡谷金选中态一致 */
     val TabSelectionTintLight = Color(0xFFE5D0A8)
     /** 顶栏标题/强标题：峡谷夜幕蓝黑，与金色强调形成高对比 */

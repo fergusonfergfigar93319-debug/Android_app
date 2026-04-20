@@ -41,7 +41,6 @@ import com.example.tx_ku.TxKuApp
 import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.core.navigation.Routes
 import com.example.tx_ku.core.navigation.dispatchAfterMainFrame
-import com.example.tx_ku.core.prefs.GameInterestStore
 import com.example.tx_ku.core.prefs.UserAgentStore
 import kotlinx.coroutines.delay
 
@@ -59,14 +58,9 @@ fun SplashScreen(
         if (CurrentUser.isLoggedIn()) {
             UserAgentStore.loadIntoCurrentUser()
         }
-        val dest = when {
-            !CurrentUser.isLoggedIn() -> Routes.LOGIN
-            CurrentUser.profile == null -> Routes.ONBOARDING
-            !GameInterestStore.hasCompletedSelection() -> Routes.GAME_INTEREST
-            else -> Routes.MAIN_TABS
-        }
+        // 评审/演示：每次冷启动闪屏后进入登录页；不再根据已存 Token 自动跳进主页（见 [BuddyCardNavHost]）。正式登录由用户在 [LoginScreen] 提交后 [navigateAfterSuccessfulAuth]。
         dispatchAfterMainFrame {
-            navController.navigate(dest) {
+            navController.navigate(Routes.LOGIN) {
                 popUpTo(Routes.SPLASH) { inclusive = true }
             }
         }

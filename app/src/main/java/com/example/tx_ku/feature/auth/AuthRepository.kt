@@ -70,6 +70,6 @@ class AuthRepository(
 
     companion object {
         /** 无真实后端时置 true；联调真实网关时改为 false。 */
-        const val USE_MOCK_AUTH: Boolean = true
+        const val USE_MOCK_AUTH: Boolean = false
     }
 }

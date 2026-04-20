@@ -150,38 +150,66 @@ fun FaceStudioPreview(
         generating = false
     }
 
+    // 与贴纸模式共用「素玉亮色展柜」外框，避免矢量捏脸误入深色全息实验皮
+    val lp = FaceStudioLightPalette
+    val shape = RoundedCornerShape(26.dp)
     Box(
         modifier = modifier
             .size(size)
-            .clip(RoundedCornerShape(24.dp))
+            .shadow(
+                elevation = 16.dp,
+                shape = shape,
+                spotColor = lp.previewCardShadowSpot,
+                ambientColor = lp.previewCardShadowAmbient
+            )
+            .clip(shape)
             .background(
                 Brush.radialGradient(
                     colors = listOf(
-                        Color(0xFF2A3860).copy(alpha = 0.55f),
-                        BuddyColors.CanyonMid.copy(alpha = 0.9f),
-                        BuddyColors.BackgroundMidTone
+                        lp.previewRadialA,
+                        lp.previewRadialB,
+                        lp.previewRadialC,
+                        lp.previewRadialEdge
                     )
                 )
             )
             .border(
-                1.5.dp,
+                2.5.dp,
                 Brush.linearGradient(
                     listOf(
-                        BuddyColors.HonorGoldBright.copy(alpha = 0.45f),
-                        BuddyColors.HonorCyanAccent.copy(alpha = 0.38f),
-                        BuddyColors.HonorGoldBright.copy(alpha = 0.45f)
+                        lp.previewBorderA.copy(alpha = 0.92f),
+                        lp.previewBorderB.copy(alpha = 0.88f),
+                        lp.previewBorderC.copy(alpha = 0.9f),
+                        lp.previewBorderA.copy(alpha = 0.75f)
                     )
                 ),
-                RoundedCornerShape(24.dp)
+                shape
+            )
+            .border(
+                1.dp,
+                lp.previewBorderInnerGlow,
+                shape
             ),
         contentAlignment = Alignment.Center
     ) {
+        Layer2DGridPaperOverlay(Modifier.fillMaxSize())
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color.White.copy(alpha = 0.14f),
+                        0.42f to Color.Transparent,
+                        1f to Color(0xFF64748B).copy(alpha = 0.06f)
+                    )
+                )
+        )
         val b = bitmap
         if (b != null && !generating) {
             Image(
                 bitmap = b.asImageBitmap(),
                 contentDescription = "Q版形象预览",
-                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(24.dp))
+                modifier = Modifier.fillMaxSize().clip(shape)
             )
         } else {
             CircularProgressIndicator(
@@ -329,7 +357,7 @@ fun FaceStudioInteractivePreview(
             }
             if (showLayerHint) {
                 val lp = FaceStudioLightPalette
-                val light = useLightChrome && useLayered2DPreview
+                val light = useLightChrome
                 Surface(
                     modifier = Modifier
                         .align(Alignment.TopEnd)

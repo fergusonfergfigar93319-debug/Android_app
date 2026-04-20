@@ -11,12 +11,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -38,36 +34,9 @@ import com.example.tx_ku.feature.splash.SplashScreen
 import com.example.tx_ku.feature.feed.EsportsCultureDetailScreen
 import com.example.tx_ku.feature.feed.GameNewsDetailScreen
 import com.example.tx_ku.feature.publish.MediaPublishScreen
-import com.example.tx_ku.TxKuApp
-import com.example.tx_ku.core.model.CurrentUser
-import com.example.tx_ku.core.prefs.GameInterestStore
-import com.example.tx_ku.core.prefs.UserAgentStore
 
 @Composable
 fun BuddyCardNavHost(navController: NavHostController) {
-    val context = LocalContext.current
-    val app = context.applicationContext as TxKuApp
-    val isLoggedIn by app.container.sessionStore.isLoggedInFlow.collectAsState(initial = false)
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-
-    LaunchedEffect(isLoggedIn, currentRoute) {
-        if (!isLoggedIn) return@LaunchedEffect
-        if (currentRoute != Routes.LOGIN) return@LaunchedEffect
-        val sessionStore = app.container.sessionStore
-        sessionStore.restoreCurrentUserIfMemoryEmpty()
-        UserAgentStore.loadIntoCurrentUser()
-        val dest = when {
-            CurrentUser.profile == null -> Routes.ONBOARDING
-            !GameInterestStore.hasCompletedSelection() -> Routes.GAME_INTEREST
-            else -> Routes.MAIN_TABS
-        }
-        navController.navigate(dest) {
-            popUpTo(Routes.LOGIN) { inclusive = true }
-            launchSingleTop = true
-        }
-    }
-
     SharedTransitionLayout {
         NavHost(
             navController = navController,

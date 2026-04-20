@@ -54,7 +54,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.tx_ku.core.designsystem.components.BuddyPageBrushes
 import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.model.AvatarDisplayModes
 
@@ -71,7 +70,9 @@ fun FaceStudioScreen(navController: NavController) {
     val layeredConfig by vm.layeredConfig.collectAsState()
     val layeredMainCategory by vm.layeredMainCategory.collectAsState()
     val canUndo by vm.canUndo.collectAsState()
-    val is2D = tuning.avatarDisplayMode == AvatarDisplayModes.LAYERED_2D
+    /** 仅矢量滑杆走旧版「八字 Tab + 分区」布局；立绘展示 [HERO_ILLUSTRATION] 与贴纸 [LAYERED_2D] 统一走全息层装配，避免套用官方搭子后误入矢量分支 */
+    val isSculptMode = tuning.avatarDisplayMode == AvatarDisplayModes.SCULPT
+    val useHolographicWorkshopUi = !isSculptMode
     var currentMainTab by remember { mutableStateOf(StudioMainTab.TREND) }
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -101,7 +102,7 @@ fun FaceStudioScreen(navController: NavController) {
 
     val lp = FaceStudioLightPalette
     var sculptSliderDragging by remember { mutableStateOf(false) }
-    val spotlightActive = sculptSliderDragging && !is2D
+    val spotlightActive = sculptSliderDragging && isSculptMode
     val previewSpotlightScale by animateFloatAsState(
         targetValue = if (spotlightActive) 1.06f else 1f,
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
@@ -116,13 +117,9 @@ fun FaceStudioScreen(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(
-                if (is2D) {
-                    Brush.verticalGradient(
-                        listOf(lp.pageTop, lp.pageMid, lp.pageBottom)
-                    )
-                } else {
-                    BuddyPageBrushes.splashHonorCool()
-                }
+                Brush.verticalGradient(
+                    listOf(lp.pageTop, lp.pageMid, lp.pageBottom)
+                )
             )
     ) {
         ProvideFaceStudioSliderDraggingReporter(
@@ -141,7 +138,7 @@ fun FaceStudioScreen(navController: NavController) {
                     Text(
                         "←",
                         fontSize = 22.sp,
-                        color = if (is2D) lp.textPrimary else Color.White.copy(alpha = 0.95f)
+                        color = lp.textPrimary
                     )
                 }
                 // 中间：潮流 / 个性（贴吧虚拟形象同款切换）
@@ -152,27 +149,22 @@ fun FaceStudioScreen(navController: NavController) {
                         onClick = { switchMainTab(StudioMainTab.TREND) },
                         shape = RoundedCornerShape(16.dp),
                         color = when {
-                            is2D && trendySel -> BuddyColors.HonorCyanAccent.copy(alpha = 0.14f)
-                            is2D -> Color.White.copy(alpha = 0.72f)
-                            trendySel -> BuddyColors.HonorCyanAccent.copy(alpha = 0.28f)
-                            else -> Color.White.copy(alpha = 0.08f)
+                            trendySel -> BuddyColors.HonorCyanAccent.copy(alpha = 0.14f)
+                            else -> Color.White.copy(alpha = 0.72f)
                         },
-                        border = if (is2D) {
-                            BorderStroke(1.dp, if (trendySel) BuddyColors.HonorCyanAccent else lp.cellBorder)
-                        } else {
-                            BorderStroke(0.dp, Color.Transparent)
-                        },
-                        shadowElevation = if (is2D && trendySel) 2.dp else 0.dp
+                        border = BorderStroke(
+                            1.dp,
+                            if (trendySel) BuddyColors.HonorCyanAccent else lp.cellBorder
+                        ),
+                        shadowElevation = if (trendySel) 2.dp else 0.dp
                     ) {
                         Text(
                             "潮流",
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                             style = MaterialTheme.typography.labelLarge,
                             color = when {
-                                is2D && trendySel -> BuddyColors.HonorCyanAccent
-                                is2D -> lp.textSecondary
                                 trendySel -> BuddyColors.HonorCyanAccent
-                                else -> Color.White.copy(alpha = 0.55f)
+                                else -> lp.textSecondary
                             },
                             fontWeight = if (trendySel) FontWeight.Bold else FontWeight.Normal
                         )
@@ -181,27 +173,22 @@ fun FaceStudioScreen(navController: NavController) {
                         onClick = { switchMainTab(StudioMainTab.PERSONALITY) },
                         shape = RoundedCornerShape(16.dp),
                         color = when {
-                            is2D && personalSel -> BuddyColors.Jade.AccentAmber.copy(alpha = 0.16f)
-                            is2D -> Color.White.copy(alpha = 0.72f)
-                            personalSel -> BuddyColors.BattlePassPurpleLight.copy(alpha = 0.35f)
-                            else -> Color.White.copy(alpha = 0.08f)
+                            personalSel -> BuddyColors.Jade.AccentAmber.copy(alpha = 0.16f)
+                            else -> Color.White.copy(alpha = 0.72f)
                         },
-                        border = if (is2D) {
-                            BorderStroke(1.dp, if (personalSel) BuddyColors.Jade.AccentAmber else lp.cellBorder)
-                        } else {
-                            BorderStroke(0.dp, Color.Transparent)
-                        },
-                        shadowElevation = if (is2D && personalSel) 2.dp else 0.dp
+                        border = BorderStroke(
+                            1.dp,
+                            if (personalSel) BuddyColors.Jade.AccentAmber else lp.cellBorder
+                        ),
+                        shadowElevation = if (personalSel) 2.dp else 0.dp
                     ) {
                         Text(
                             "个性",
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                             style = MaterialTheme.typography.labelLarge,
                             color = when {
-                                is2D && personalSel -> BuddyColors.Jade.AccentAmber
-                                is2D -> lp.textSecondary
-                                personalSel -> BuddyColors.BattlePassPurpleLight
-                                else -> Color.White.copy(alpha = 0.55f)
+                                personalSel -> BuddyColors.Jade.AccentAmber
+                                else -> lp.textSecondary
                             },
                             fontWeight = if (personalSel) FontWeight.Bold else FontWeight.Normal
                         )
@@ -213,11 +200,11 @@ fun FaceStudioScreen(navController: NavController) {
                         navController.popBackStack()
                     },
                     shape = RoundedCornerShape(16.dp),
-                    color = if (is2D) BuddyColors.HonorCyanAccent else BuddyColors.Jade.AccentAmber,
+                    color = BuddyColors.HonorCyanAccent,
                     shadowElevation = 2.dp
                 ) {
                     Text(
-                        text = if (is2D) "锁定机体" else "保存",
+                        text = if (useHolographicWorkshopUi) "锁定机体" else "保存",
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                         style = MaterialTheme.typography.labelLarge,
                         color = Color.White,
@@ -263,7 +250,7 @@ fun FaceStudioScreen(navController: NavController) {
                     modifier = Modifier
                         .heightIn(min = 44.dp)
                         .then(
-                            if (is2D) {
+                            if (useHolographicWorkshopUi) {
                                 Modifier.shadow(
                                     6.dp,
                                     RoundedCornerShape(20.dp),
@@ -276,22 +263,26 @@ fun FaceStudioScreen(navController: NavController) {
                     shape = RoundedCornerShape(20.dp),
                     border = BorderStroke(
                         1.dp,
-                        if (is2D) BuddyColors.HonorCyanAccent else Color.White.copy(alpha = 0.22f)
+                        if (useHolographicWorkshopUi) BuddyColors.HonorCyanAccent else lp.cellBorder
                     ),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = if (is2D) BuddyColors.HonorCyanAccent.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.06f),
-                        contentColor = if (is2D) BuddyColors.HonorCyanAccent else Color.White.copy(alpha = 0.75f)
+                        containerColor = if (useHolographicWorkshopUi) {
+                            BuddyColors.HonorCyanAccent.copy(alpha = 0.12f)
+                        } else {
+                            Color.White.copy(alpha = 0.92f)
+                        },
+                        contentColor = if (useHolographicWorkshopUi) BuddyColors.HonorCyanAccent else lp.textSecondary
                     ),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                 ) {
-                    Text("全息层装配", fontSize = 13.sp, fontWeight = if (is2D) FontWeight.Bold else FontWeight.Normal)
+                    Text("全息层装配", fontSize = 13.sp, fontWeight = if (useHolographicWorkshopUi) FontWeight.Bold else FontWeight.Normal)
                 }
                 OutlinedButton(
                     onClick = { vm.setStudioEditorMode(AvatarDisplayModes.SCULPT) },
                     modifier = Modifier
                         .heightIn(min = 44.dp)
                         .then(
-                            if (!is2D) {
+                            if (isSculptMode) {
                                 Modifier.shadow(
                                     6.dp,
                                     RoundedCornerShape(20.dp),
@@ -304,20 +295,24 @@ fun FaceStudioScreen(navController: NavController) {
                     shape = RoundedCornerShape(20.dp),
                     border = BorderStroke(
                         1.dp,
-                        if (!is2D) BuddyColors.Jade.AccentAmber else Color.White.copy(alpha = 0.22f)
+                        if (isSculptMode) BuddyColors.Jade.AccentAmber else lp.cellBorder
                     ),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = if (!is2D) BuddyColors.Jade.AccentAmber.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.06f),
-                        contentColor = if (!is2D) BuddyColors.Jade.AccentAmber else Color.White.copy(alpha = 0.75f)
+                        containerColor = if (isSculptMode) {
+                            BuddyColors.Jade.AccentAmber.copy(alpha = 0.14f)
+                        } else {
+                            Color.White.copy(alpha = 0.92f)
+                        },
+                        contentColor = if (isSculptMode) BuddyColors.Jade.AccentAmber else lp.textSecondary
                     ),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                 ) {
-                    Text("矢量捏脸", fontSize = 13.sp, fontWeight = if (!is2D) FontWeight.Bold else FontWeight.Normal)
+                    Text("矢量捏脸", fontSize = 13.sp, fontWeight = if (isSculptMode) FontWeight.Bold else FontWeight.Normal)
                 }
                 Text(
-                    text = if (is2D) "2D 图层 · 拟合预览" else "滑杆 · 参数曲面",
+                    text = if (useHolographicWorkshopUi) "2D 图层 · 拟合预览" else "滑杆 · 参数曲面",
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (is2D) lp.textMuted else Color.White.copy(alpha = 0.45f),
+                    color = lp.textMuted,
                     modifier = Modifier.padding(start = 4.dp)
                 )
             }
@@ -328,31 +323,21 @@ fun FaceStudioScreen(navController: NavController) {
                     .fillMaxWidth()
                     .height(288.dp)
                     .background(
-                        if (is2D) {
-                            Brush.verticalGradient(
-                                listOf(
-                                    lp.previewStripTop,
-                                    lp.previewStripMid,
-                                    lp.previewStripBottom,
-                                    lp.previewStripBottom.copy(alpha = 0.92f)
-                                )
+                        Brush.verticalGradient(
+                            listOf(
+                                lp.previewStripTop,
+                                lp.previewStripMid,
+                                lp.previewStripBottom,
+                                lp.previewStripBottom.copy(alpha = 0.92f)
                             )
-                        } else {
-                            Brush.verticalGradient(
-                                listOf(
-                                    Color(0xFF1E2A4A).copy(alpha = 0.92f),
-                                    BuddyColors.CanyonMid.copy(alpha = 0.98f),
-                                    BuddyColors.BackgroundMidTone.copy(alpha = 0.98f)
-                                )
-                            )
-                        }
+                        )
                     )
             ) {
                 // 主预览（居中）：点选图层快速切换分类
                 FaceStudioInteractivePreview(
                     tuning = tuning,
                     onLayerTap = { tabIndex ->
-                        if (is2D) {
+                        if (useHolographicWorkshopUi) {
                             val n = tabIndex.coerceIn(0, Layered2DMainCategory.entries.size - 1)
                             vm.setLayeredMainCategory(Layered2DMainCategory.entries[n])
                         } else {
@@ -368,10 +353,17 @@ fun FaceStudioScreen(navController: NavController) {
                     size = 260.dp,
                     showLayerHint = true,
                     layeredConfig = layeredConfig,
-                    useLayered2DPreview = is2D,
-                    useLightChrome = is2D,
-                    layeredHairMotionEnabled = is2D,
-                    layeredHairMotionEmphasis = if (is2D && layeredMainCategory == Layered2DMainCategory.Hair) 1.32f else 1f
+                    useLayered2DPreview = useHolographicWorkshopUi,
+                    useLightChrome = true,
+                    layeredHairMotionEnabled = useHolographicWorkshopUi,
+                    layeredHairMotionEmphasis =
+                        if (tuning.avatarDisplayMode == AvatarDisplayModes.LAYERED_2D &&
+                            layeredMainCategory == Layered2DMainCategory.Hair
+                        ) {
+                            1.32f
+                        } else {
+                            1f
+                        }
                 )
 
                 // 右侧工具栏
@@ -381,25 +373,29 @@ fun FaceStudioScreen(navController: NavController) {
                         .padding(end = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    PreviewToolButton(icon = Icons.Outlined.Lock, label = "锁定", onClick = { /* TODO */ }, useLightChrome = is2D)
-                    PreviewToolButton(icon = Icons.AutoMirrored.Outlined.Undo, label = "撤销", onClick = { vm.undo() }, enabled = canUndo, useLightChrome = is2D)
+                    PreviewToolButton(icon = Icons.Outlined.Lock, label = "锁定", onClick = { /* TODO */ }, useLightChrome = true)
+                    PreviewToolButton(icon = Icons.AutoMirrored.Outlined.Undo, label = "撤销", onClick = { vm.undo() }, enabled = canUndo, useLightChrome = true)
                     PreviewToolButton(
                         icon = Icons.Outlined.Casino,
                         label = "随机",
-                        onClick = { if (is2D) vm.randomizeLayered() else vm.randomize() },
-                        useLightChrome = is2D
+                        onClick = {
+                            if (useHolographicWorkshopUi) vm.randomizeLayered() else vm.randomize()
+                        },
+                        useLightChrome = true
                     )
                 }
             }
 
             // ── 峡谷捏脸：分类 Tab（Q 版贴纸模式下隐藏） ──
-            if (!is2D) {
+            if (isSculptMode) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
                         .graphicsLayer { alpha = panelSpotlightAlpha },
-                    color = Color(0xFF0C1220).copy(alpha = 0.55f),
-                    shadowElevation = 4.dp
+                    color = Color.White.copy(alpha = 0.88f),
+                    shadowElevation = 2.dp,
+                    border = BorderStroke(1.dp, lp.cellBorder.copy(alpha = 0.65f)),
+                    shape = RoundedCornerShape(0.dp)
                 ) {
                     Row(
                         modifier = Modifier
@@ -414,7 +410,8 @@ fun FaceStudioScreen(navController: NavController) {
                                 label = tab.label,
                                 selected = selectedTab == index,
                                 onClick = { selectedTab = index },
-                                compact = true
+                                compact = true,
+                                lightChrome = true
                             )
                         }
                     }
@@ -429,7 +426,7 @@ fun FaceStudioScreen(navController: NavController) {
                     .padding(horizontal = 10.dp, vertical = 6.dp)
                     .graphicsLayer { alpha = panelSpotlightAlpha }
             ) {
-                if (is2D) {
+                if (useHolographicWorkshopUi) {
                     Avatar2DStudioPanel(vm = vm)
                 } else {
                     when (selectedTab) {
@@ -449,7 +446,7 @@ fun FaceStudioScreen(navController: NavController) {
                     StudioMainTab.PERSONALITY -> {
                         AgentPersonaTuningContent(
                             modifier = Modifier.fillMaxSize(),
-                            useLightChrome = is2D
+                            useLightChrome = true
                         )
                     }
                 }
@@ -466,10 +463,18 @@ private fun IconTab(
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
-    compact: Boolean = false
+    compact: Boolean = false,
+    /** 浅色工坊：与「全息层装配」展柜一致，避免矢量 Tab 误入夜间金边样式 */
+    lightChrome: Boolean = false
 ) {
+    val lp = FaceStudioLightPalette
     val hPad = if (compact) 8.dp else 10.dp
-    val tint = if (selected) BuddyColors.HonorGoldBright else Color.White.copy(alpha = 0.52f)
+    val tint = when {
+        lightChrome && selected -> BuddyColors.HonorCyanAccent
+        lightChrome -> lp.textSecondary.copy(alpha = 0.85f)
+        selected -> BuddyColors.HonorGoldBright
+        else -> Color.White.copy(alpha = 0.52f)
+    }
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
@@ -482,8 +487,12 @@ private fun IconTab(
                 .size(if (compact) 36.dp else 38.dp)
                 .clip(CircleShape)
                 .background(
-                    if (selected) BuddyColors.HonorCyanAccent.copy(alpha = 0.22f)
-                    else Color.White.copy(alpha = 0.06f)
+                    when {
+                        lightChrome && selected -> BuddyColors.HonorCyanAccent.copy(alpha = 0.12f)
+                        lightChrome -> Color.White.copy(alpha = 0.78f)
+                        selected -> BuddyColors.HonorCyanAccent.copy(alpha = 0.22f)
+                        else -> Color.White.copy(alpha = 0.06f)
+                    }
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -497,7 +506,12 @@ private fun IconTab(
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = if (selected) BuddyColors.HonorGoldBright else Color.White.copy(alpha = 0.55f),
+            color = when {
+                lightChrome && selected -> BuddyColors.HonorCyanAccent
+                lightChrome -> lp.textMuted
+                selected -> BuddyColors.HonorGoldBright
+                else -> Color.White.copy(alpha = 0.55f)
+            },
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             fontSize = 10.sp
         )

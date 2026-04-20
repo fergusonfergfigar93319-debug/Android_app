@@ -17,6 +17,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -31,19 +32,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Article
+import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,15 +55,16 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,6 +72,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -79,6 +85,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tx_ku.core.brand.BrandConfig
 import com.example.tx_ku.core.designsystem.components.BuddyCardView
 import com.example.tx_ku.core.designsystem.components.BuddyEmptyState
@@ -92,6 +100,7 @@ import com.example.tx_ku.core.designsystem.theme.BuddyDimens
 import com.example.tx_ku.core.designsystem.theme.LocalBuddyDarkTheme
 import com.example.tx_ku.core.domain.AgentPersonaResolver
 import com.example.tx_ku.core.model.BuddyCard
+import com.example.tx_ku.core.model.AgentTuningRefresh
 import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.core.model.Post
 import com.example.tx_ku.core.model.Profile
@@ -113,8 +122,6 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
     navController: NavController? = null
 ) {
-    val card = CurrentUser.buddyCard
-    val profile = CurrentUser.profile
     val following by FollowRepository.following.collectAsState()
     val allPosts by ForumRepository.posts.collectAsState()
     val bookmarkIds by ForumRepository.bookmarkedPostIds.collectAsState()
@@ -122,6 +129,19 @@ fun ProfileScreen(
     val clipboard = LocalClipboardManager.current
     val snackbarHost = LocalBuddySnackbarHostState.current
     val snackScope = LocalBuddySnackbarScope.current
+
+    val app = LocalContext.current.applicationContext as TxKuApp
+    val userMeViewModel: UserMeViewModel = viewModel(factory = UserMeViewModel.factory(app.container))
+    val userMeState by userMeViewModel.uiState.collectAsStateWithLifecycle()
+    val profileEpoch by userMeViewModel.profileEpoch.collectAsStateWithLifecycle()
+    val profile = remember(profileEpoch) { CurrentUser.profile }
+    val card = remember(profileEpoch) { CurrentUser.buddyCard }
+
+    LaunchedEffect(userMeViewModel) {
+        userMeViewModel.userMessages.collect { msg ->
+            snackScope.showBuddySnackbar(snackbarHost, msg)
+        }
+    }
 
     var bookmarksSheet by remember { mutableStateOf(false) }
     var myPostsSheet by remember { mutableStateOf(false) }
@@ -133,18 +153,27 @@ fun ProfileScreen(
     }
 
     var selectedTab by remember { mutableStateOf(ArchiveTab.Persona) }
-    val profileScroll = rememberScrollState()
     val scope = rememberCoroutineScope()
     val darkChrome = LocalBuddyDarkTheme.current
 
-    // 核心优化 1：根节点沉浸式背景
+    // 沉浸式背景：亮部加一层青玉环境光，贴近素玉玻璃体系
     val rootGradient = if (darkChrome) {
         Brush.verticalGradient(
-            colors = listOf(BuddyColors.BackgroundHighlight, BuddyColors.CanyonMid, BuddyColors.CanyonDeep)
+            colors = listOf(
+                BuddyColors.HonorCyanAccent.copy(alpha = 0.14f),
+                BuddyColors.BackgroundHighlight,
+                BuddyColors.CanyonMid,
+                BuddyColors.CanyonDeep
+            )
         )
     } else {
         Brush.verticalGradient(
-            colors = listOf(BuddyColors.BackgroundLightLilac, BuddyColors.CommunityPageBackground, BuddyColors.ChromeShelfTint)
+            colors = listOf(
+                BuddyColors.HonorCyanAccent.copy(alpha = 0.12f),
+                BuddyColors.BackgroundLightLilac,
+                BuddyColors.CommunityPageBackground,
+                BuddyColors.ChromeShelfTint
+            )
         )
     }
 
@@ -156,82 +185,157 @@ fun ProfileScreen(
             val myPostsByTime: List<Post> = remember(allPosts, myUid) {
                 allPosts.filter { it.authorId == myUid }.sortedByDescending { it.createdAt }
             }
+            val myLikesReceived = remember(myPostsByTime) {
+                myPostsByTime.sumOf { it.likeCount }
+            }
+            val tuningEpoch by AgentTuningRefresh.generation.collectAsStateWithLifecycle()
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(profileScroll)
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = BuddyDimens.SpacingXl)
             ) {
-                // ── 顶部头图：精简的个人信息呈现 ──
-                ArchiveHeaderV2(
-                    profile = profile,
-                    selectedTab = selectedTab,
-                    completionRatio = profileCompletionRatio(profile),
-                    onShare = {
-                        clipboard.setText(AnnotatedString(buildProfileShareClipboardText(profile)))
-                        snackScope.showBuddySnackbar(snackbarHost, "档案摘要已复制到剪贴板")
-                    },
-                    onSettings = { navController?.navigate(Routes.PROFILE_EDIT) }
-                )
-
-                Spacer(Modifier.height(BuddyDimens.SpacingLg))
-
-                // ── 核心优化 2：悬浮数据矩阵卡 ──
-                FloatingDataMatrix(
-                    postCount = myPostCount,
-                    bookmarkCount = bookmarkIds.size,
-                    followingCount = following.size,
-                    onPostsClick = { myPostsSheet = true },
-                    onBookmarksClick = { bookmarksSheet = true },
-                    onFollowingClick = { navController?.navigate(Routes.FOLLOWING_LIST) }
-                )
-
-                Spacer(Modifier.height(BuddyDimens.SpacingMd))
-
-                // ── 核心优化 3：精炼胶囊工具栏 ──
-                CompactToolRow(
-                    onAddFriend = { navController?.navigate(Routes.ADD_FRIEND_SEARCH) },
-                    onPost = { navController?.navigate(Routes.POST_EDITOR) },
-                    onEdit = { navController?.navigate(Routes.PROFILE_EDIT) },
-                    navEnabled = navController != null
-                )
-
-                Spacer(Modifier.height(BuddyDimens.SpacingLg))
-
-                // ── 档案分类 Tab ──
-                ArchiveTabBar(
-                    selectedTab = selectedTab,
-                    onTabClick = { selectedTab = it }
-                )
-
-                HorizontalDivider(
-                    thickness = 1.dp,
-                    color = if (darkChrome) BuddyColors.GoldOutline.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.05f)
-                )
-
-                // ── Tab 内容区 ──
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = BuddyDimens.SpacingLg, horizontal = BuddyDimens.ScreenPaddingHorizontal),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    when (selectedTab) {
-                        ArchiveTab.Persona -> PersonaArchiveContent(profile = profile, navController = navController)
-                        ArchiveTab.Combat -> CombatArchiveContent(profile = profile, card = effectiveCard)
-                        ArchiveTab.Footprint -> {
-                            // 因为顶部有了矩阵卡，这里只展示最近帖子列表
-                            RecentFootprintList(myPosts = myPostsByTime)
+                item {
+                    if (userMeState.isRefreshing) {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    }
+                }
+                item {
+                    ProfileDashboardTopBar(
+                        onShare = {
+                            clipboard.setText(AnnotatedString(buildProfileShareClipboardText(profile)))
+                            snackScope.showBuddySnackbar(snackbarHost, "档案摘要已复制到剪贴板")
+                        },
+                        onSync = { userMeViewModel.refreshProfile() },
+                        isRefreshing = userMeState.isRefreshing,
+                        darkChrome = darkChrome
+                    )
+                }
+                item {
+                    ProfileDashboardHero(
+                        profile = profile,
+                        selectedTab = selectedTab,
+                        completionRatio = profileCompletionRatio(profile),
+                        onEditProfile = { navController?.navigate(Routes.PROFILE_EDIT) },
+                        darkChrome = darkChrome
+                    )
+                }
+                item {
+                    Spacer(Modifier.height(BuddyDimens.SpacingMd))
+                }
+                item {
+                    ProfileStatsStrip(
+                        followingCount = following.size,
+                        likesReceived = myLikesReceived,
+                        postCount = myPostCount,
+                        onFollowingClick = { navController?.navigate(Routes.FOLLOWING_LIST) },
+                        onLikesClick = {
+                            snackScope.showBuddySnackbar(snackbarHost, "获赞累计自你发布的帖子 · 可查看帖子列表")
+                            myPostsSheet = true
+                        },
+                        onPostsClick = { myPostsSheet = true },
+                        darkChrome = darkChrome
+                    )
+                }
+                item {
+                    ProfileDashboardGroupCard(title = "社区与互动", darkChrome = darkChrome) {
+                        ProfileDashboardActionRow(
+                            icon = Icons.Filled.Article,
+                            title = "峡谷广场 · 我的帖子",
+                            onClick = { myPostsSheet = true }
+                        )
+                        ProfileDashboardGroupDivider(darkChrome)
+                        ProfileDashboardActionRow(
+                            icon = Icons.Filled.Bookmarks,
+                            title = "我的收藏",
+                            onClick = { bookmarksSheet = true }
+                        )
+                        ProfileDashboardGroupDivider(darkChrome)
+                        ProfileDashboardActionRow(
+                            icon = Icons.Filled.Badge,
+                            title = "搭子名片与工坊",
+                            subtitle = "组队名片与 AI 搭子创作台",
+                            onClick = { navController?.navigate(Routes.MY_AGENT) }
+                        )
+                        if (navController != null) {
+                            ProfileDashboardGroupDivider(darkChrome)
+                            ProfileDashboardActionRow(
+                                icon = Icons.Filled.Add,
+                                title = "发布新帖",
+                                subtitle = "前往峡谷广场",
+                                onClick = { navController.navigate(Routes.POST_EDITOR) }
+                            )
                         }
                     }
-                    Spacer(Modifier.height(BuddyDimens.SpacingXl))
-                    if (navController != null) {
-                        LogoutButton {
-                            scope.launch {
-                                (context.applicationContext as TxKuApp).container.sessionStore.clearSession()
-                                LocalAuthRepository.logout()
-                                navController.navigate(Routes.LOGIN) { popUpTo(Routes.MAIN_TABS) { inclusive = true } }
+                }
+                item {
+                    ProfileDashboardGroupCard(title = "关系网络", darkChrome = darkChrome) {
+                        ProfileDashboardActionRow(
+                            icon = Icons.Filled.People,
+                            title = "我的关注",
+                            onClick = { navController?.navigate(Routes.FOLLOWING_LIST) }
+                        )
+                        ProfileDashboardGroupDivider(darkChrome)
+                        ProfileDashboardActionRow(
+                            icon = Icons.Filled.PersonAdd,
+                            title = "按 ID 找搭子",
+                            onClick = { navController?.navigate(Routes.ADD_FRIEND_SEARCH) }
+                        )
+                    }
+                }
+                if (navController != null) {
+                    item {
+                        ProfileDashboardGroupCard(title = "系统", darkChrome = darkChrome) {
+                            ProfileDashboardActionRow(
+                                icon = Icons.Filled.Settings,
+                                title = "资料与账号",
+                                subtitle = "头像、签名与游戏档案",
+                                onClick = { navController.navigate(Routes.PROFILE_EDIT) }
+                            )
+                            ProfileDashboardGroupDivider(darkChrome)
+                            ProfileDashboardActionRow(
+                                icon = Icons.Filled.ExitToApp,
+                                title = "退出登录",
+                                isDestructive = true,
+                                onClick = {
+                                    scope.launch {
+                                        (context.applicationContext as TxKuApp).container.sessionStore.clearSession()
+                                        LocalAuthRepository.logout()
+                                        navController.navigate(Routes.LOGIN) { popUpTo(Routes.MAIN_TABS) { inclusive = true } }
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+                item {
+                    Spacer(Modifier.height(BuddyDimens.SpacingLg))
+                }
+                item {
+                    ArchiveTabBar(
+                        selectedTab = selectedTab,
+                        onTabClick = { selectedTab = it }
+                    )
+                }
+                item {
+                    HorizontalDivider(
+                        thickness = 1.dp,
+                        color = if (darkChrome) BuddyColors.GoldOutline.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.05f)
+                    )
+                }
+                item {
+                    key(tuningEpoch) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = BuddyDimens.SpacingLg, horizontal = BuddyDimens.ScreenPaddingHorizontal),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            when (selectedTab) {
+                                ArchiveTab.Persona -> PersonaArchiveContent(profile = profile, navController = navController)
+                                ArchiveTab.Combat -> CombatArchiveContent(profile = profile, card = effectiveCard)
+                                ArchiveTab.Footprint -> RecentFootprintList(myPosts = myPostsByTime)
                             }
+                            Spacer(Modifier.height(BuddyDimens.SpacingLg))
                         }
                     }
                 }
@@ -274,33 +378,66 @@ private enum class ArchiveTab(val label: String) {
     Footprint("峡谷足迹")
 }
 
-/** 重构后的极简沉浸式头部 */
 @Composable
-private fun ArchiveHeaderV2(
+private fun ProfileDashboardTopBar(
+    onShare: () -> Unit,
+    onSync: (() -> Unit)?,
+    isRefreshing: Boolean,
+    darkChrome: Boolean
+) {
+    val titleColor = if (darkChrome) BuddyColors.HonorGoldBright else BuddyColors.CommunityHeaderDeep
+    val iconTint = if (darkChrome) Color.White.copy(alpha = 0.88f) else BuddyColors.CommunityHeaderMid
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .padding(horizontal = BuddyDimens.ScreenPaddingHorizontal)
+            .height(52.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            "元流档案",
+            style = MaterialTheme.typography.titleLarge,
+            color = titleColor,
+            fontWeight = FontWeight.Black
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (onSync != null) {
+                IconButton(
+                    onClick = onSync,
+                    enabled = !isRefreshing
+                ) {
+                    Icon(Icons.Default.Sync, contentDescription = "同步档案", tint = iconTint)
+                }
+            }
+            IconButton(onClick = onShare) {
+                Icon(Icons.Default.Share, contentDescription = "分享档案", tint = iconTint)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProfileDashboardHero(
     profile: Profile,
     selectedTab: ArchiveTab,
     completionRatio: Float,
-    onShare: () -> Unit,
-    onSettings: () -> Unit
+    onEditProfile: () -> Unit,
+    darkChrome: Boolean
 ) {
-    val darkChrome = LocalBuddyDarkTheme.current
     val onHeaderPrimary = if (darkChrome) Color.White else BuddyColors.CommunityTextPrimary
     val onHeaderMuted = if (darkChrome) BuddyColors.OnSurfaceVariant.copy(alpha = 0.92f) else BuddyColors.TextSecondaryLayered
-    val iconTint = if (darkChrome) Color.White.copy(alpha = 0.88f) else BuddyColors.CommunityHeaderMid
-    val titleColor = if (darkChrome) BuddyColors.HonorGoldBright else BuddyColors.CommunityHeaderDeep
-
-    // 呼吸浮动：EaseInOutSine + 上下缓动，模拟「站立」轻量感
-    val breathe = rememberInfiniteTransition(label = "archiveHeroBreathe")
+    val breathe = rememberInfiniteTransition(label = "profileHeroBreathe")
     val floatY by breathe.animateFloat(
-        initialValue = -5f,
-        targetValue = 5f,
+        initialValue = -4f,
+        targetValue = 4f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = EaseInOutSine),
+            animation = tween(2200, easing = EaseInOutSine),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "floatY"
+        label = "heroFloatY"
     )
-    // 弹簧 Pop：切换档案 Tab 时头像轻微弹跳（与「捏脸部位切换」同源思路）
     val popScale = remember { Animatable(1f) }
     val springPop = spring<Float>(
         dampingRatio = Spring.DampingRatioMediumBouncy,
@@ -313,85 +450,128 @@ private fun ArchiveHeaderV2(
             return@LaunchedEffect
         }
         popScale.snapTo(0.94f)
-        popScale.animateTo(1.06f, springPop)
+        popScale.animateTo(1.05f, springPop)
         popScale.animateTo(1f, springPop)
     }
     val archiveLv = (completionRatio * 9f).toInt().coerceIn(0, 9) + 1
+    val uidText = profile.userId.ifBlank { CurrentUser.effectiveForumAuthorId() }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(horizontal = BuddyDimens.ScreenPaddingHorizontal),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(horizontal = BuddyDimens.ScreenPaddingHorizontal)
     ) {
-        // 顶栏操作
         Row(
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(BuddyDimens.SpacingMd)
         ) {
-            Text("元流档案", style = MaterialTheme.typography.titleLarge, color = titleColor, fontWeight = FontWeight.Black)
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                IconButton(onClick = onShare) { Icon(Icons.Default.Share, "分享", tint = iconTint) }
-                IconButton(onClick = onSettings) { Icon(Icons.Default.Settings, "设置", tint = iconTint) }
-            }
-        }
-
-        Spacer(Modifier.height(BuddyDimens.SpacingLg))
-
-        // 头像与等级 (呼吸浮动 + Tab 切换弹簧缩放)
-        Box(
-            modifier = Modifier.graphicsLayer {
-                translationY = floatY
-                scaleX = popScale.value
-                scaleY = popScale.value
-            },
-            contentAlignment = Alignment.BottomEnd
-        ) {
-            BuddyProfileAvatar(
-                avatarUrl = profile.avatarUrl,
-                nickname = profile.nickname,
-                size = 110.dp,
-                modifier = Modifier
-                    .border(BorderStroke(2.dp, Brush.sweepGradient(listOf(BuddyColors.HonorGold, BuddyColors.HonorGoldBright, BuddyColors.HonorGold))), CircleShape)
-                    .padding(4.dp)
-            )
-            // 悬浮等级徽章
-            Surface(
-                color = BuddyColors.HonorGold,
-                shape = CircleShape,
-                modifier = Modifier.size(30.dp).border(2.dp, if (darkChrome) BuddyColors.CanyonDeep else Color.White, CircleShape),
-                shadowElevation = 6.dp
+            Box(
+                modifier = Modifier.graphicsLayer {
+                    translationY = floatY
+                    scaleX = popScale.value
+                    scaleY = popScale.value
+                },
+                contentAlignment = Alignment.BottomEnd
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text("Lv$archiveLv", fontSize = 11.sp, fontWeight = FontWeight.Black, color = BuddyColors.CanyonDeep)
+                BuddyProfileAvatar(
+                    avatarUrl = profile.avatarUrl,
+                    nickname = profile.nickname,
+                    size = 88.dp,
+                    modifier = Modifier
+                        .border(
+                            BorderStroke(
+                                2.dp,
+                                Brush.sweepGradient(
+                                    listOf(
+                                        BuddyColors.HonorGold,
+                                        BuddyColors.HonorGoldBright,
+                                        BuddyColors.HonorGold
+                                    )
+                                )
+                            ),
+                            CircleShape
+                        )
+                        .padding(3.dp)
+                )
+                Surface(
+                    color = BuddyColors.HonorGold,
+                    shape = CircleShape,
+                    modifier = Modifier
+                        .size(28.dp)
+                        .border(
+                            2.dp,
+                            if (darkChrome) BuddyColors.CanyonDeep else Color.White,
+                            CircleShape
+                        ),
+                    shadowElevation = 6.dp
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            "Lv$archiveLv",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Black,
+                            color = BuddyColors.CanyonDeep
+                        )
+                    }
+                }
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    profile.nickname,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = onHeaderPrimary,
+                    fontWeight = FontWeight.ExtraBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "UID · $uidText",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = onHeaderMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Surface(
+                onClick = onEditProfile,
+                shape = RoundedCornerShape(20.dp),
+                color = if (darkChrome) Color.White.copy(alpha = 0.08f) else BuddyColors.HonorCyanAccent.copy(alpha = 0.12f),
+                border = BorderStroke(
+                    1.dp,
+                    BuddyColors.HonorCyanAccent.copy(alpha = if (darkChrome) 0.45f else 0.55f)
+                )
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = null,
+                        tint = BuddyColors.HonorCyanAccent,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "编辑资料",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = BuddyColors.HonorCyanAccent,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
         }
-
-        Spacer(Modifier.height(BuddyDimens.SpacingMd))
-
+        Spacer(Modifier.height(BuddyDimens.SpacingSm))
         Text(
-            profile.nickname,
-            style = MaterialTheme.typography.headlineSmall,
-            color = onHeaderPrimary,
-            fontWeight = FontWeight.ExtraBold
-        )
-
-        Text(
-            profile.bio.ifBlank { "尚未填写个性签名..." },
+            profile.bio.ifBlank { "尚未填写个性签名…" },
             style = MaterialTheme.typography.bodyMedium,
             color = onHeaderMuted,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(start = 40.dp, end = 40.dp, top = 6.dp),
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
-
-        Spacer(Modifier.height(BuddyDimens.SpacingMd))
-
-        // 进度小标识
+        Spacer(Modifier.height(BuddyDimens.SpacingSm))
         val (filled, total) = profileCompletionCount(profile)
         Text(
             text = "同步进度 · $filled/$total",
@@ -399,122 +579,211 @@ private fun ArchiveHeaderV2(
             color = BuddyColors.HonorCyanAccent,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
-                .background(BuddyColors.HonorCyanAccent.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
+                .background(
+                    BuddyColors.HonorCyanAccent.copy(alpha = 0.15f),
+                    RoundedCornerShape(12.dp)
+                )
                 .padding(horizontal = 12.dp, vertical = 4.dp)
         )
     }
 }
 
-/** 悬浮数据矩阵卡 */
 @Composable
-private fun FloatingDataMatrix(
-    postCount: Int,
-    bookmarkCount: Int,
+private fun ProfileStatsStrip(
     followingCount: Int,
+    likesReceived: Int,
+    postCount: Int,
+    onFollowingClick: () -> Unit,
+    onLikesClick: () -> Unit,
     onPostsClick: () -> Unit,
-    onBookmarksClick: () -> Unit,
-    onFollowingClick: () -> Unit
+    darkChrome: Boolean
 ) {
-    val dark = LocalBuddyDarkTheme.current
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = BuddyDimens.ScreenPaddingHorizontal),
-        shape = RoundedCornerShape(24.dp),
-        color = if (dark) BuddyColors.CanyonSurfaceElevated.copy(alpha = 0.65f) else Color.White.copy(alpha = 0.7f),
-        border = BorderStroke(1.dp, if (dark) BuddyColors.GoldOutline else BuddyColors.OutlineLight),
-        shadowElevation = if (dark) 0.dp else 4.dp
+        shape = RoundedCornerShape(20.dp),
+        color = if (darkChrome) BuddyColors.CanyonSurfaceElevated.copy(alpha = 0.55f) else Color.White.copy(alpha = 0.72f),
+        border = BorderStroke(
+            1.dp,
+            if (darkChrome) BuddyColors.GoldOutline.copy(alpha = 0.35f) else BuddyColors.OutlineLight
+        ),
+        shadowElevation = if (darkChrome) 0.dp else 3.dp
     ) {
         Row(
-            modifier = Modifier.padding(vertical = 20.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            MatrixStatItem(label = "场次 (帖子)", value = postCount.toString(), icon = "📊", onClick = onPostsClick)
-
-            // 分割线
-            Box(Modifier.height(30.dp).width(1.dp).background(if (dark) BuddyColors.GoldOutline.copy(alpha = 0.3f) else Color.LightGray))
-
-            MatrixStatItem(label = "收藏 (灵感)", value = bookmarkCount.toString(), icon = "💡", onClick = onBookmarksClick)
-
-            Box(Modifier.height(30.dp).width(1.dp).background(if (dark) BuddyColors.GoldOutline.copy(alpha = 0.3f) else Color.LightGray))
-
-            MatrixStatItem(label = "关注 (同频)", value = followingCount.toString(), icon = "🤝", onClick = onFollowingClick)
+            DashboardStatPill(
+                value = followingCount.toString(),
+                label = "关注",
+                onClick = onFollowingClick,
+                darkChrome = darkChrome
+            )
+            Box(
+                Modifier
+                    .height(36.dp)
+                    .width(1.dp)
+                    .background(
+                        if (darkChrome) BuddyColors.GoldOutline.copy(alpha = 0.28f)
+                        else Color.Black.copy(alpha = 0.06f)
+                    )
+            )
+            DashboardStatPill(
+                value = likesReceived.toString(),
+                label = "获赞",
+                onClick = onLikesClick,
+                darkChrome = darkChrome
+            )
+            Box(
+                Modifier
+                    .height(36.dp)
+                    .width(1.dp)
+                    .background(
+                        if (darkChrome) BuddyColors.GoldOutline.copy(alpha = 0.28f)
+                        else Color.Black.copy(alpha = 0.06f)
+                    )
+            )
+            DashboardStatPill(
+                value = postCount.toString(),
+                label = "帖子",
+                onClick = onPostsClick,
+                darkChrome = darkChrome
+            )
         }
     }
 }
 
 @Composable
-private fun MatrixStatItem(label: String, value: String, icon: String, onClick: () -> Unit) {
-    val dark = LocalBuddyDarkTheme.current
+private fun DashboardStatPill(
+    value: String,
+    label: String,
+    onClick: () -> Unit,
+    darkChrome: Boolean
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable(onClick = onClick).padding(horizontal = 12.dp)
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 4.dp)
     ) {
-        Text(text = icon, fontSize = 20.sp, modifier = Modifier.padding(bottom = 4.dp))
         Text(
             text = value,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Black,
-            color = if (dark) Color.White else BuddyColors.CommunityTextPrimary
+            color = if (darkChrome) Color.White else BuddyColors.CommunityTextPrimary
         )
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = if (dark) BuddyColors.OnSurfaceVariant else BuddyColors.CommunityTextSecondary
+            color = if (darkChrome) BuddyColors.OnSurfaceVariant else BuddyColors.CommunityTextSecondary
         )
     }
 }
 
-/** 精炼胶囊工具栏 */
 @Composable
-private fun CompactToolRow(
-    onAddFriend: () -> Unit,
-    onPost: () -> Unit,
-    onEdit: () -> Unit,
-    navEnabled: Boolean
+private fun ProfileDashboardGroupCard(
+    title: String,
+    darkChrome: Boolean,
+    content: @Composable ColumnScope.() -> Unit
 ) {
-    if (!navEnabled) return
-    val dark = LocalBuddyDarkTheme.current
-
-    LazyRow(
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = BuddyDimens.ScreenPaddingHorizontal),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    val sectionColor = if (darkChrome) BuddyColors.OnSurfaceVariant else BuddyColors.CommunityTextSecondary
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = BuddyDimens.ScreenPaddingHorizontal, vertical = 8.dp)
     ) {
-        item {
-            ToolPill(icon = Icons.Default.Search, label = "加好友", onClick = onAddFriend, dark = dark)
-        }
-        item {
-            ToolPill(icon = Icons.Default.Add, label = "去发帖", onClick = onPost, dark = dark)
-        }
-        item {
-            ToolPill(icon = Icons.Default.Edit, label = "编辑资料", onClick = onEdit, dark = dark)
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelLarge,
+            color = sectionColor,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+        )
+        Surface(
+            shape = RoundedCornerShape(20.dp),
+            color = if (darkChrome) BuddyColors.CanyonSurfaceElevated.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.7f),
+            border = BorderStroke(
+                1.dp,
+                if (darkChrome) BuddyColors.GoldOutline.copy(alpha = 0.28f) else BuddyColors.OutlineLight
+            ),
+            shadowElevation = if (darkChrome) 0.dp else 2.dp,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.fillMaxWidth(), content = content)
         }
     }
 }
 
 @Composable
-private fun ToolPill(
+private fun ProfileDashboardGroupDivider(darkChrome: Boolean) {
+    HorizontalDivider(
+        thickness = 1.dp,
+        color = if (darkChrome) BuddyColors.GoldOutline.copy(alpha = 0.2f) else Color.Black.copy(alpha = 0.06f),
+        modifier = Modifier.padding(horizontal = 16.dp)
+    )
+}
+
+@Composable
+private fun ProfileDashboardActionRow(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    onClick: () -> Unit,
-    dark: Boolean
+    title: String,
+    subtitle: String? = null,
+    isDestructive: Boolean = false,
+    onClick: () -> Unit
 ) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(100),
-        color = if (dark) BuddyColors.SurfaceDark.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.8f),
-        border = BorderStroke(1.dp, if (dark) BuddyColors.GoldOutline.copy(alpha = 0.3f) else BuddyColors.OutlineLight)
+    val dark = LocalBuddyDarkTheme.current
+    val primary = when {
+        isDestructive -> MaterialTheme.colorScheme.error
+        dark -> Color.White
+        else -> BuddyColors.CommunityTextPrimary
+    }
+    val secondary = if (isDestructive) {
+        MaterialTheme.colorScheme.error.copy(alpha = 0.75f)
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        ) {
-            Icon(icon, contentDescription = null, tint = if (dark) BuddyColors.HonorGold else BuddyColors.CommunityPrimary, modifier = Modifier.size(16.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(text = label, style = MaterialTheme.typography.labelMedium, color = if (dark) Color.White else BuddyColors.CommunityTextPrimary)
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = primary,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = primary,
+                fontWeight = FontWeight.Medium
+            )
+            if (!subtitle.isNullOrBlank()) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = secondary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
+        Icon(
+            imageVector = Icons.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = if (dark) Color.White.copy(alpha = 0.35f) else BuddyColors.TextSecondaryLayered.copy(alpha = 0.65f),
+            modifier = Modifier.size(22.dp)
+        )
     }
 }
 
@@ -689,19 +958,6 @@ private fun ArchiveSectionCard(title: String, icon: String, content: @Composable
                 content()
             }
         }
-    }
-}
-
-@Composable
-private fun LogoutButton(onClick: () -> Unit) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error.copy(alpha = 0.8f))
-    ) {
-        Text("退出当前账号", style = MaterialTheme.typography.labelLarge)
     }
 }
 

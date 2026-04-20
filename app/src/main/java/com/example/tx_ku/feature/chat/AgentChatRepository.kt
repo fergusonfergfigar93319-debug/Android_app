@@ -1,24 +1,39 @@
 package com.example.tx_ku.feature.chat
 
+import com.example.tx_ku.BuildConfig
 import com.example.tx_ku.core.ai.PersonaPromptBuilder
 import com.example.tx_ku.core.model.AgentPersonaConfig
-import com.example.tx_ku.core.model.FocusArea
 import com.example.tx_ku.core.model.GamingPreferences
 import com.example.tx_ku.core.model.LayeredAvatarConfig
-import kotlinx.coroutines.delay
+import com.example.tx_ku.core.network.ApiConstants
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.callbackFlow
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import okhttp3.sse.EventSource
+import okhttp3.sse.EventSourceListener
+import okhttp3.sse.EventSources
+import org.json.JSONArray
+import org.json.JSONObject
 
 /**
- * 流式对话数据源：当前用 [Flow] 模拟 TTFB + 分块吐字；接后端时将 [delay] 换为 OkHttp SSE / WebSocket 监听即可。
+ * 智能体回复：**OkHttp SSE** + [callbackFlow]，取消收集时自动 [EventSource.cancel]。
  *
- * 接入真实 LLM 时：将 [PersonaPromptBuilder.buildSystemPrompt] 的产出作为首条 `system` 消息，
- * 再拼接多轮 `user`/`assistant` 与本次 `user`。
+ * - **同频搭原生**：`POST /ai/agent/chat/stream`（联调手册 §5.5，`type: delta|done|error`）。
+ * - **OpenAI 兼容**：在 `BuildConfig.OPENAI_COMPAT_CHAT_URL` 填绝对地址（如 `https://…/v1/chat/completions`），
+ *   并在 `OPENAI_COMPAT_API_KEY` 填网关 Key；`choices[].delta.content` 与 `[DONE]`。
  */
-class AgentChatRepository {
+class AgentChatRepository(
+    private val buddySseClient: OkHttpClient,
+    private val openAiGatewaySseClient: OkHttpClient
+) {
 
     /**
-     * @param dynamicMemoryContext 可选动态记忆（段位、主玩英雄等），写入 System Prompt 的「记忆背景」段。
+     * @param dynamicMemoryContext 可选动态记忆（段位、主玩英雄等），写入 System Prompt。
      */
     fun streamAgentResponse(
         userMessage: String,
@@ -28,7 +43,7 @@ class AgentChatRepository {
         gamingPreferences: GamingPreferences? = null,
         tabooNotes: String? = null,
         corePersonaScript: String? = null
-    ): Flow<String> = flow {
+    ): Flow<String> = callbackFlow {
         val systemPrompt = PersonaPromptBuilder.buildSystemPrompt(
             personaConfig,
             dynamicMemoryContext = dynamicMemoryContext,
@@ -39,39 +54,185 @@ class AgentChatRepository {
         )
         check(systemPrompt.isNotBlank())
 
-        /*
-        val apiRequest = LlmRequest(
-            messages = listOf(
-                Message(role = "system", content = systemPrompt),
-                Message(role = "user", content = userMessage)
-            ),
-            stream = true
-        )
-        */
+        val openAiUrl = BuildConfig.OPENAI_COMPAT_CHAT_URL.trim()
+        val useOpenAi = openAiUrl.isNotEmpty()
+        val client = if (useOpenAi) openAiGatewaySseClient else buddySseClient
+        val jsonBody = if (useOpenAi) {
+            openAiChatCompletionsBody(systemPrompt, userMessage)
+        } else {
+            buddyAgentStreamBody(systemPrompt, userMessage)
+        }
+        val url = if (useOpenAi) openAiUrl else ApiConstants.agentChatStreamUrl()
 
-        delay(1200)
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val builder = Request.Builder()
+            .url(url)
+            .addHeader("Accept", "text/event-stream")
+            .post(jsonBody.toRequestBody(mediaType))
 
-        val mockResponse = mockStreamingReply(userMessage, personaConfig)
+        if (useOpenAi) {
+            val key = BuildConfig.OPENAI_COMPAT_API_KEY.trim()
+            if (key.isNotEmpty()) {
+                builder.header(ApiConstants.AUTH_HEADER, ApiConstants.AUTH_PREFIX + key)
+            }
+        }
 
-        val chunks = mockResponse.chunked(2)
-        for (chunk in chunks) {
-            emit(chunk)
-            delay((50..150).random().toLong())
+        val request = builder.build()
+
+        val listener = object : EventSourceListener() {
+            override fun onEvent(
+                eventSource: EventSource,
+                id: String?,
+                type: String?,
+                data: String
+            ) {
+                val trimmed = data.trim()
+                if (trimmed == "[DONE]") {
+                    close()
+                    return
+                }
+                if (trimmed.isEmpty()) return
+                try {
+                    val parsed = parseSseDataPayload(trimmed, preferOpenAi = useOpenAi)
+                    when (parsed) {
+                        is SseParseResult.Delta -> if (parsed.text.isNotEmpty()) trySend(parsed.text)
+                        is SseParseResult.Done -> close()
+                        is SseParseResult.Error -> close(IllegalStateException(parsed.message))
+                        is SseParseResult.Ignore -> Unit
+                    }
+                } catch (_: Exception) {
+                    // 单行非 JSON / 厂商扩展事件：忽略
+                }
+            }
+
+            override fun onClosed(eventSource: EventSource) {
+                close()
+            }
+
+            override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
+                val code = response?.code
+                val hint = buildString {
+                    if (t != null) append(t.message ?: t::class.java.simpleName)
+                    if (code != null) {
+                        if (isNotEmpty()) append(" ")
+                        append("(HTTP $code)")
+                    }
+                }
+                close(
+                    t ?: IllegalStateException(
+                        if (hint.isNotEmpty()) hint else "SSE 连接失败"
+                    )
+                )
+            }
+        }
+
+        val factory = EventSources.createFactory(client)
+        val eventSource = factory.newEventSource(request, listener)
+
+        awaitClose {
+            eventSource.cancel()
         }
     }
 
-    private fun mockStreamingReply(userMessage: String, config: AgentPersonaConfig): String {
-        val name = config.name
-        if (userMessage.contains("你好")) {
-            return "你好呀！我是「$name」——${config.basePersonality.desc.take(28)}…准备好一起上分了吗？"
+    private fun openAiChatCompletionsBody(systemPrompt: String, userMessage: String): String {
+        return JSONObject().apply {
+            put("model", BuildConfig.OPENAI_COMPAT_MODEL.trim().ifEmpty { "hunyuan-pro" })
+            put("stream", true)
+            put("temperature", 0.7)
+            put(
+                "messages",
+                JSONArray().apply {
+                    put(
+                        JSONObject().apply {
+                            put("role", "system")
+                            put("content", systemPrompt)
+                        }
+                    )
+                    put(
+                        JSONObject().apply {
+                            put("role", "user")
+                            put("content", userMessage)
+                        }
+                    )
+                }
+            )
+        }.toString()
+    }
+
+    private fun buddyAgentStreamBody(systemPrompt: String, userMessage: String): String {
+        return JSONObject().apply {
+            put("message", userMessage)
+            put(
+                "messages",
+                JSONArray().apply {
+                    put(
+                        JSONObject().apply {
+                            put("role", "system")
+                            put("content", systemPrompt)
+                        }
+                    )
+                    put(
+                        JSONObject().apply {
+                            put("role", "user")
+                            put("content", userMessage)
+                        }
+                    )
+                }
+            )
+        }.toString()
+    }
+
+    private sealed class SseParseResult {
+        data class Delta(val text: String) : SseParseResult()
+        data object Done : SseParseResult()
+        data class Error(val message: String) : SseParseResult()
+        data object Ignore : SseParseResult()
+    }
+
+    private fun parseSseDataPayload(data: String, preferOpenAi: Boolean): SseParseResult {
+        val json = JSONObject(data)
+        if (preferOpenAi) {
+            val err = json.optJSONObject("error")
+            if (err != null) {
+                return SseParseResult.Error(err.optString("message", err.toString()))
+            }
+            val choices = json.optJSONArray("choices")
+            if (choices != null && choices.length() > 0) {
+                val choice0 = choices.getJSONObject(0)
+                val delta = choice0.optJSONObject("delta")
+                val content = delta?.optString("content").orEmpty()
+                val finish = choice0.optString("finish_reason", "")
+                if (finish.isNotEmpty() && finish != "null" && content.isEmpty()) {
+                    return SseParseResult.Done
+                }
+                return SseParseResult.Delta(content)
+            }
         }
-        return when (config.focusArea) {
-            FocusArea.EMOTIONAL_SUPPORT ->
-                "先稳住心态，别急。关于「${userMessage.take(32)}${if (userMessage.length > 32) "…" else ""}」我在这儿陪你捋一捋。"
-            FocusArea.TACTICAL_ANALYSIS ->
-                "战术向拆解：「${userMessage.take(40)}${if (userMessage.length > 40) "…" else ""}」——先看阵容与兵线，再定团；需要我按步骤拆也可以说一声。"
-            FocusArea.BALANCED ->
-                "我已经收到：「${userMessage.take(40)}${if (userMessage.length > 40) "…" else ""}」。咱们边聊边找可执行的一步，你觉得从哪块先下手？"
+        when (json.optString("type")) {
+            "delta" -> {
+                val text = json.optString("text", "")
+                val tool = json.optString("toolCall", "")
+                val chunk = when {
+                    text.isNotEmpty() -> text
+                    tool.isNotEmpty() -> tool
+                    else -> ""
+                }
+                return SseParseResult.Delta(chunk)
+            }
+            "done" -> return SseParseResult.Done
+            "error" -> {
+                val msg = json.optString("message", json.toString())
+                val code = json.optInt("code", 0)
+                return SseParseResult.Error(if (code != 0) "[$code] $msg" else msg)
+            }
         }
+        if (!preferOpenAi) return SseParseResult.Ignore
+        val choices = json.optJSONArray("choices")
+        if (choices != null && choices.length() > 0) {
+            val delta = choices.getJSONObject(0).optJSONObject("delta")
+            val content = delta?.optString("content").orEmpty()
+            return SseParseResult.Delta(content)
+        }
+        return SseParseResult.Ignore
     }
 }

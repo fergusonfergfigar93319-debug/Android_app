@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,8 +23,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -68,7 +69,9 @@ import com.example.tx_ku.feature.profile.AgentPersonaScreen
 import com.example.tx_ku.feature.profile.ProfileScreen
 
 private val FloatingDockCorner = RoundedCornerShape(34.dp)
-private val FloatingDockHeight = 68.dp
+private val FloatingDockHeight = 72.dp
+private val PostShortcutSquircle = RoundedCornerShape(20.dp)
+private val PostShortcutSquircleSize = 54.dp
 /** 坞体垂直外边距（上下各一截）+ 槽高度，供主内容底部留白与悬浮球定位 */
 private val FloatingDockClearanceAboveNav = 108.dp
 
@@ -177,6 +180,14 @@ fun MainTabScreen(
                     selectedIndex = index
                 }
             },
+            onPostClick = if (navController != null) {
+                {
+                    haptic.buddyPrimaryClick()
+                    navController.navigate(Routes.POST_EDITOR)
+                }
+            } else {
+                null
+            },
             selectedTint = dockSelectedTint,
             unselectedTint = dockUnselectedTint,
             modifier = Modifier
@@ -186,37 +197,12 @@ fun MainTabScreen(
                 .fillMaxWidth()
         )
 
-        if (navController != null && tabs[selectedIndex] == MainTab.FORUM) {
-            FloatingActionButton(
-                onClick = {
-                    haptic.buddyPrimaryClick()
-                    navController.navigate(Routes.POST_EDITOR)
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .navigationBarsPadding()
-                    .padding(end = 20.dp, bottom = FloatingDockClearanceAboveNav + 12.dp),
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 8.dp,
-                    pressedElevation = 12.dp
-                )
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_add),
-                    contentDescription = "发帖"
-                )
-            }
-        }
-
         val showAgentFab = navController != null &&
             CurrentUser.profile != null &&
             CurrentUser.agentChatUnlocked &&
             tabs[selectedIndex] != MainTab.AGENT
         if (showAgentFab) {
-            val forumExtra = if (tabs[selectedIndex] == MainTab.FORUM) 56.dp else 0.dp
-            val bottomPad = FloatingDockClearanceAboveNav + 8.dp + forumExtra
+            val bottomPad = FloatingDockClearanceAboveNav + 8.dp
             AgentChatFloatingEntry(
                 tuning = CurrentUser.agentTuning,
                 preview = bubblePreview,
@@ -242,6 +228,8 @@ private fun MainTabFloatingGlassDock(
     tabs: List<MainTab>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
+    /** 底栏中心发帖捷径；为 null 时按键半透明且不可点（如导航未注入） */
+    onPostClick: (() -> Unit)?,
     selectedTint: Color,
     unselectedTint: Color,
     modifier: Modifier = Modifier
@@ -285,56 +273,142 @@ private fun MainTabFloatingGlassDock(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 6.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+                .padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            tabs.forEachIndexed { index, tab ->
-                val isSelected = selectedIndex == index
-                val interaction = remember(tab) { MutableInteractionSource() }
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(20.dp))
-                        .clickable(
-                            interactionSource = interaction,
-                            indication = null,
-                            onClick = { onSelect(index) }
-                        )
-                        .padding(vertical = 6.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        painter = painterResource(tab.iconResId),
-                        contentDescription = tab.title,
-                        tint = if (isSelected) selectedTint else unselectedTint,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = tab.title,
-                        style = MaterialTheme.typography.labelSmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        textAlign = TextAlign.Center,
-                        color = if (isSelected) selectedTint else unselectedTint,
-                        modifier = Modifier.padding(horizontal = 2.dp)
-                    )
-                    AnimatedVisibility(
-                        visible = isSelected,
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Box(
-                            modifier = Modifier
-                                .size(4.dp)
-                                .background(selectedTint, CircleShape)
-                        )
-                    }
-                }
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TabColumnInternal(
+                    tab = tabs[0],
+                    selected = selectedIndex == 0,
+                    selectedTint = selectedTint,
+                    unselectedTint = unselectedTint,
+                    onClick = { onSelect(0) }
+                )
+                TabColumnInternal(
+                    tab = tabs[1],
+                    selected = selectedIndex == 1,
+                    selectedTint = selectedTint,
+                    unselectedTint = unselectedTint,
+                    onClick = { onSelect(1) }
+                )
+            }
+            MainTabDockPostShortcut(
+                enabled = onPostClick != null,
+                onClick = { onPostClick?.invoke() },
+                modifier = Modifier.padding(horizontal = 2.dp)
+            )
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TabColumnInternal(
+                    tab = tabs[2],
+                    selected = selectedIndex == 2,
+                    selectedTint = selectedTint,
+                    unselectedTint = unselectedTint,
+                    onClick = { onSelect(2) }
+                )
+                TabColumnInternal(
+                    tab = tabs[3],
+                    selected = selectedIndex == 3,
+                    selectedTint = selectedTint,
+                    unselectedTint = unselectedTint,
+                    onClick = { onSelect(3) }
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun RowScope.TabColumnInternal(
+    tab: MainTab,
+    selected: Boolean,
+    selectedTint: Color,
+    unselectedTint: Color,
+    onClick: () -> Unit
+) {
+    val interaction = remember(tab) { MutableInteractionSource() }
+    Column(
+        modifier = Modifier
+            .weight(1f)
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                onClick = onClick
+            )
+            .padding(vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            painter = painterResource(tab.iconResId),
+            contentDescription = tab.title,
+            tint = if (selected) selectedTint else unselectedTint,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = tab.title,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            color = if (selected) selectedTint else unselectedTint,
+            modifier = Modifier.padding(horizontal = 2.dp)
+        )
+        AnimatedVisibility(
+            visible = selected,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Box(
+                modifier = Modifier
+                    .size(4.dp)
+                    .background(selectedTint, CircleShape)
+            )
+        }
+    }
+}
+
+@Composable
+private fun MainTabDockPostShortcut(
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val interaction = remember { MutableInteractionSource() }
+    Box(
+        modifier = modifier
+            .size(PostShortcutSquircleSize)
+            .shadow(
+                elevation = if (enabled) 10.dp else 4.dp,
+                shape = PostShortcutSquircle,
+                spotColor = BuddyColors.NavPostShortcutPink.copy(alpha = 0.45f)
+            )
+            .clip(PostShortcutSquircle)
+            .background(BuddyColors.NavPostShortcutPink.copy(alpha = if (enabled) 1f else 0.38f))
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                enabled = enabled,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Add,
+            contentDescription = "发帖",
+            tint = Color.White,
+            modifier = Modifier.size(30.dp)
+        )
     }
 }
