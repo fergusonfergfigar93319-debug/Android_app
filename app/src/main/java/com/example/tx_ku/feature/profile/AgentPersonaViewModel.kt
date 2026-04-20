@@ -5,6 +5,8 @@ import com.example.tx_ku.core.domain.AgentPersonaResolver
 import com.example.tx_ku.core.model.AgentTuning
 import com.example.tx_ku.core.model.BuddyAgentPersona
 import com.example.tx_ku.core.model.CurrentUser
+import com.example.tx_ku.core.model.GamingPreferences
+import com.example.tx_ku.core.model.withGamingPreferences
 import com.example.tx_ku.core.prefs.UserAgentStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -145,6 +147,11 @@ class AgentPersonaViewModel : ViewModel() {
         recomputePersona()
     }
 
+    fun updateGamingPreferences(prefs: GamingPreferences) {
+        CurrentUser.agentTuning = CurrentUser.agentTuning.withGamingPreferences(prefs)
+        recomputePersona()
+    }
+
     fun setSculptFaceRoundness(v: Float) {
         CurrentUser.agentTuning = CurrentUser.agentTuning.copy(sculptFaceRoundness = v.coerceIn(0f, 1f))
         recomputePersona()
@@ -233,7 +240,11 @@ class AgentPersonaViewModel : ViewModel() {
             useSculptAvatarForDisplay = s.useSculptAvatarForDisplay,
             avatarDisplayMode = s.avatarDisplayMode,
             layeredAvatarJson = s.layeredAvatarJson,
-            customCreationNamingUnlocked = s.customCreationNamingUnlocked
+            customCreationNamingUnlocked = s.customCreationNamingUnlocked,
+            gamingMainRole = s.gamingMainRole,
+            gamingSlangDensity = s.gamingSlangDensity,
+            gamingPressureAttitude = s.gamingPressureAttitude,
+            gamingBondMemory = s.gamingBondMemory
         )
         recomputePersona()
     }
@@ -257,6 +268,10 @@ class AgentPersonaViewModel : ViewModel() {
         val keepAvatarMode = CurrentUser.agentTuning.avatarDisplayMode
         val keepLayeredJson = CurrentUser.agentTuning.layeredAvatarJson
         val keepNamingUnlocked = CurrentUser.agentTuning.customCreationNamingUnlocked
+        val keepGamingMainRole = CurrentUser.agentTuning.gamingMainRole
+        val keepGamingSlang = CurrentUser.agentTuning.gamingSlangDensity
+        val keepGamingPressure = CurrentUser.agentTuning.gamingPressureAttitude
+        val keepGamingBond = CurrentUser.agentTuning.gamingBondMemory
         val t = when (preset) {
             AgentTuningOptions.QuickPreset.RANK -> AgentTuning(
                 intensity = "犀利",
@@ -323,7 +338,11 @@ class AgentPersonaViewModel : ViewModel() {
             useSculptAvatarForDisplay = keepSculptDisplay,
             avatarDisplayMode = keepAvatarMode,
             layeredAvatarJson = keepLayeredJson,
-            customCreationNamingUnlocked = keepNamingUnlocked
+            customCreationNamingUnlocked = keepNamingUnlocked,
+            gamingMainRole = keepGamingMainRole,
+            gamingSlangDensity = keepGamingSlang,
+            gamingPressureAttitude = keepGamingPressure,
+            gamingBondMemory = keepGamingBond
         )
         CurrentUser.agentTuning = t
         recomputePersona()

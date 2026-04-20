@@ -26,10 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.PhotoLibrary
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -40,11 +37,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -53,8 +55,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tx_ku.core.designsystem.theme.BuddyColors
-import com.example.tx_ku.core.designsystem.theme.JadePrimaryButton
-import com.example.tx_ku.core.designsystem.theme.jadeSoftCard
 
 /**
  * 峡谷 Q 版贴纸编辑器：**素玉 3.0** 高透玻璃 + 峡谷青 / 琥珀点缀（全息装配语境）。
@@ -62,7 +62,6 @@ import com.example.tx_ku.core.designsystem.theme.jadeSoftCard
 @Composable
 fun Avatar2DStudioPanel(
     vm: FaceStudioViewModel,
-    onSaveAndExit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val cfg by vm.layeredConfig.collectAsState()
@@ -254,35 +253,6 @@ fun Avatar2DStudioPanel(
                 }
             }
         }
-
-        Spacer(Modifier.height(10.dp))
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .jadeSoftCard(RoundedCornerShape(22.dp), elevation = 8.dp)
-                .padding(horizontal = 12.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                GlassIconDockButton(
-                    icon = Icons.Outlined.Settings,
-                    contentDescription = "设置",
-                    onClick = { }
-                )
-                GlassIconDockButton(
-                    icon = Icons.Outlined.PhotoLibrary,
-                    contentDescription = "相册",
-                    onClick = { }
-                )
-            }
-            Spacer(Modifier.weight(1f))
-            JadePrimaryButton(
-                text = "锁定机体并保存",
-                onClick = onSaveAndExit,
-                modifier = Modifier.weight(1.2f)
-            )
-        }
     }
 }
 
@@ -324,30 +294,6 @@ private fun GlassCategoryChip(
 }
 
 @Composable
-private fun GlassIconDockButton(
-    icon: ImageVector,
-    contentDescription: String,
-    onClick: () -> Unit
-) {
-    IconButton(
-        onClick = onClick,
-        modifier = Modifier
-            .size(48.dp)
-            .shadow(4.dp, CircleShape, spotColor = Color.Black.copy(alpha = 0.06f))
-            .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.78f))
-            .border(0.5.dp, BuddyColors.HonorCyanAccent.copy(alpha = 0.28f), CircleShape)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = BuddyColors.Jade.TextSecondary,
-            modifier = Modifier.size(22.dp)
-        )
-    }
-}
-
-@Composable
 private fun PresetGlassCard(
     title: String,
     subtitle: String,
@@ -357,34 +303,46 @@ private fun PresetGlassCard(
     modifier: Modifier = Modifier
 ) {
     val shape = RoundedCornerShape(20.dp)
+    val density = LocalDensity.current
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(124.dp)
-            .shadow(8.dp, shape, spotColor = baseColor.copy(alpha = 0.18f))
-            .clip(shape)
-            .background(Color.White.copy(alpha = 0.82f))
-            .border(
-                0.5.dp,
-                Brush.linearGradient(
-                    colors = listOf(baseColor.copy(alpha = 0.45f), Color.Transparent),
-                    start = Offset.Zero,
-                    end = Offset(400f, 400f)
-                ),
-                shape
-            )
-            .clickable(onClick = onClick),
+            .graphicsLayer {
+                this.shape = shape
+                clip = true
+                shadowElevation = with(density) { 6.dp.toPx() }
+                ambientShadowColor = baseColor.copy(alpha = 0.1f)
+                spotShadowColor = baseColor.copy(alpha = 0.2f)
+            }
+            .clickable(onClick = onClick)
+            .drawBehind {
+                val r = 20.dp.toPx()
+                val corner = CornerRadius(r, r)
+                drawRoundRect(
+                    color = Color.White.copy(alpha = 0.82f),
+                    cornerRadius = corner
+                )
+                drawRoundRect(
+                    brush = Brush.radialGradient(
+                        colors = listOf(baseColor.copy(alpha = 0.12f), Color.Transparent),
+                        center = Offset(size.width * 0.5f, size.height * 0.32f),
+                        radius = size.maxDimension * 0.85f
+                    ),
+                    cornerRadius = corner
+                )
+                drawRoundRect(
+                    brush = Brush.linearGradient(
+                        colors = listOf(baseColor.copy(alpha = 0.45f), Color.Transparent),
+                        start = Offset.Zero,
+                        end = Offset(size.width, size.height)
+                    ),
+                    cornerRadius = corner,
+                    style = Stroke(width = 0.5.dp.toPx())
+                )
+            },
         contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(baseColor.copy(alpha = 0.12f), Color.Transparent)
-                    )
-                )
-        )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(
                 imageVector = icon,
@@ -603,6 +561,7 @@ private fun HeroTabPanel(
     lp: FaceStudioLightPalette,
     modifier: Modifier = Modifier
 ) {
+    val density = LocalDensity.current
     val cartoon = CartoonQStylePresets.entries
     val heroItems = FaceStudioCatalog.hero2DThemes
     LazyVerticalGrid(
@@ -649,19 +608,31 @@ private fun HeroTabPanel(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(132.dp)
-                    .shadow(10.dp, shape, spotColor = accent.copy(alpha = 0.15f))
-                    .clip(shape)
-                    .background(Color.White.copy(alpha = 0.8f))
-                    .border(
-                        0.5.dp,
-                        Brush.linearGradient(
-                            listOf(accent.copy(alpha = 0.4f), Color.Transparent),
-                            start = Offset(0f, 0f),
-                            end = Offset(500f, 500f)
-                        ),
-                        shape
-                    )
+                    .graphicsLayer {
+                        this.shape = shape
+                        clip = true
+                        shadowElevation = with(density) { 6.dp.toPx() }
+                        spotShadowColor = accent.copy(alpha = 0.14f)
+                        ambientShadowColor = accent.copy(alpha = 0.06f)
+                    }
                     .clickable { vm.applyHero2DTheme(index) }
+                    .drawBehind {
+                        val r = 22.dp.toPx()
+                        val corner = CornerRadius(r, r)
+                        drawRoundRect(
+                            color = Color.White.copy(alpha = 0.8f),
+                            cornerRadius = corner
+                        )
+                        drawRoundRect(
+                            brush = Brush.linearGradient(
+                                listOf(accent.copy(alpha = 0.38f), Color.Transparent),
+                                start = Offset.Zero,
+                                end = Offset(size.width, size.height)
+                            ),
+                            cornerRadius = corner,
+                            style = Stroke(width = 0.5.dp.toPx())
+                        )
+                    }
                     .padding(horizontal = 12.dp, vertical = 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
@@ -669,7 +640,6 @@ private fun HeroTabPanel(
                 Box(
                     modifier = Modifier
                         .size(46.dp)
-                        .shadow(4.dp, CircleShape, spotColor = Color.Black.copy(alpha = 0.06f))
                         .clip(CircleShape)
                         .background(lp.heroCardEmojiCircle)
                         .border(0.5.dp, lp.heroCardEmojiRing, CircleShape),

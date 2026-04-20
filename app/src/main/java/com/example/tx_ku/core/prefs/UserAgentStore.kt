@@ -129,7 +129,11 @@ object UserAgentStore {
             avatarDisplayMode = prefs.getString(k("avatarDisplayMode"), null)
                 ?: migrateAvatarDisplayMode(def),
             layeredAvatarJson = prefs.getString(k("layeredAvatarJson"), null) ?: def.layeredAvatarJson,
-            customCreationNamingUnlocked = prefs.getBoolean(k("customCreationNamingUnlocked"), false)
+            customCreationNamingUnlocked = prefs.getBoolean(k("customCreationNamingUnlocked"), false),
+            gamingMainRole = prefs.getString(k("gamingMainRole"), null) ?: def.gamingMainRole,
+            gamingSlangDensity = prefs.getFloat(k("gamingSlangDensity"), def.gamingSlangDensity),
+            gamingPressureAttitude = prefs.getFloat(k("gamingPressureAttitude"), def.gamingPressureAttitude),
+            gamingBondMemory = prefs.getString(k("gamingBondMemory"), null) ?: def.gamingBondMemory
         )
         if (loaded == legacyFactoryDefaultTuning) {
             CurrentUser.agentTuning = AgentTuning()
@@ -183,6 +187,10 @@ object UserAgentStore {
             .putString(k("avatarDisplayMode"), t.avatarDisplayMode)
             .putString(k("layeredAvatarJson"), t.layeredAvatarJson)
             .putBoolean(k("customCreationNamingUnlocked"), t.customCreationNamingUnlocked)
+            .putString(k("gamingMainRole"), t.gamingMainRole)
+            .putFloat(k("gamingSlangDensity"), t.gamingSlangDensity)
+            .putFloat(k("gamingPressureAttitude"), t.gamingPressureAttitude)
+            .putString(k("gamingBondMemory"), t.gamingBondMemory)
             .putBoolean(k("agentChatUnlocked"), CurrentUser.agentChatUnlocked)
             .apply()
     }

@@ -32,6 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.foundation.Canvas
@@ -268,6 +269,10 @@ fun FaceStudioInteractivePreview(
 ) {
     val haptic = LocalHapticFeedback.current
     val density = LocalDensity.current
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        LayerHitboxDetector.ensureLoaded(context)
+    }
     BoxWithConstraints(modifier = modifier.size(size)) {
         val wDp = maxWidth
         val hDp = maxHeight
@@ -281,7 +286,8 @@ fun FaceStudioInteractivePreview(
                         val nx = offset.x / wPx
                         val ny = offset.y / hPx
                         val tab = if (useLayered2DPreview) {
-                            layered2dMainCategoryFromTap(nx, ny)
+                            LayerHitboxDetector.categoryFromNormalizedTap(nx, ny)?.ordinal
+                                ?: layered2dMainCategoryFromTap(nx, ny)
                         } else {
                             faceStudioTabFromTap(nx, ny)
                         }

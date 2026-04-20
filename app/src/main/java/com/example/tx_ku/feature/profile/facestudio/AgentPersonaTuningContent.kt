@@ -38,8 +38,11 @@ import com.example.tx_ku.core.ai.PersonaPromptBuilder
 import com.example.tx_ku.core.designsystem.components.BuddyPrimaryButton
 import com.example.tx_ku.core.designsystem.theme.BuddyColors
 import com.example.tx_ku.core.domain.AgentPersonaConfigMapper
+import com.example.tx_ku.core.model.AvatarDisplayModes
 import com.example.tx_ku.core.model.CurrentUser
 import com.example.tx_ku.core.model.FocusArea
+import com.example.tx_ku.core.model.LayeredAvatarConfig
+import com.example.tx_ku.core.model.toGamingPreferences
 import com.example.tx_ku.feature.profile.AgentPersonaViewModel
 
 private fun intensityToFloat(s: String): Float = when (s) {
@@ -173,6 +176,12 @@ fun AgentPersonaTuningContent(
             }
         }
 
+        GamingPersonaSection(
+            prefs = tuning.toGamingPreferences(),
+            onPrefsChange = { personaVm.updateGamingPreferences(it) },
+            useLightChrome = useLightChrome
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -187,12 +196,34 @@ fun AgentPersonaTuningContent(
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(8.dp))
-            val preview = remember(tuning, profile.userId, profile.rank) {
+            val preview = remember(
+                tuning,
+                profile.userId,
+                profile.rank,
+                tuning.layeredAvatarJson,
+                tuning.avatarDisplayMode,
+                tuning.gamingMainRole,
+                tuning.gamingSlangDensity,
+                tuning.gamingPressureAttitude,
+                tuning.gamingBondMemory,
+                tuning.tabooNotes,
+                tuning.customPersonaScript
+            ) {
                 val cfg = AgentPersonaConfigMapper.from(profile, tuning)
+                val layered =
+                    if (tuning.avatarDisplayMode == AvatarDisplayModes.LAYERED_2D) {
+                        LayeredAvatarConfig.fromJsonString(tuning.layeredAvatarJson)
+                    } else {
+                        null
+                    }
                 PersonaPromptBuilder.buildSystemPrompt(
                     cfg,
-                    dynamicMemoryContext = AgentPersonaConfigMapper.memorySnippet(profile)
-                ).lineSequence().take(12).joinToString("\n")
+                    dynamicMemoryContext = AgentPersonaConfigMapper.memorySnippet(profile),
+                    layeredAvatarConfig = layered,
+                    gamingPreferences = tuning.toGamingPreferences(),
+                    tabooNotes = tuning.tabooNotes.takeIf { it.isNotBlank() },
+                    corePersonaScript = tuning.customPersonaScript.takeIf { it.isNotBlank() }
+                ).lineSequence().take(28).joinToString("\n")
             }
             Text(
                 text = preview,

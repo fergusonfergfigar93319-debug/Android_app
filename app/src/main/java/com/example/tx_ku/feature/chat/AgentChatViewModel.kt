@@ -7,7 +7,10 @@ import com.example.tx_ku.TxKuApp
 import com.example.tx_ku.core.domain.AgentPersonaConfigMapper
 import com.example.tx_ku.core.domain.AgentPersonaResolver
 import com.example.tx_ku.core.brand.BrandConfig
+import com.example.tx_ku.core.model.AvatarDisplayModes
 import com.example.tx_ku.core.model.CurrentUser
+import com.example.tx_ku.core.model.LayeredAvatarConfig
+import com.example.tx_ku.core.model.toGamingPreferences
 import com.example.tx_ku.feature.chat.agent.AgentNavCommand
 import com.example.tx_ku.feature.chat.agent.AgentTaskInterpretation
 import com.example.tx_ku.feature.chat.agent.AgentTaskRouter
@@ -320,6 +323,12 @@ class AgentChatViewModel(application: Application) : AndroidViewModel(applicatio
         val tuningSnapshot = CurrentUser.agentTuning
         val personaConfig = AgentPersonaConfigMapper.from(profile, tuningSnapshot)
         val memorySnippet = AgentPersonaConfigMapper.memorySnippet(profile)
+        val layeredForPrompt =
+            if (tuningSnapshot.avatarDisplayMode == AvatarDisplayModes.LAYERED_2D) {
+                LayeredAvatarConfig.fromJsonString(tuningSnapshot.layeredAvatarJson)
+            } else {
+                null
+            }
         streamReplyJob?.cancel()
         streamReplyJob = viewModelScope.launch {
             val task = AgentTaskRouter.interpret(draft, profile, tuningSnapshot)
@@ -332,7 +341,11 @@ class AgentChatViewModel(application: Application) : AndroidViewModel(applicatio
                     agentChatRepository.streamAgentResponse(
                         userMessage = draft,
                         personaConfig = personaConfig,
-                        dynamicMemoryContext = memorySnippet
+                        dynamicMemoryContext = memorySnippet,
+                        layeredAvatarConfig = layeredForPrompt,
+                        gamingPreferences = tuningSnapshot.toGamingPreferences(),
+                        tabooNotes = tuningSnapshot.tabooNotes.takeIf { it.isNotBlank() },
+                        corePersonaScript = tuningSnapshot.customPersonaScript.takeIf { it.isNotBlank() }
                     )
                 ) {
                     postReplySideEffects(task)

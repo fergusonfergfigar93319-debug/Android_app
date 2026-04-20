@@ -207,25 +207,22 @@ fun FaceStudioScreen(navController: NavController) {
                         )
                     }
                 }
-                if (!is2D) {
-                    Surface(
-                        onClick = {
-                            vm.saveToHistory()
-                            navController.popBackStack()
-                        },
-                        shape = RoundedCornerShape(16.dp),
-                        color = BuddyColors.HonorCyanAccent
-                    ) {
-                        Text(
-                            "保存",
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                } else {
-                    Spacer(Modifier.width(72.dp))
+                Surface(
+                    onClick = {
+                        vm.saveToHistory()
+                        navController.popBackStack()
+                    },
+                    shape = RoundedCornerShape(16.dp),
+                    color = if (is2D) BuddyColors.HonorCyanAccent else BuddyColors.Jade.AccentAmber,
+                    shadowElevation = 2.dp
+                ) {
+                    Text(
+                        text = if (is2D) "锁定机体" else "保存",
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
 
@@ -433,13 +430,7 @@ fun FaceStudioScreen(navController: NavController) {
                     .graphicsLayer { alpha = panelSpotlightAlpha }
             ) {
                 if (is2D) {
-                    Avatar2DStudioPanel(
-                        vm = vm,
-                        onSaveAndExit = {
-                            vm.saveToHistory()
-                            navController.popBackStack()
-                        }
-                    )
+                    Avatar2DStudioPanel(vm = vm)
                 } else {
                     when (selectedTab) {
                         0 -> TabPresets(tuning, vm)

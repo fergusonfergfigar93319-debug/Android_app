@@ -11,6 +11,7 @@ import com.example.tx_ku.core.model.Verbosity
 /**
  * 将建档画像 [Profile] 与实时定制 [AgentTuning] 映射为 [AgentPersonaConfig]，
  * 供 [com.example.tx_ku.core.ai.PersonaPromptBuilder] 与后端 LLM 使用。
+ * 2D 外观约束由 [VisualPersonaMapper] 从 [com.example.tx_ku.core.model.LayeredAvatarConfig] 注入，需在 Builder 侧单独传入。
  */
 object AgentPersonaConfigMapper {
 

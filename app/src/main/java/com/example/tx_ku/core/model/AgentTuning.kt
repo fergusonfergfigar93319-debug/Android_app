@@ -167,7 +167,20 @@ data class AgentTuning(
      * 用户已从「自定义创作」入口进入元流捏脸，或在创作台点过「给搭子起名」。
      * 为 true 时可在仍为出厂气质套组的情况下编辑展示名（备忘、纸条等仍受 [isFactoryDefault] 约束）。
      */
-    val customCreationNamingUnlocked: Boolean = false
+    val customCreationNamingUnlocked: Boolean = false,
+
+    // ═══════════════════════════════════════════════════════════════
+    // 峡谷电竞偏好（个性 Tab · Gaming Persona → System Prompt）
+    // ═══════════════════════════════════════════════════════════════
+
+    /** 主玩分路：对抗路 / 中路 / 发育路 / 游走 / 打野 */
+    val gamingMainRole: String = "游走",
+    /** 0～1：黑话与术语浓度 */
+    val gamingSlangDensity: Float = 0.5f,
+    /** 0～1：逆风时态度，偏低温柔鼓励、偏高铁血教练 */
+    val gamingPressureAttitude: Float = 0.5f,
+    /** 专属羁绊 / Few-shot 背景（可选） */
+    val gamingBondMemory: String = ""
 )
 
 /**
@@ -204,7 +217,11 @@ fun AgentTuning.isFactoryDefault(): Boolean {
         customPhrase3 == d.customPhrase3 &&
         useSculptAvatarForDisplay == d.useSculptAvatarForDisplay &&
         avatarDisplayMode == d.avatarDisplayMode &&
-        layeredAvatarJson == d.layeredAvatarJson
+        layeredAvatarJson == d.layeredAvatarJson &&
+        gamingMainRole == d.gamingMainRole &&
+        gamingSlangDensity == d.gamingSlangDensity &&
+        gamingPressureAttitude == d.gamingPressureAttitude &&
+        gamingBondMemory == d.gamingBondMemory
 }
 
 /** 捏脸 Q 脸单行摘要（写入人设 traits / 分享）。 */

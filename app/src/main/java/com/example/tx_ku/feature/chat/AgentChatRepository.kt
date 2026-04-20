@@ -3,6 +3,8 @@ package com.example.tx_ku.feature.chat
 import com.example.tx_ku.core.ai.PersonaPromptBuilder
 import com.example.tx_ku.core.model.AgentPersonaConfig
 import com.example.tx_ku.core.model.FocusArea
+import com.example.tx_ku.core.model.GamingPreferences
+import com.example.tx_ku.core.model.LayeredAvatarConfig
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -21,11 +23,19 @@ class AgentChatRepository {
     fun streamAgentResponse(
         userMessage: String,
         personaConfig: AgentPersonaConfig,
-        dynamicMemoryContext: String? = null
+        dynamicMemoryContext: String? = null,
+        layeredAvatarConfig: LayeredAvatarConfig? = null,
+        gamingPreferences: GamingPreferences? = null,
+        tabooNotes: String? = null,
+        corePersonaScript: String? = null
     ): Flow<String> = flow {
         val systemPrompt = PersonaPromptBuilder.buildSystemPrompt(
             personaConfig,
-            dynamicMemoryContext = dynamicMemoryContext
+            dynamicMemoryContext = dynamicMemoryContext,
+            layeredAvatarConfig = layeredAvatarConfig,
+            gamingPreferences = gamingPreferences,
+            tabooNotes = tabooNotes,
+            corePersonaScript = corePersonaScript
         )
         check(systemPrompt.isNotBlank())
 
